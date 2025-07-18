@@ -1,0 +1,291 @@
+<template>
+  <div>
+    <Head :title="form.reference_number" />
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">
+        <Link class="text-brand-400 hover:text-brand-600" href="/deposits">Deposits</Link>
+        <span class="text-brand-400 font-medium">/</span>
+        {{ form.reference_number }}
+      </h1>
+      <p class="text-gray-600">Edit deposit transaction details</p>
+    </div>
+
+    <!-- Deposit Details Card -->
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="text-sm font-medium text-gray-500">Amount</div>
+          <div class="text-2xl font-bold text-green-600 mt-1">
+            {{ $formatAmount(deposit.amount) }}
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm font-medium text-gray-500">Payment Mode</div>
+          <div class="mt-1">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {{ deposit.payment_mode?.replace('_', ' ').toUpperCase() }}
+            </span>
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm font-medium text-gray-500">Transaction Date</div>
+          <div class="text-sm text-gray-900 mt-1">
+            {{ $formatDate(deposit.transaction_date) }}
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm font-medium text-gray-500">Created</div>
+          <div class="text-sm text-gray-900 mt-1">
+            {{ $formatDate(deposit.created_at) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Form Card -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold">Edit Deposit Information</h2>
+      </div>
+
+      <form @submit.prevent="update">
+        <div class="p-6 space-y-6">
+          <!-- Transaction Details -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account *</label>
+              <select
+                v-model="form.bank_account_id"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.bank_account_id ? 'border-red-500' : ''"
+              >
+                <option value="">Select Bank Account</option>
+                <option v-for="bankAccount in bankAccounts" :key="bankAccount.value" :value="bankAccount.value">{{ bankAccount.label }}</option>
+              </select>
+              <div v-if="form.errors.bank_account_id" class="mt-1 text-sm text-red-600">{{ form.errors.bank_account_id }}</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Date *</label>
+              <input
+                v-model="form.transaction_date"
+                type="date"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.transaction_date ? 'border-red-500' : ''"
+              />
+              <div v-if="form.errors.transaction_date" class="mt-1 text-sm text-red-600">{{ form.errors.transaction_date }}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
+              <select
+                v-model="form.payment_mode"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.payment_mode ? 'border-red-500' : ''"
+              >
+                <option value="">Select Payment Mode</option>
+                <option v-for="paymentMode in paymentModes" :key="paymentMode.value" :value="paymentMode.value">{{ paymentMode.label }}</option>
+              </select>
+              <div v-if="form.errors.payment_mode" class="mt-1 text-sm text-red-600">{{ form.errors.payment_mode }}</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2 text-gray-500">GMD</span>
+                <input
+                  v-model="form.amount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.amount ? 'border-red-500' : ''"
+                  placeholder="0.00"
+                />
+              </div>
+              <div v-if="form.errors.amount" class="mt-1 text-sm text-red-600">{{ form.errors.amount }}</div>
+            </div>
+          </div>
+
+          <!-- Branch and Shift Information -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+              <select
+                v-model="form.branch_id"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.branch_id ? 'border-red-500' : ''"
+              >
+                <option value="">Select Branch</option>
+                <option v-for="branch in branches" :key="branch.value" :value="branch.value">{{ branch.label }}</option>
+              </select>
+              <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">{{ form.errors.branch_id }}</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Shift</label>
+              <select
+                v-model="form.shift_id"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.shift_id ? 'border-red-500' : ''"
+              >
+                <option value="">Select Shift</option>
+                <option v-for="shift in shifts" :key="shift.value" :value="shift.value">{{ shift.label }}</option>
+              </select>
+              <div v-if="form.errors.shift_id" class="mt-1 text-sm text-red-600">{{ form.errors.shift_id }}</div>
+            </div>
+          </div>
+
+          <!-- Reference and Documentation -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+              <input
+                v-model="form.reference_number"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.reference_number ? 'border-red-500' : ''"
+                placeholder="Reference number"
+              />
+              <div v-if="form.errors.reference_number" class="mt-1 text-sm text-red-600">{{ form.errors.reference_number }}</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Receipt/Image</label>
+              <input
+                @input="form.image = $event.target.files[0]"
+                type="file"
+                accept="image/*"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.image ? 'border-red-500' : ''"
+              />
+              <div v-if="form.errors.image" class="mt-1 text-sm text-red-600">{{ form.errors.image }}</div>
+              <div v-if="deposit.image_path" class="mt-2">
+                <button type="button" @click="showCurrentImage" class="text-sm text-blue-600 hover:text-blue-800">
+                  View current image
+                </button>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">Optional: Upload new receipt or proof of deposit</p>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              v-model="form.description"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+              :class="form.errors.description ? 'border-red-500' : ''"
+              placeholder="Optional: Add notes about this deposit"
+            ></textarea>
+            <div v-if="form.errors.description" class="mt-1 text-sm text-red-600">{{ form.errors.description }}</div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <Link href="/deposits" class="text-gray-600 hover:text-gray-800">
+              <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+              </svg>
+              Back to Deposits
+            </Link>
+            <button
+              v-if="!deposit.deleted_at"
+              @click="destroy"
+              type="button"
+              class="text-red-600 hover:text-red-800 flex items-center"
+            >
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              Delete Deposit
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            :disabled="form.processing"
+            class="btn-kingbaker flex items-center"
+          >
+            <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ form.processing ? 'Updating...' : 'Update Deposit' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Image Modal -->
+    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeImageModal">
+      <div class="max-w-4xl max-h-full p-4">
+        <img :src="`/storage/${deposit.image_path}`" class="max-w-full max-h-full rounded-lg" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { Head, Link } from '@inertiajs/vue3'
+import Layout from '@/Shared/Layout.vue'
+import { formatterMixin } from '@/Utils/formatters'
+
+export default {
+  components: {
+    Head,
+    Link,
+  },
+  mixins: [formatterMixin],
+  layout: Layout,
+  props: {
+    deposit: Object,
+    bankAccounts: Array,
+    branches: Array,
+    shifts: Array,
+    paymentModes: Array,
+  },
+  remember: 'form',
+  data() {
+    return {
+      form: this.$inertia.form({
+        bank_account_id: this.deposit.bank_account_id,
+        transaction_date: this.deposit.transaction_date ? this.deposit.transaction_date.split('T')[0] : '',
+        payment_mode: this.deposit.payment_mode,
+        amount: this.deposit.amount,
+        branch_id: this.deposit.branch_id,
+        shift_id: this.deposit.shift_id,
+        reference_number: this.deposit.reference_number,
+        description: this.deposit.description,
+        image: null,
+      }),
+      showImageModal: false,
+    }
+  },
+  methods: {
+    update() {
+      this.form.put(`/deposits/${this.deposit.id}`, {
+        onSuccess: () => this.form.reset('image'),
+      })
+    },
+    destroy() {
+      if (confirm('Are you sure you want to delete this deposit?')) {
+        this.$inertia.delete(`/deposits/${this.deposit.id}`)
+      }
+    },
+    showCurrentImage() {
+      this.showImageModal = true
+    },
+    closeImageModal() {
+      this.showImageModal = false
+    },
+  },
+}
+</script>

@@ -1,0 +1,29 @@
+Finance
+
+
+Module
+Description
+Details
+Account Sheets
+Transaction date, type (cheque, cash etc.), description with cheque number or reference number if available, amount (credit or debit)
+Each added account should have its own account sheet that can be filtered by month, week etc.
+Account crediting (cash deposits, cheque deposits)
+Cash deposits, Bank transfers, Wave deposit, Cheque deposit logged on the account sheet
+Daily shift sales are to be uploaded and tracked in this module. Other payments made to accounts also logged. Credit only.
+Cheque Payments (paid, recurring or pending invoices & bills)
+Invoice payments made to vendors through inventory purchases or bills paid for daily operations. Other payments are those owed to various institutions /individuals (loans or advances to staff,
+Issue payments and track based on category (I.e. recurring bill, vendor bill, other payments) Logged into account sheet as debit.
+Invoices (bulk sales, credit customer, loans)
+Generate invoices customers for bulk order payment that should credit a specific account. Invoices are categorized as sales from shops or bills owed from partners/branches. Other invoices include unusual payments made to us.
+Daily supply tracked in this module and billed at the end of month for Hotels/partners. Credit only.
+Expenses
+Cash-on-hand or Petty cash expenses made are tracked here. Any logged individual/staff who is given access to this module has to report and submit their expenses for reimbursement.
+Date posted and transaction date vary, payee, description, amount with unique id. Auto adds to report when transaction is posted. Debit only.
+Miscellaneous
+Payments made that are outside the scope of daily operations.
+I.e. purchase of appliances, office chairs etc. Can be debit or credit.
+
+- Account sheets: create a bank account and all transactions are logged into that sheet.
+- Account sheet details: date, payment type (debit and credit), payment mode/type (cheque and bank transfer), cheque number, payment details (payee, amount, description).
+- Log Deposits into the accounts (Enter data into the system and upload deposit slips) Select date, select shift, select branch location, select account, enter amount (specify wave payments, bank transfer, credit customers etc.)
+- Issue payments, pay bills and handle transactions: Petty cash expenses, Vendor Bills for production, Cash-on-hand expenses, Recurring Bills, Miscellaneous. Payments should have unique reference IDs. Submit the report for the cash-on-hand expenses or petty cash for replenishment. Recurring bills: water bill, electricity, cashpower, GRA, SSFHC, trade license (categorized as a recurring bill). Miscellaneous: renovations costs, printers, chairs etc.
