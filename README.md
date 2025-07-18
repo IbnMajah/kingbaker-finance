@@ -69,7 +69,7 @@ php artisan serve
 
 You're ready to go! Visit Ping CRM in your browser, and login with:
 
-- **Username:** admin@kingbakers.com
+- **Username:** admin@kingbaker.com
 - **Password:** secret
 
 ## Running tests

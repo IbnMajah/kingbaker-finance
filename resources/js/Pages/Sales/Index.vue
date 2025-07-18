@@ -164,6 +164,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cashier</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -179,6 +180,9 @@
               </td>
               <td class="px-6 py-4 text-sm text-gray-900">
                 {{ sale.shift?.name || 'N/A' }}
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900">
+                {{ sale.cashier || 'N/A' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
                 <span class="font-medium text-green-600">
@@ -209,7 +213,7 @@
               </td>
             </tr>
             <tr v-if="!sales?.data?.length">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                 No sales found.
               </td>
             </tr>

@@ -20,7 +20,7 @@ class OrganizationsTest extends TestCase
             'account_id' => Account::create(['name' => 'Acme Corporation'])->id,
             'first_name' => 'John',
             'last_name' => 'Doe',
-            'email' => 'admin@kingbakers.com',
+            'email' => 'admin@kingbaker.com',
             'owner' => true,
         ]);
 

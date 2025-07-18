@@ -14,13 +14,9 @@ return new class extends Migration
         Schema::create('expense_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('expense_claim_id');
-            $table->date('expense_date');
-            $table->string('title');
             $table->string('description');
-            $table->decimal('amount', 12, 2);
+            $table->decimal('unit_price', 12, 2);
             $table->unsignedInteger('quantity')->default(1);
-            $table->string('category')->nullable(); // e.g. 'transport', 'meals', 'supplies', etc.
-            $table->string('receipt_image_path')->nullable(); // For receipt image
             $table->timestamps();
             $table->softDeletes();
 

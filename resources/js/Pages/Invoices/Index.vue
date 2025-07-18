@@ -9,7 +9,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -26,7 +26,6 @@
           </div>
         </div>
       </div>
-
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -38,13 +37,10 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">
-                {{ $formatAmount(summary.total_amount) }}
-            </p>
+            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_amount) }}</p>
           </div>
         </div>
       </div>
-
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -56,13 +52,10 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Amount Paid</p>
-            <p class="text-2xl font-semibold text-gray-900">
-                {{ $formatAmount(summary.total_paid) }}
-            </p>
+            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_paid) }}</p>
           </div>
         </div>
       </div>
-
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -74,141 +67,104 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Pending Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">
-                {{ $formatAmount(summary.pending_amount) }}
-            </p>
+            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.pending_amount) }}</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Filters Panel -->
-    <div class="bg-white rounded-lg shadow mb-6">
-      <div class="p-6 border-b border-gray-200">
-        <h3 class="text-lg font-semibold">Filters</h3>
+    <!-- Filters and Actions -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Filter Invoices</h2>
+        <Link class="btn-kingbaker" href="/invoices/create">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+          </svg>
+          <span>Create Invoice</span>
+        </Link>
       </div>
-      <div class="p-6 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Search -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-            <input
-              v-model="form.search"
-              type="text"
-              placeholder="Invoice #, customer name, email..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            />
-          </div>
-
-          <!-- Status -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              v-model="form.status"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            >
-              <option value="">All Statuses</option>
-              <option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
-            </select>
-          </div>
-
-          <!-- Invoice Type -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Type</label>
-            <select
-              v-model="form.invoice_type"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            >
-              <option value="">All Types</option>
-              <option v-for="type in invoiceTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
-            </select>
-          </div>
-
-          <!-- Customer Type -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
-            <select
-              v-model="form.customer_type"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            >
-              <option value="">All Customer Types</option>
-              <option v-for="type in customerTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
-            </select>
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+          <input
+            v-model="form.search"
+            type="text"
+            placeholder="Invoice #, customer name, email..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+          />
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Bank Account -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account</label>
-            <select
-              v-model="form.bank_account_id"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            >
-              <option value="">All Accounts</option>
-              <option v-for="account in bankAccounts" :key="account.id" :value="account.id">{{ account.name }}</option>
-            </select>
-          </div>
-
-          <!-- Branch -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-            <select
-              v-model="form.branch_id"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            >
-              <option value="">All Branches</option>
-              <option v-for="branch in branches" :key="branch.id" :value="branch.id">{{ branch.name }}</option>
-            </select>
-          </div>
-
-          <!-- Date From -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-            <input
-              v-model="form.date_from"
-              type="date"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            />
-          </div>
-
-          <!-- Date To -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-            <input
-              v-model="form.date_to"
-              type="date"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-            />
-          </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select v-model="form.status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500">
+            <option value="">All Statuses</option>
+            <option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
+          </select>
         </div>
-
-        <!-- Actions -->
-        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-          <button
-            @click="clearFilters"
-            class="text-gray-600 hover:text-gray-800"
-          >
-            Clear Filters
-          </button>
-          <Link href="/invoices/create" class="btn-kingbaker">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
-            </svg>
-            Create Invoice
-          </Link>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Type</label>
+          <select v-model="form.invoice_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500">
+            <option value="">All Types</option>
+            <option v-for="type in invoiceTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
+          <select v-model="form.customer_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500">
+            <option value="">All Customer Types</option>
+            <option v-for="type in customerTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account</label>
+          <select v-model="form.bank_account_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500">
+            <option value="">All Accounts</option>
+            <option v-for="account in bankAccounts" :key="account.id" :value="account.id">{{ account.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+          <select v-model="form.branch_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500">
+            <option value="">All Branches</option>
+            <option v-for="branch in branches" :key="branch.id" :value="branch.id">{{ branch.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+          <input
+            v-model="form.date_from"
+            type="date"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+          <input
+            v-model="form.date_to"
+            type="date"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+          />
+        </div>
+      </div>
+      <div class="flex items-center mt-4 space-x-4">
+        <button @click="clearFilters" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+          Clear Filters
+        </button>
+        <div class="text-sm text-gray-500">
+          Showing {{ invoices.data?.length || 0 }} of {{ invoices.total || 0 }} invoices
         </div>
       </div>
     </div>
 
     <!-- Invoices Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-      <div v-if="loading" class="flex items-center justify-center p-8">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold">Invoices</h2>
       </div>
-
-      <div v-else class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+      <div class="overflow-x-auto">
+        <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
@@ -216,9 +172,9 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
-              <th class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -252,284 +208,97 @@
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ invoice.due_date ? $formatDate(invoice.due_date) : 'No due date' }}</div>
+                <div class="text-sm text-gray-900">{{ $formatDate(invoice.due_date) }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="getStatusBadgeClass(invoice.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
-                  {{ getStatusLabel(invoice.status) }}
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <span v-if="invoice.status === 'paid'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Paid
+                </span>
+                <span v-else-if="invoice.status === 'pending'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  Pending
+                </span>
+                <span v-else-if="invoice.status === 'overdue'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  Overdue
+                </span>
+                <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  {{ invoice.status || 'Unknown' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ invoice.bank_account?.name || 'N/A' }}</div>
+                <div class="text-sm text-gray-900">{{ invoice.bank_account?.name || '-' }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex items-center justify-end space-x-2">
-                  <!-- View -->
-                  <Link
-                    :href="`/invoices/${invoice.id}`"
-                    class="text-gray-600 hover:text-blue-600 p-1 rounded-md hover:bg-blue-50"
-                    title="View Details"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-2">
+                  <!-- View Button -->
+                  <Link :href="`/invoices/${invoice.id}`" class="text-blue-600 hover:text-blue-900" title="View Invoice">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                   </Link>
 
-                  <!-- Edit -->
-                  <Link
-                    :href="`/invoices/${invoice.id}/edit`"
-                    class="text-gray-600 hover:text-green-600 p-1 rounded-md hover:bg-green-50"
-                    title="Edit Invoice"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  <!-- Edit Button -->
+                  <Link :href="`/invoices/${invoice.id}/edit`" class="text-brand-600 hover:text-brand-900" title="Edit Invoice">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
                     </svg>
                   </Link>
 
-                  <!-- Mark as Sent (only for draft) -->
-                  <button
-                    v-if="invoice.status === 'draft'"
-                    @click="markAsSent(invoice)"
-                    class="text-gray-600 hover:text-blue-600 p-1 rounded-md hover:bg-blue-50"
-                    title="Mark as Sent"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                    </svg>
-                  </button>
-
-                  <!-- Record Payment (for sent/partially paid/overdue) -->
-                  <button
-                    v-if="['sent', 'partially_paid', 'overdue'].includes(invoice.status)"
-                    @click="openPaymentModal(invoice)"
-                    class="text-gray-600 hover:text-green-600 p-1 rounded-md hover:bg-green-50"
-                    title="Record Payment"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                  </button>
-
-                  <!-- Mark as Paid (for sent/partially paid/overdue) -->
-                  <button
-                    v-if="['sent', 'partially_paid', 'overdue'].includes(invoice.status)"
-                    @click="markAsPaid(invoice)"
-                    class="text-gray-600 hover:text-purple-600 p-1 rounded-md hover:bg-purple-50"
-                    title="Mark as Paid"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </button>
-
-                  <!-- Print -->
-                  <Link
-                    :href="`/invoices/${invoice.id}/print`"
-                    target="_blank"
-                    class="text-gray-600 hover:text-gray-800 p-1 rounded-md hover:bg-gray-100"
-                    title="Print Invoice"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <!-- Print Button -->
+                  <Link :href="`/invoices/${invoice.id}/print`" class="text-purple-600 hover:text-purple-900" title="Print Invoice">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                     </svg>
                   </Link>
 
-                  <!-- Download PDF -->
-                  <Link
-                    :href="`/invoices/${invoice.id}/download-pdf`"
-                    class="text-gray-600 hover:text-indigo-600 p-1 rounded-md hover:bg-indigo-50"
-                    title="Download PDF"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  <!-- Restore Button (for deleted invoices) -->
+                  <button v-if="invoice.deleted_at" @click="restore(invoice)" class="text-green-600 hover:text-green-900" title="Restore Invoice">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
                     </svg>
-                  </Link>
+                  </button>
 
-                  <!-- Cancel (only for draft/sent with no payments) -->
-                  <button
-                    v-if="['draft', 'sent'].includes(invoice.status) && invoice.amount_paid === 0"
-                    @click="cancelInvoice(invoice)"
-                    class="text-gray-600 hover:text-red-600 p-1 rounded-md hover:bg-red-50"
-                    title="Cancel Invoice"
-                  >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  <!-- Delete Button (for active invoices) -->
+                  <button v-if="!invoice.deleted_at" @click="destroy(invoice)" class="text-red-600 hover:text-red-900" title="Delete Invoice">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
                   </button>
                 </div>
               </td>
             </tr>
-            <tr v-if="!invoices.data?.length">
+            <tr v-if="!invoices?.data?.length">
               <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                  <path d="M34 40H14a4 4 0 01-4-4V12a4 4 0 014-4h11.172a4 4 0 012.828 1.172L39.828 21a4 4 0 011.172 2.828V36a4 4 0 01-4 4z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                  <path d="M24 32h8M24 24h8M16 32h4M16 24h4M16 16h4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-                <p class="mt-4 text-lg">No invoices found</p>
-                <p class="text-gray-400">Get started by creating your first invoice.</p>
+                No invoices found.
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-
       <!-- Pagination -->
-      <div v-if="invoices.data?.length" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+      <div v-if="invoices?.data?.length" class="px-6 py-4 border-t border-gray-200">
         <div class="flex items-center justify-between">
-          <div class="flex-1 flex justify-between sm:hidden">
+          <div class="text-sm text-gray-700">
+            Showing {{ invoices.from || 0 }} to {{ invoices.to || 0 }} of {{ invoices.total || 0 }} results
+          </div>
+          <div class="flex space-x-2">
             <Link
               v-if="invoices.prev_page_url"
               :href="invoices.prev_page_url"
-              class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              preserve-state
             >
               Previous
             </Link>
             <Link
               v-if="invoices.next_page_url"
               :href="invoices.next_page_url"
-              class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              preserve-state
             >
               Next
             </Link>
           </div>
-          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p class="text-sm text-gray-700">
-                Showing <span class="font-medium">{{ invoices.from || 0 }}</span> to <span class="font-medium">{{ invoices.to || 0 }}</span> of <span class="font-medium">{{ invoices.total || 0 }}</span> results
-              </p>
-            </div>
-            <div>
-              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                <Link
-                  v-if="invoices.prev_page_url"
-                  :href="invoices.prev_page_url"
-                  class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                >
-                  <span class="sr-only">Previous</span>
-                  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                  </svg>
-                </Link>
-                <span v-for="page in invoices.links?.slice(1, -1)" :key="page.label">
-                  <Link
-                    v-if="page.url"
-                    :href="page.url"
-                    :class="page.active ? 'bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
-                    class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                  >
-                    {{ page.label }}
-                  </Link>
-                  <span
-                    v-else
-                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
-                  >
-                    {{ page.label }}
-                  </span>
-                </span>
-                <Link
-                  v-if="invoices.next_page_url"
-                  :href="invoices.next_page_url"
-                  class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                >
-                  <span class="sr-only">Next</span>
-                  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                  </svg>
-                </Link>
-              </nav>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Payment Modal -->
-    <div v-if="showPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Record Payment</h3>
-          <div v-if="selectedInvoice" class="mb-4 p-3 bg-gray-50 rounded-md">
-            <p class="text-sm text-gray-600">Invoice: {{ selectedInvoice.invoice_number }}</p>
-            <p class="text-sm text-gray-600">Customer: {{ selectedInvoice.customer_name }}</p>
-            <p class="text-sm text-gray-600">Remaining: GMD {{ selectedInvoice.remaining_amount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
-          </div>
-
-          <form @submit.prevent="submitPayment">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Amount</label>
-              <input
-                v-model="paymentForm.amount"
-                type="number"
-                step="0.01"
-                :max="selectedInvoice?.remaining_amount"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-              />
-            </div>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-              <select
-                v-model="paymentForm.payment_method"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-              >
-                <option value="">Select method</option>
-                <option value="cash">Cash</option>
-                <option value="cheque">Cheque</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="mobile_money">Mobile Money</option>
-              </select>
-            </div>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Reference</label>
-              <input
-                v-model="paymentForm.payment_reference"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                placeholder="Check #, Transfer ID, etc."
-              />
-            </div>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-              <input
-                v-model="paymentForm.payment_date"
-                type="date"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-              />
-            </div>
-
-            <div class="mb-6">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea
-                v-model="paymentForm.notes"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                rows="2"
-                placeholder="Optional notes..."
-              ></textarea>
-            </div>
-
-            <div class="flex justify-end space-x-3">
-              <button
-                type="button"
-                @click="closePaymentModal"
-                class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="paymentForm.processing"
-                class="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 disabled:opacity-50"
-              >
-                {{ paymentForm.processing ? 'Recording...' : 'Record Payment' }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
     </div>
@@ -729,6 +498,32 @@ export default {
         processing: false,
       }
     },
+    destroy(invoice) {
+      if (confirm(`Are you sure you want to delete invoice ${invoice.invoice_number}?`)) {
+        this.$inertia.delete(`/invoices/${invoice.id}`, {
+          onSuccess: () => {
+            console.log('Invoice deleted successfully')
+          },
+          onError: (errors) => {
+            console.error('Error deleting invoice:', errors)
+            alert('Error deleting invoice. Please try again.')
+          }
+        })
+      }
+    },
+    restore(invoice) {
+      if (confirm(`Are you sure you want to restore invoice ${invoice.invoice_number}?`)) {
+        this.$inertia.put(`/invoices/${invoice.id}/restore`, {}, {
+          onSuccess: () => {
+            console.log('Invoice restored successfully')
+          },
+          onError: (errors) => {
+            console.error('Error restoring invoice:', errors)
+            alert('Error restoring invoice. Please try again.')
+          }
+        })
+      }
+    }
   },
 }
 </script>

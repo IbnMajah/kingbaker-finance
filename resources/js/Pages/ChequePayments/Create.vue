@@ -91,6 +91,56 @@
             </div>
           </div>
 
+          <!-- Conditional Fields Based on Payment Category -->
+          <div v-if="form.payment_category === 'vendor_payment'" class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Vendor Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor *</label>
+                <select
+                  v-model="form.vendor_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.vendor_id ? 'border-red-500' : ''"
+                >
+                  <option value="">Select Vendor</option>
+                  <option v-for="vendor in vendors" :key="vendor.value" :value="vendor.value">{{ vendor.label }}</option>
+                </select>
+                <div v-if="form.errors.vendor_id" class="mt-1 text-sm text-red-600">{{ form.errors.vendor_id }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="form.payment_category === 'recurring_bill'" class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Bill Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bill *</label>
+                <select
+                  v-model="form.bill_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.bill_id ? 'border-red-500' : ''"
+                  @change="updateFromBill"
+                >
+                  <option value="">Select Bill</option>
+                  <option v-for="bill in bills" :key="bill.value" :value="bill.value">{{ bill.label }}</option>
+                </select>
+                <div v-if="form.errors.bill_id" class="mt-1 text-sm text-red-600">{{ form.errors.bill_id }}</div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Recurring Frequency *</label>
+                <select
+                  v-model="form.recurring_frequency"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.recurring_frequency ? 'border-red-500' : ''"
+                >
+                  <option value="">Select Frequency</option>
+                  <option v-for="frequency in recurringFrequencies" :key="frequency.value" :value="frequency.value">{{ frequency.label }}</option>
+                </select>
+                <div v-if="form.errors.recurring_frequency" class="mt-1 text-sm text-red-600">{{ form.errors.recurring_frequency }}</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Financial Details -->
           <div class="border-t border-gray-200 pt-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Financial Details</h3>
@@ -258,8 +308,11 @@ export default {
   props: {
     bankAccounts: Array,
     branches: Array,
+    vendors: Array,
+    bills: Array,
     paymentCategories: Array,
     paymentModes: Array,
+    recurringFrequencies: Array,
   },
   remember: 'form',
   data() {
@@ -272,6 +325,9 @@ export default {
         payment_mode: '',
         bank_account_id: '',
         branch_id: '',
+        vendor_id: '',
+        bill_id: '',
+        recurring_frequency: '',
         cheque_number: '',
         reference_number: '',
         description: '',
@@ -305,6 +361,16 @@ export default {
         other_payment: 'Describe the payment purpose and details'
       }
       return placeholders[this.form.payment_category] || 'Describe the payment purpose and details'
+    },
+    updateFromBill() {
+      if (this.form.bill_id) {
+        const selectedBill = this.bills.find(bill => bill.value == this.form.bill_id)
+        if (selectedBill) {
+          this.form.amount = selectedBill.amount
+          this.form.vendor_id = selectedBill.vendor_id
+          this.form.description = selectedBill.description || `Payment for ${selectedBill.label}`
+        }
+      }
     },
   },
 }

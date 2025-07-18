@@ -20,6 +20,9 @@ class ChequePayment extends Model
         'payment_mode',
         'bank_account_id',
         'branch_id',
+        'vendor_id',
+        'bill_id',
+        'recurring_frequency',
         'cheque_number',
         'reference_number',
         'description',
@@ -47,6 +50,16 @@ class ChequePayment extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    public function bill(): BelongsTo
+    {
+        return $this->belongsTo(Bill::class);
     }
 
     public function getFormattedAmountAttribute(): string

@@ -30,6 +30,12 @@ class BillController extends Controller
             ->when($request->input('status'), function ($query, $status) {
                 $query->where('status', $status);
             })
+            ->when($request->input('date_from'), function ($query, $dateFrom) {
+                $query->whereDate('bill_date', '>=', $dateFrom);
+            })
+            ->when($request->input('date_to'), function ($query, $dateTo) {
+                $query->whereDate('bill_date', '<=', $dateTo);
+            })
             ->orderBy('due_date', 'desc');
 
         $bills = $query->paginate(10)
@@ -38,6 +44,7 @@ class BillController extends Controller
                 'reference' => $bill->reference,
                 'description' => $bill->description,
                 'amount' => $bill->amount,
+                'bill_date' => $bill->bill_date,
                 'due_date' => $bill->due_date,
                 'status' => $bill->status,
                 'vendor' => $bill->vendor ? [
@@ -47,7 +54,7 @@ class BillController extends Controller
             ]);
 
         return Inertia::render('Bills/Index', [
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status', 'date_from', 'date_to']),
             'bills' => $bills,
         ]);
     }

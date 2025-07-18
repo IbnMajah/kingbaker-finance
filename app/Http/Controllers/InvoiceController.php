@@ -52,6 +52,13 @@ class InvoiceController extends Controller
             ->when($request->input('date_to'), function ($query, $dateTo) {
                 $query->whereDate('invoice_date', '<=', $dateTo);
             })
+            ->when($request->input('trashed'), function ($query, $trashed) {
+                if ($trashed === 'with') {
+                    $query->withTrashed();
+                } elseif ($trashed === 'only') {
+                    $query->onlyTrashed();
+                }
+            })
             ->orderBy('invoice_date', 'desc');
 
         // Calculate summary statistics with same filters
@@ -98,11 +105,12 @@ class InvoiceController extends Controller
                 'billing_period' => $invoice->billing_period,
                 'is_recurring' => $invoice->is_recurring,
                 'attachment_path' => $invoice->attachment_path,
+                'deleted_at' => $invoice->deleted_at,
                 'created_at' => $invoice->created_at,
             ]);
 
         return Inertia::render('Invoices/Index', [
-            'filters' => $request->only(['search', 'status', 'invoice_type', 'customer_type', 'bank_account_id', 'branch_id', 'date_from', 'date_to']),
+            'filters' => $request->only(['search', 'status', 'invoice_type', 'customer_type', 'bank_account_id', 'branch_id', 'date_from', 'date_to', 'trashed']),
             'invoices' => $invoices,
             'summary' => $summaryStats,
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get(['id', 'name']),
@@ -243,8 +251,38 @@ class InvoiceController extends Controller
      */
     public function edit(Invoice $invoice): Response
     {
+        $invoice->load(['bankAccount', 'branch', 'payments']);
+
         return Inertia::render('Invoices/Edit', [
-            'invoice' => $invoice->load(['bankAccount', 'branch', 'payments']),
+            'invoice' => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'customer_name' => $invoice->customer_name,
+                'customer_email' => $invoice->customer_email,
+                'customer_phone' => $invoice->customer_phone,
+                'customer_address' => $invoice->customer_address,
+                'invoice_date' => $invoice->invoice_date->format('Y-m-d'),
+                'due_date' => $invoice->due_date ? $invoice->due_date->format('Y-m-d') : '',
+                'amount' => $invoice->amount,
+                'amount_paid' => $invoice->amount_paid,
+                'remaining_amount' => $invoice->remaining_amount,
+                'status' => $invoice->status,
+                'invoice_type' => $invoice->invoice_type,
+                'customer_type' => $invoice->customer_type,
+                'bank_account_id' => $invoice->bank_account_id,
+                'branch_id' => $invoice->branch_id,
+                'description' => $invoice->description,
+                'billing_period' => $invoice->billing_period,
+                'is_recurring' => $invoice->is_recurring,
+                'recurring_frequency' => $invoice->recurring_frequency,
+                'attachment_path' => $invoice->attachment_path,
+                'bankAccount' => $invoice->bankAccount,
+                'branch' => $invoice->branch,
+                'payments' => $invoice->payments,
+                'created_at' => $invoice->created_at,
+                'updated_at' => $invoice->updated_at,
+                'deleted_at' => $invoice->deleted_at,
+            ],
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
                 'value' => $a->id,
                 'label' => $a->name
@@ -483,5 +521,15 @@ class InvoiceController extends Controller
         // This would require a PDF library like dompdf or tcpdf
         // For now, we'll redirect to print view
         return $this->print($invoice);
+    }
+
+    /**
+     * Restore a soft-deleted invoice
+     */
+    public function restore(Invoice $invoice): RedirectResponse
+    {
+        $invoice->restore();
+
+        return Redirect::route('invoices')->with('success', 'Invoice restored successfully.');
     }
 }

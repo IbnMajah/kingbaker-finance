@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
 		'account_id' => 1,
                 'first_name' => 'Isatou',
                 'last_name' => 'Demba',
-                'email' => 'isatou@kingbakers.com',
+                'email' => 'isatou@kingbaker.com',
                 'password' => Hash::make('password'),
                 'owner' => true,
             ],

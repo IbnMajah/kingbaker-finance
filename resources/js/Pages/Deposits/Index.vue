@@ -101,10 +101,10 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
-          <select v-model="form.payment_mode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500">
-            <option value="">All Payment Modes</option>
-            <option v-for="mode in paymentModes" :key="mode.value" :value="mode.value">{{ mode.label }}</option>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Deposit Type</label>
+          <select v-model="form.deposit_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500">
+            <option value="">All Deposit Types</option>
+            <option v-for="type in depositTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
           </select>
         </div>
         <div>
@@ -162,7 +162,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Mode</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deposit Type</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -171,7 +171,7 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="deposit in deposits?.data || []" :key="deposit.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ $formatDate(deposit.transaction_date) }}
+                {{ $formatDate(deposit.deposit_date) }}
               </td>
               <td class="px-6 py-4 text-sm text-gray-900">
                 <div class="font-medium">{{ deposit.reference_number }}</div>
@@ -182,12 +182,12 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {{ deposit.payment_mode?.replace('_', ' ').toUpperCase() }}
+                  {{ deposit.deposit_type?.replace('_', ' ').toUpperCase() }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
                 <span class="font-medium text-green-600">
-                  +{{ $formatAmount(deposit.amount) }}
+                  {{ $formatAmount(deposit.amount) }}
                 </span>
               </td>
               <td class="px-6 py-4 text-sm text-gray-900">
@@ -195,12 +195,18 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-center">
                 <div class="flex items-center justify-center space-x-2">
-                  <Link :href="`/deposits/${deposit.id}/edit`" class="text-brand-600 hover:text-brand-900">
+                  <Link :href="`/deposits/${deposit.id}`" class="text-blue-600 hover:text-blue-900" title="View Details">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                      <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                    </svg>
+                  </Link>
+                  <Link :href="`/deposits/${deposit.id}/edit`" class="text-brand-600 hover:text-brand-900" title="Edit">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
                     </svg>
                   </Link>
-                  <button v-if="deposit.image_path" @click="showImage(deposit.image_path)" class="text-gray-600 hover:text-gray-900">
+                  <button v-if="deposit.image_path" @click="showImage(deposit.image_path)" class="text-gray-600 hover:text-gray-900" title="View Receipt">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
                     </svg>
@@ -245,10 +251,23 @@
       </div>
     </div>
 
-    <!-- Image Modal -->
-    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeImageModal">
-      <div class="max-w-4xl max-h-full p-4">
-        <img :src="`/storage/${selectedImage}`" class="max-w-full max-h-full rounded-lg" />
+        <!-- Image Modal -->
+    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" @click="closeImageModal">
+      <div class="relative w-1/2 h-4/5 flex items-center justify-center">
+        <img
+          :src="`/storage/${selectedImage}`"
+          alt="Receipt Image"
+          class="w-full h-full object-contain rounded-lg shadow-2xl"
+          @click.stop
+        />
+        <button
+          @click="closeImageModal"
+          class="absolute top-4 right-4 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -291,7 +310,7 @@ export default {
       type: Array,
       default: () => []
     },
-    paymentModes: {
+    depositTypes: {
       type: Array,
       default: () => []
     },
@@ -300,7 +319,7 @@ export default {
     return {
       form: {
         search: this.filters.search,
-        payment_mode: this.filters.payment_mode,
+        deposit_type: this.filters.deposit_type,
         bank_account_id: this.filters.bank_account_id,
         branch_id: this.filters.branch_id,
         date_from: this.filters.date_from,

@@ -14,7 +14,8 @@ class Sale extends Model
         'branch_id',
         'shift_id',
         'sales_date',
-        'amount'
+        'amount',
+        'cashier'
     ];
 
     protected $casts = [
@@ -34,7 +35,7 @@ class Sale extends Model
 
     public function deposits()
     {
-        return $this->hasMany(Deposit::class);
+        return $this->belongsToMany(Deposit::class, 'deposit_sales');
     }
 
     public function scopeFilter($query, array $filters)

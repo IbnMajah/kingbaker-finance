@@ -15,8 +15,8 @@ class OrganizationSeeder extends Seeder
         $organizations = [
             [
                 'account_id' => 1,
-                'name' => 'King Bakers',
-                'email' => 'info@kingbakers.com',
+                'name' => 'King Baker',
+                'email' => 'info@kingbaker.com',
                 'phone' => '+1234567890',
                 'address' => '123 Main Street',
                 'city' => 'Cebu City',

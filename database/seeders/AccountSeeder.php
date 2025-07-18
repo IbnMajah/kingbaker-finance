@@ -13,7 +13,7 @@ class AccountSeeder extends Seeder
     public function run(): void
     {
         Account::create([
-            'name' => 'King Bakers',
+            'name' => 'King Baker',
         ]);
     }
 }

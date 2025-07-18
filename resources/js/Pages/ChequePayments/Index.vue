@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold mb-2">Cheque Payments</h1>
-      <p class="text-gray-600">Manage vendor payments, bills, and other payment transactions</p>
+      <p class="text-gray-600">Manage and track all cheque payment transactions</p>
     </div>
 
     <!-- Summary Cards -->
@@ -39,7 +39,7 @@
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Amount</p>
             <p class="text-2xl font-semibold text-gray-900">
-                {{ $formatAmount(summary.total_amount) }} 
+                {{ $formatAmount(summary.total_amount) }}
             </p>
             <p class="text-xs text-gray-500 mt-1">All payments combined</p>
           </div>
@@ -86,21 +86,17 @@
     </div>
 
     <!-- Filters and Actions -->
-    <div class="bg-white rounded-lg shadow mb-6">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <h3 class="text-lg font-medium">Filter Payments</h3>
-          <Link href="/cheque-payments/create" class="btn-kingbaker">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            New Payment
-          </Link>
-        </div>
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Filter Cheque Payments</h2>
+        <Link class="btn-kingbaker" href="/cheque-payments/create">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+          </svg>
+          <span>Create Cheque Payment</span>
+        </Link>
       </div>
-
-      <div class="p-6">
-        <form @submit.prevent="search" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Search -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -191,7 +187,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
             />
           </div>
-        </form>
+        </div>
 
         <div class="flex justify-end space-x-3 mt-4">
           <button
@@ -209,17 +205,15 @@
             Search
           </button>
         </div>
-      </div>
     </div>
 
-    <!-- Payments Table -->
+    <!-- Cheque Payments Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium">Payments</h3>
+        <h2 class="text-lg font-semibold">Cheque Payments</h2>
       </div>
-
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+        <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment #</th>
@@ -290,9 +284,8 @@
           </tbody>
         </table>
       </div>
-
       <!-- Pagination -->
-      <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+      <div class="px-6 py-4 border-t border-gray-200">
         <div class="flex-1 flex justify-between sm:hidden">
           <Link
             v-if="payments.prev_page_url"

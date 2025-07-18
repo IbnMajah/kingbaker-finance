@@ -48,10 +48,12 @@ class ExpenseClaimController extends Controller
                     return [
                         'id' => $claim->id,
                         'claim_number' => $claim->reference_id,
-                        'transaction_date' => $claim->claim_date,
+                        'claim_date' => $claim->claim_date,
+                        'title' => $claim->title,
+                        'category' => $claim->category,
                         'payee' => $claim->payee,
                         'description' => $claim->notes,
-                        'amount' => $claim->total_amount,
+                        'total' => $claim->total,
                         'status' => $claim->status,
                         'branch' => $claim->branch ? [
                             'id' => $claim->branch->id,
@@ -88,7 +90,7 @@ class ExpenseClaimController extends Controller
             'totalClaims' => ExpenseClaim::count(),
             'pendingClaims' => ExpenseClaim::where('status', 'submitted')->count(),
             'approvedClaims' => ExpenseClaim::where('status', 'approved')->count(),
-            'totalAmount' => ExpenseClaim::sum('total_amount'),
+            'totalAmount' => ExpenseClaim::sum('total'),
         ]);
     }
 
@@ -100,7 +102,6 @@ class ExpenseClaimController extends Controller
         return Inertia::render('ExpenseClaims/Create', [
             'expenseTypes' => ['petty_cash', 'cash_on_hand', 'other'],
             'categories' => ['office_supplies', 'travel', 'meals', 'utilities', 'maintenance', 'other'],
-            'bankAccounts' => BankAccount::select('id as value', 'name as label')->get(),
             'branches' => Branch::select('id as value', 'name as label')->get(),
             'referenceId' => 'EXP-' . strtoupper(Str::random(7)),
         ]);
@@ -114,50 +115,48 @@ class ExpenseClaimController extends Controller
         $validated = $request->validate([
             'reference_id' => 'required|string|unique:expense_claims,reference_id',
             'claim_date' => 'required|date',
+            'title' => 'required|string|max:255',
+            'category' => 'nullable|string|max:255',
+            'receipt_image' => 'nullable|image|max:2048',
             'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
-            'bank_account_id' => 'required|exists:bank_accounts,id',
             'branch_id' => 'nullable|exists:branches,id',
             'payee' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.expense_date' => 'required|date',
-            'items.*.title' => 'required|string|max:255',
             'items.*.description' => 'required|string|max:255',
-            'items.*.amount' => 'required|numeric|min:0.01',
-            'items.*.quantity' => 'nullable|integer|min:1',
-            'items.*.category' => 'nullable|string',
-            'items.*.receipt_image' => 'nullable|image|max:2048',
+            'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         DB::beginTransaction();
         try {
+            $receiptPath = null;
+            if ($request->hasFile('receipt_image')) {
+                $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
+            }
+
             $expenseClaim = ExpenseClaim::create([
                 'user_id' => auth()->id(),
                 'reference_id' => $validated['reference_id'],
                 'claim_date' => $validated['claim_date'],
+                'title' => $validated['title'],
+                'category' => $validated['category'],
+                'receipt_image_path' => $receiptPath,
                 'status' => 'draft',
                 'expense_type' => $validated['expense_type'],
-                'bank_account_id' => $validated['bank_account_id'],
                 'branch_id' => $validated['branch_id'],
                 'payee' => $validated['payee'],
                 'notes' => $validated['notes'],
-                'total_amount' => collect($validated['items'])->sum('amount'),
+                'total' => collect($validated['items'])->sum(function($item) {
+                    return $item['unit_price'] * ($item['quantity'] ?? 1);
+                }),
             ]);
 
             foreach ($validated['items'] as $item) {
-                $imagePath = null;
-                if (isset($item['receipt_image']) && $item['receipt_image']) {
-                    $imagePath = $item['receipt_image']->store('receipts', 'public');
-                }
-
                 $expenseClaim->items()->create([
-                    'expense_date' => $item['expense_date'],
-                    'title' => $item['title'],
                     'description' => $item['description'],
-                    'amount' => $item['amount'],
+                    'unit_price' => $item['unit_price'],
                     'quantity' => $item['quantity'] ?? 1,
-                    'category' => $item['category'] ?? null,
-                    'receipt_image_path' => $imagePath,
                 ]);
             }
 
@@ -184,10 +183,13 @@ class ExpenseClaimController extends Controller
                 'id' => $expenseClaim->id,
                 'claim_number' => $expenseClaim->reference_id,
                 'date_posted' => $expenseClaim->created_at,
-                'transaction_date' => $expenseClaim->claim_date,
+                'claim_date' => $expenseClaim->claim_date,
+                'title' => $expenseClaim->title,
+                'category' => $expenseClaim->category,
+                'receipt_image_path' => $expenseClaim->receipt_image_path,
                 'payee' => $expenseClaim->payee,
                 'description' => $expenseClaim->notes,
-                'amount' => $expenseClaim->total_amount,
+                'total' => $expenseClaim->total,
                 'status' => $expenseClaim->status,
                 'branch' => $expenseClaim->branch ? [
                     'id' => $expenseClaim->branch->id,
@@ -213,19 +215,10 @@ class ExpenseClaimController extends Controller
                 ] : null,
                 'items' => $expenseClaim->items->map(fn($item) => [
                     'id' => $item->id,
-                    'expense_date' => $item->expense_date,
-                    'title' => $item->title,
                     'description' => $item->description,
-                    'amount' => $item->amount,
+                    'unit_price' => $item->unit_price,
                     'quantity' => $item->quantity,
-                    'category' => $item->category,
-                    'receipt_image_path' => $item->receipt_image_path,
                 ]),
-                'receipts' => $expenseClaim->items->map(fn($item) => [
-                    'id' => $item->id,
-                    'name' => basename($item->receipt_image_path),
-                    'path' => $item->receipt_image_path,
-                ])->filter(fn($receipt) => $receipt['path']),
                 'updated_at' => $expenseClaim->updated_at,
                 'notes' => $expenseClaim->notes,
             ],
@@ -242,38 +235,31 @@ class ExpenseClaimController extends Controller
                 ->with('error', 'Only draft expense claims can be edited.');
         }
 
-        $expenseClaim->load(['user', 'items', 'bankAccount', 'branch']);
+        $expenseClaim->load(['user', 'items', 'branch']);
 
         return Inertia::render('ExpenseClaims/Edit', [
             'expenseClaim' => [
                 'id' => $expenseClaim->id,
-                'claim_number' => $expenseClaim->reference_id,
-                'transaction_date' => $expenseClaim->claim_date->format('Y-m-d'),
+                'reference_id' => $expenseClaim->reference_id,
+                'claim_date' => $expenseClaim->claim_date->format('Y-m-d'),
+                'title' => $expenseClaim->title,
+                'category' => $expenseClaim->category,
+                'receipt_image_path' => $expenseClaim->receipt_image_path,
                 'payee' => $expenseClaim->payee,
-                'amount' => $expenseClaim->total_amount,
+                'expense_type' => $expenseClaim->expense_type,
+                'total' => $expenseClaim->total,
                 'status' => $expenseClaim->status,
-                'bank_account_id' => $expenseClaim->bank_account_id,
                 'branch_id' => $expenseClaim->branch_id,
-                'description' => $expenseClaim->notes,
-                'notes' => '',
-                'receipts' => $expenseClaim->items->map(fn($item) => [
-                    'id' => $item->id,
-                    'name' => basename($item->receipt_image_path),
-                    'path' => $item->receipt_image_path,
-                ])->filter(fn($receipt) => $receipt['path']),
+                'notes' => $expenseClaim->notes,
+                'items' => $expenseClaim->items,
             ],
-            'bankAccounts' => BankAccount::where('active', true)
-                ->orderBy('name')
-                ->get()
-                ->map(fn($account) => [
-                    'id' => $account->id,
-                    'name' => $account->name,
-                ]),
+            'expenseTypes' => ['petty_cash', 'cash_on_hand', 'other'],
+            'categories' => ['office_supplies', 'travel', 'meals', 'utilities', 'maintenance', 'other'],
             'branches' => Branch::orderBy('name')
                 ->get()
                 ->map(fn($branch) => [
-                    'id' => $branch->id,
-                    'name' => $branch->name,
+                    'value' => $branch->id,
+                    'label' => $branch->name,
                 ]),
         ]);
     }
@@ -288,25 +274,56 @@ class ExpenseClaimController extends Controller
         }
 
         $validated = $request->validate([
-            'transaction_date' => 'required|date',
-            'payee' => 'required|string',
-            'amount' => 'required|numeric|min:0.01',
-            'bank_account_id' => 'required|exists:bank_accounts,id',
+            'claim_date' => 'required|date',
+            'title' => 'required|string|max:255',
+            'category' => 'nullable|string|max:255',
+            'receipt_image' => 'nullable|image|max:2048',
+            'payee' => 'required|string|max:255',
+            'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
             'branch_id' => 'nullable|exists:branches,id',
-            'description' => 'required|string',
             'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.description' => 'required|string|max:255',
+            'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         DB::beginTransaction();
         try {
+            $receiptPath = $expenseClaim->receipt_image_path;
+            if ($request->hasFile('receipt_image')) {
+                if ($receiptPath) {
+                    Storage::disk('public')->delete($receiptPath);
+                }
+                $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
+            }
+
+            // Update the expense claim
             $expenseClaim->update([
-                'claim_date' => $validated['transaction_date'],
+                'claim_date' => $validated['claim_date'],
+                'title' => $validated['title'],
+                'category' => $validated['category'],
+                'receipt_image_path' => $receiptPath,
                 'payee' => $validated['payee'],
-                'total_amount' => $validated['amount'],
-                'bank_account_id' => $validated['bank_account_id'],
+                'expense_type' => $validated['expense_type'],
                 'branch_id' => $validated['branch_id'],
-                'notes' => $validated['description'],
+                'notes' => $validated['notes'],
             ]);
+
+            // Delete existing items
+            $expenseClaim->items()->delete();
+
+            // Create new items
+            foreach ($validated['items'] as $itemData) {
+                $expenseClaim->items()->create([
+                    'description' => $itemData['description'],
+                    'unit_price' => $itemData['unit_price'],
+                    'quantity' => $itemData['quantity'],
+                ]);
+            }
+
+            // Update total amount
+            $expenseClaim->updateTotalAmount();
 
             DB::commit();
             return Redirect::route('expense-claims.show', $expenseClaim->id)
@@ -376,74 +393,7 @@ class ExpenseClaimController extends Controller
         return Redirect::route('expense-claims')->with('success', 'Expense claim rejected.');
     }
 
-    /**
-     * Pay the expense claim.
-     */
-    public function pay(Request $request, ExpenseClaim $expenseClaim): RedirectResponse
-    {
-        if ($expenseClaim->status !== 'approved') {
-            return Redirect::back()->with('error', 'Only approved expense claims can be paid.');
-        }
 
-        $validated = $request->validate([
-            'bank_account_id' => 'required|exists:bank_accounts,id',
-            'transaction_date' => 'required|date',
-            'payment_mode' => 'required|in:cash,cheque,bank_transfer,nafa,wave,other',
-            'reference_number' => 'nullable|string|max:255',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            // Create the transaction
-            $transaction = Transaction::create([
-                'bank_account_id' => $validated['bank_account_id'],
-                'transaction_date' => $validated['transaction_date'],
-                'type' => 'debit',
-                'payment_mode' => $validated['payment_mode'],
-                'reference_number' => $validated['reference_number'],
-                'payee' => $expenseClaim->user->name,
-                'amount' => $expenseClaim->total_amount,
-                'description' => 'Payment for expense claim #' . $expenseClaim->reference_id,
-                'category' => $expenseClaim->expense_type,
-                'created_by' => Auth::id(),
-            ]);
-
-            // Update the expense claim
-            $expenseClaim->update([
-                'status' => 'paid',
-                'transaction_id' => $transaction->id,
-            ]);
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return Redirect::back()->withErrors([
-                'error' => 'An error occurred while processing the payment: ' . $e->getMessage(),
-            ]);
-        }
-
-        return Redirect::route('expense-claims')->with('success', 'Expense claim paid successfully.');
-    }
-
-    /**
-     * Show the form for paying an expense claim.
-     */
-    public function showPayForm(ExpenseClaim $expenseClaim): Response|RedirectResponse
-    {
-        if ($expenseClaim->status !== 'approved') {
-            return Redirect::route('expense-claims.show', $expenseClaim->id)
-                ->with('error', 'Only approved expense claims can be paid.');
-        }
-
-        $expenseClaim->load(['user', 'items']);
-        $bankAccounts = BankAccount::where('active', true)->orderBy('name')->get();
-
-        return Inertia::render('ExpenseClaims/Pay', [
-            'expenseClaim' => $expenseClaim,
-            'bankAccounts' => $bankAccounts,
-            'paymentModes' => ['cash', 'cheque', 'bank_transfer', 'nafa', 'wave', 'other'],
-        ]);
-    }
 
     /**
      * Remove the specified resource from storage.
@@ -454,13 +404,13 @@ class ExpenseClaimController extends Controller
             return Redirect::back()->with('error', 'Only draft or rejected expense claims can be deleted.');
         }
 
-        // Delete all expense items first
-        foreach ($expenseClaim->items as $item) {
-            if ($item->receipt_image_path) {
-                Storage::disk('public')->delete($item->receipt_image_path);
-            }
-            $item->delete();
+        // Delete receipt image if it exists
+        if ($expenseClaim->receipt_image_path) {
+            Storage::disk('public')->delete($expenseClaim->receipt_image_path);
         }
+
+        // Delete all expense items first
+        $expenseClaim->items()->delete();
 
         $expenseClaim->delete();
 

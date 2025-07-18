@@ -25,7 +25,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(expenseClaim.amount) }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(expenseClaim.total) }}</p>
           </div>
         </div>
       </div>
@@ -90,12 +90,21 @@
           <div class="text-gray-900 font-mono">{{ expenseClaim.claim_number }}</div>
         </div>
         <div>
-          <div class="text-sm font-medium text-gray-500">Payee</div>
-          <div class="text-gray-900">{{ expenseClaim.payee }}</div>
+          <div class="text-sm font-medium text-gray-500">Title</div>
+          <div class="text-gray-900">{{ expenseClaim.title || 'No title' }}</div>
         </div>
         <div>
-          <div class="text-sm font-medium text-gray-500">Bank Account</div>
-          <div class="text-gray-900">{{ expenseClaim.bank_account?.name ?? 'Not specified' }}</div>
+          <div class="text-sm font-medium text-gray-500">Category</div>
+          <div class="text-gray-900">
+            <span v-if="expenseClaim.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              {{ expenseClaim.category.replace('_', ' ') }}
+            </span>
+            <span v-else class="text-gray-400">No category</span>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm font-medium text-gray-500">Payee</div>
+          <div class="text-gray-900">{{ expenseClaim.payee }}</div>
         </div>
         <div>
           <div class="text-sm font-medium text-gray-500">Branch</div>
@@ -108,6 +117,18 @@
         <div v-if="expenseClaim.approver">
           <div class="text-sm font-medium text-gray-500">Approved By</div>
           <div class="text-gray-900">{{ expenseClaim.approver.name }}</div>
+        </div>
+        <div v-if="expenseClaim.receipt_image_path">
+          <div class="text-sm font-medium text-gray-500">Receipt</div>
+          <button
+            @click="showImage(expenseClaim.receipt_image_path)"
+            class="text-brand-600 hover:text-brand-900 text-sm"
+          >
+            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+            </svg>
+            View Receipt
+          </button>
         </div>
       </div>
     </div>
@@ -132,54 +153,39 @@
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="item in expenseClaim.items" :key="item.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ $formatDate(item.expense_date) }}
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                {{ item.title }}
-              </td>
               <td class="px-6 py-4 text-sm text-gray-900">
                 <div class="font-medium">{{ item.description }}</div>
                 <div v-if="item.notes" class="text-xs text-gray-500 truncate max-w-xs">{{ item.notes }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  {{ item.category || 'N/A' }}
-                </span>
-              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                 {{ item.quantity || 1 }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
-                {{ $formatAmount(item.amount) }}
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                {{ $formatAmount(item.unit_price) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <button
-                  v-if="item.receipt_image_path"
-                  @click="showImage(item.receipt_image_path)"
-                  class="text-brand-600 hover:text-brand-900"
-                >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
-                  </svg>
-                </button>
-                <span v-else class="text-gray-400">No receipt</span>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
+                {{ $formatAmount((item.unit_price || 0) * (item.quantity || 1)) }}
               </td>
             </tr>
             <tr v-if="!expenseClaim.items?.length">
-              <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="4" class="px-6 py-4 text-center text-gray-500">
                 No expense items found.
+              </td>
+            </tr>
+            <tr class="bg-gray-50">
+              <td colspan="3" class="px-6 py-4 text-right font-semibold text-gray-900">
+                Total:
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900">
+                {{ $formatAmount(expenseClaim.total) }}
               </td>
             </tr>
           </tbody>
@@ -250,23 +256,27 @@
           {{ processing ? 'Rejecting...' : 'Reject' }}
         </button>
 
-        <Link
-          v-if="expenseClaim.status === 'approved'"
-          :href="'/expense-claims/' + expenseClaim.id + '/pay'"
-          class="btn-kingbaker flex items-center bg-green-600 hover:bg-green-700"
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          Process Payment
-        </Link>
+
       </div>
     </div>
 
-    <!-- Image Modal -->
-    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeImageModal">
-      <div class="max-w-4xl max-h-full p-4">
-        <img :src="`/storage/${selectedImage}`" class="max-w-full max-h-full rounded-lg" />
+        <!-- Image Modal -->
+    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" @click="closeImageModal">
+      <div class="relative w-1/2 h-4/5 flex items-center justify-center">
+        <img
+          :src="`/storage/${selectedImage}`"
+          alt="Receipt Image"
+          class="w-full h-full object-contain rounded-lg shadow-2xl"
+          @click.stop
+        />
+        <button
+          @click="closeImageModal"
+          class="absolute top-4 right-4 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
