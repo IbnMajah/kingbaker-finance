@@ -12,6 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Only proceed if deposit_type column exists (it may not exist if columns weren't renamed yet)
+        if (!Schema::hasColumn('deposits', 'deposit_type')) {
+            // Skip this migration - the columns haven't been renamed yet
+            return;
+        }
+
         // First, expand the enum to include both old and new values
         DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('cash', 'cash_deposit', 'bank_transfer', 'nafa', 'nafa_deposit', 'wave', 'wave_deposit', 'cheque', 'cheque_deposit', 'sales', 'daily_sales_deposit')");
 
@@ -31,14 +37,22 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert data back to old format
+        // Only proceed if deposit_type column exists
+        if (!Schema::hasColumn('deposits', 'deposit_type')) {
+            return;
+        }
+
+        // Expand enum to include old values
+        DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('cash', 'cash_deposit', 'bank_transfer', 'nafa', 'nafa_deposit', 'wave', 'wave_deposit', 'cheque', 'cheque_deposit', 'sales', 'daily_sales_deposit')");
+
+        // Revert data to old enum values
         DB::table('deposits')->where('deposit_type', 'cash_deposit')->update(['deposit_type' => 'cash']);
         DB::table('deposits')->where('deposit_type', 'nafa_deposit')->update(['deposit_type' => 'nafa']);
         DB::table('deposits')->where('deposit_type', 'wave_deposit')->update(['deposit_type' => 'wave']);
         DB::table('deposits')->where('deposit_type', 'cheque_deposit')->update(['deposit_type' => 'cheque']);
         DB::table('deposits')->where('deposit_type', 'daily_sales_deposit')->update(['deposit_type' => 'sales']);
 
-        // Revert enum back to old values
+        // Restore original enum
         DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('cash', 'bank_transfer', 'nafa', 'wave', 'cheque', 'sales')");
     }
 };
