@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BankAccount;
 use App\Models\Branch;
 use App\Models\Deposit;
+use App\Models\Sale;
 use App\Models\Shift;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,8 +30,8 @@ class DepositController extends Controller
                         });
                 });
             })
-            ->when($request->input('payment_mode'), function ($query, $mode) {
-                $query->where('payment_mode', $mode);
+            ->when($request->input('deposit_type'), function ($query, $type) {
+                $query->where('deposit_type', $type);
             })
             ->when($request->input('bank_account_id'), function ($query, $bankAccountId) {
                 $query->where('bank_account_id', $bankAccountId);
@@ -39,32 +40,32 @@ class DepositController extends Controller
                 $query->where('branch_id', $branchId);
             })
             ->when($request->input('date_from'), function ($query, $dateFrom) {
-                $query->whereDate('transaction_date', '>=', $dateFrom);
+                $query->whereDate('deposit_date', '>=', $dateFrom);
             })
             ->when($request->input('date_to'), function ($query, $dateTo) {
-                $query->whereDate('transaction_date', '<=', $dateTo);
+                $query->whereDate('deposit_date', '<=', $dateTo);
             })
-            ->orderBy('transaction_date', 'desc');
+            ->orderBy('deposit_date', 'desc');
 
         // Calculate summary statistics with same filters
         $summaryQuery = clone $query;
         $summaryStats = [
             'total_deposits' => $summaryQuery->count(),
             'total_amount' => $summaryQuery->sum('amount'),
-            'this_month' => $summaryQuery->whereMonth('transaction_date', now()->month)
-                                      ->whereYear('transaction_date', now()->year)
-                                      ->sum('amount'),
-            'today' => $summaryQuery->whereDate('transaction_date', now()->toDateString())
+                        'this_month' => $summaryQuery->whereMonth('deposit_date', now()->month)
+                                       ->whereYear('deposit_date', now()->year)
+                                       ->sum('amount'),
+            'today' => $summaryQuery->whereDate('deposit_date', now()->toDateString())
                                    ->sum('amount'),
         ];
 
         $deposits = $query->paginate(25)
             ->through(fn ($deposit) => [
                 'id' => $deposit->id,
-                'transaction_date' => $deposit->transaction_date,
+                'deposit_date' => $deposit->deposit_date,
                 'description' => $deposit->description,
                 'amount' => $deposit->amount,
-                'payment_mode' => $deposit->payment_mode,
+                'deposit_type' => $deposit->deposit_type,
                 'reference_number' => $deposit->reference_number,
                 'bank_account' => $deposit->bankAccount ? [
                     'id' => $deposit->bankAccount->id,
@@ -87,24 +88,38 @@ class DepositController extends Controller
             ]);
 
         return Inertia::render('Deposits/Index', [
-            'filters' => $request->only(['search', 'payment_mode', 'bank_account_id', 'branch_id', 'date_from', 'date_to']),
+            'filters' => $request->only(['search', 'deposit_type', 'bank_account_id', 'branch_id', 'date_from', 'date_to']),
             'deposits' => $deposits,
             'summary' => $summaryStats,
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get(['id', 'name']),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
-            'paymentModes' => [
-                ['value' => 'cash', 'label' => 'Cash'],
+            'depositTypes' => [
+                ['value' => 'cash_deposit', 'label' => 'Cash Deposit'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
-                ['value' => 'nafa', 'label' => 'NAFA'],
-                ['value' => 'wave', 'label' => 'Wave'],
-                ['value' => 'cheque', 'label' => 'Cheque'],
-                ['value' => 'sales', 'label' => 'Daily Sales'],
+                ['value' => 'nafa_deposit', 'label' => 'NAFA Deposit'],
+                ['value' => 'wave_deposit', 'label' => 'Wave Deposit'],
+                ['value' => 'cheque_deposit', 'label' => 'Cheque Deposit'],
+                ['value' => 'daily_sales_deposit', 'label' => 'Daily Sales Deposit'],
             ],
         ]);
     }
 
     public function create(): Response
     {
+        // Get all sales for frontend filtering
+        $availableSales = Sale::with(['branch', 'shift'])
+            ->orderBy('sales_date', 'desc')
+            ->get()
+            ->map(fn($sale) => [
+                'id' => $sale->id,
+                'sales_date' => $sale->sales_date->format('Y-m-d'),
+                'amount' => $sale->amount,
+                'cashier' => $sale->cashier,
+                'branch' => $sale->branch?->name,
+                'shift' => $sale->shift?->name,
+                'is_deposited' => $sale->deposits()->exists(),
+            ]);
+
         return Inertia::render('Deposits/Create', [
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
                 'value' => $a->id,
@@ -118,13 +133,14 @@ class DepositController extends Controller
                 'value' => $s->id,
                 'label' => $s->name
             ]),
-            'paymentModes' => [
-                ['value' => 'cash', 'label' => 'Cash'],
+            'availableSales' => $availableSales,
+            'depositTypes' => [
+                ['value' => 'cash_deposit', 'label' => 'Cash Deposit'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
-                ['value' => 'nafa', 'label' => 'NAFA'],
-                ['value' => 'wave', 'label' => 'Wave'],
-                ['value' => 'cheque', 'label' => 'Cheque'],
-                ['value' => 'sales', 'label' => 'Daily Sales'],
+                ['value' => 'nafa_deposit', 'label' => 'NAFA Deposit'],
+                ['value' => 'wave_deposit', 'label' => 'Wave Deposit'],
+                ['value' => 'cheque_deposit', 'label' => 'Cheque Deposit'],
+                ['value' => 'daily_sales_deposit', 'label' => 'Daily Sales Deposit'],
             ],
         ]);
     }
@@ -133,21 +149,23 @@ class DepositController extends Controller
     {
         $validated = $request->validate([
             'bank_account_id' => 'required|exists:bank_accounts,id',
-            'transaction_date' => 'required|date',
-            'payment_mode' => 'required|in:cash,bank_transfer,nafa,wave,cheque,sales',
+            'deposit_date' => 'required|date',
+            'deposit_type' => 'required|in:cash_deposit,bank_transfer,nafa_deposit,wave_deposit,cheque_deposit,daily_sales_deposit',
             'amount' => 'required|numeric|min:0.01',
             'branch_id' => 'nullable|exists:branches,id',
             'shift_id' => 'nullable|exists:shifts,id',
-            'reference_number' => 'nullable|string|max:255',
+            'reference_number' => 'required|string|max:255',
+            'depositor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+            'selected_sales' => 'nullable|array',
+            'selected_sales.*' => 'exists:sales,id',
         ]);
 
-        // Generate reference number if not provided
-        if (empty($validated['reference_number'])) {
-            $year = date('Y');
-            $count = Deposit::whereYear('created_at', $year)->count() + 1;
-            $validated['reference_number'] = 'DEP-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+        // If sales are selected, calculate total amount from selected sales
+        if (!empty($validated['selected_sales'])) {
+            $selectedSales = Sale::whereIn('id', $validated['selected_sales'])->get();
+            $validated['amount'] = $selectedSales->sum('amount');
         }
 
         // Handle file upload separately
@@ -156,8 +174,9 @@ class DepositController extends Controller
             $imagePath = $request->file('image')->store('deposits', 'public');
         }
 
-        // Remove image from validated data since it's not a database column
-        unset($validated['image']);
+        // Remove non-database fields from validated data
+        $selectedSalesIds = $validated['selected_sales'] ?? [];
+        unset($validated['image'], $validated['selected_sales']);
 
         $deposit = Deposit::create([
             ...$validated,
@@ -165,12 +184,17 @@ class DepositController extends Controller
             'created_by' => Auth::id(),
         ]);
 
+        // Attach selected sales to the deposit
+        if (!empty($selectedSalesIds)) {
+            $deposit->sales()->attach($selectedSalesIds);
+        }
+
         // Create corresponding transaction if bank account exists
         if ($deposit->bankAccount) {
             $deposit->bankAccount->transactions()->create([
-                'transaction_date' => $deposit->transaction_date,
+                'transaction_date' => $deposit->deposit_date,
                 'type' => 'credit',
-                'payment_mode' => $deposit->payment_mode,
+                'payment_mode' => $this->mapDepositTypeToPaymentMode($deposit->deposit_type),
                 'reference_number' => $deposit->reference_number,
                 'amount' => $deposit->amount,
                 'description' => $deposit->description,
@@ -185,10 +209,44 @@ class DepositController extends Controller
         return Redirect::route('deposits')->with('success', 'Deposit recorded successfully.');
     }
 
+    public function show(Deposit $deposit): Response
+    {
+        return Inertia::render('Deposits/Show', [
+            'deposit' => $deposit->load(['bankAccount', 'branch', 'shift', 'sales.branch', 'sales.shift']),
+        ]);
+    }
+
     public function edit(Deposit $deposit): Response
     {
+        // Get current sales associated with this deposit
+        $currentSales = $deposit->sales()->with(['branch', 'shift'])->get()->map(fn($sale) => [
+            'id' => $sale->id,
+            'sales_date' => $sale->sales_date->format('Y-m-d'),
+            'amount' => $sale->amount,
+            'cashier' => $sale->cashier,
+            'branch' => $sale->branch?->name,
+            'shift' => $sale->shift?->name,
+        ]);
+
+        // Get all sales for frontend filtering
+        $availableSales = Sale::with(['branch', 'shift'])
+            ->orderBy('sales_date', 'desc')
+            ->get()
+            ->map(fn($sale) => [
+                'id' => $sale->id,
+                'sales_date' => $sale->sales_date->format('Y-m-d'),
+                'amount' => $sale->amount,
+                'cashier' => $sale->cashier,
+                'branch' => $sale->branch?->name,
+                'shift' => $sale->shift?->name,
+                'is_deposited' => $sale->deposits()->exists(),
+                'current_deposit_id' => $sale->deposits()->where('deposit_id', $deposit->id)->exists() ? $deposit->id : null,
+            ]);
+
         return Inertia::render('Deposits/Edit', [
             'deposit' => $deposit->load(['bankAccount', 'branch', 'shift']),
+            'currentSales' => $currentSales,
+            'availableSales' => $availableSales,
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
                 'value' => $a->id,
                 'label' => $a->name
@@ -201,13 +259,13 @@ class DepositController extends Controller
                 'value' => $s->id,
                 'label' => $s->name
             ]),
-            'paymentModes' => [
-                ['value' => 'cash', 'label' => 'Cash'],
+            'depositTypes' => [
+                ['value' => 'cash_deposit', 'label' => 'Cash Deposit'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
-                ['value' => 'nafa', 'label' => 'NAFA'],
-                ['value' => 'wave', 'label' => 'Wave'],
-                ['value' => 'cheque', 'label' => 'Cheque'],
-                ['value' => 'sales', 'label' => 'Daily Sales'],
+                ['value' => 'nafa_deposit', 'label' => 'NAFA Deposit'],
+                ['value' => 'wave_deposit', 'label' => 'Wave Deposit'],
+                ['value' => 'cheque_deposit', 'label' => 'Cheque Deposit'],
+                ['value' => 'daily_sales_deposit', 'label' => 'Daily Sales Deposit'],
             ],
         ]);
     }
@@ -216,14 +274,19 @@ class DepositController extends Controller
     {
         $validated = $request->validate([
             'bank_account_id' => 'required|exists:bank_accounts,id',
-            'transaction_date' => 'required|date',
-            'payment_mode' => 'required|in:cash,bank_transfer,nafa,wave,cheque,sales',
+            'deposit_date' => 'required|date',
+            'deposit_type' => 'required|in:cash_deposit,bank_transfer,nafa_deposit,wave_deposit,cheque_deposit,daily_sales_deposit',
             'amount' => 'required|numeric|min:0.01',
             'branch_id' => 'nullable|exists:branches,id',
             'shift_id' => 'nullable|exists:shifts,id',
-            'reference_number' => 'nullable|string|max:255',
+            'reference_number' => 'required|string|max:255',
+            'depositor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+            'sales_to_add' => 'nullable|array',
+            'sales_to_add.*' => 'exists:sales,id',
+            'sales_to_remove' => 'nullable|array',
+            'sales_to_remove.*' => 'exists:sales,id',
         ]);
 
         // Handle file upload separately
@@ -235,10 +298,39 @@ class DepositController extends Controller
             $validated['image_path'] = $request->file('image')->store('deposits', 'public');
         }
 
-        // Remove image from validated data since it's not a database column
-        unset($validated['image']);
+        // Handle sales relationship changes
+        $salesToAdd = $validated['sales_to_add'] ?? [];
+        $salesToRemove = $validated['sales_to_remove'] ?? [];
+
+        // Remove non-database fields from validated data
+        unset($validated['image'], $validated['sales_to_add'], $validated['sales_to_remove']);
+
+        // If sales mode and sales are being modified, recalculate amount
+        if ($validated['deposit_type'] === 'daily_sales_deposit' && (!empty($salesToAdd) || !empty($salesToRemove))) {
+            // Get current sales associated with this deposit
+            $currentSalesIds = $deposit->sales()->pluck('sales.id')->toArray();
+
+            // Calculate new sales IDs after adding and removing
+            $newSalesIds = array_diff($currentSalesIds, $salesToRemove);
+            $newSalesIds = array_unique(array_merge($newSalesIds, $salesToAdd));
+
+            // Calculate total amount from new sales selection
+            if (!empty($newSalesIds)) {
+                $totalAmount = Sale::whereIn('id', $newSalesIds)->sum('amount');
+                $validated['amount'] = $totalAmount;
+            }
+        }
 
         $deposit->update($validated);
+
+        // Update sales relationships
+        if (!empty($salesToRemove)) {
+            $deposit->sales()->detach($salesToRemove);
+        }
+
+        if (!empty($salesToAdd)) {
+            $deposit->sales()->attach($salesToAdd);
+        }
 
         // Update corresponding transaction if bank account exists
         if ($deposit->bankAccount) {
@@ -249,8 +341,8 @@ class DepositController extends Controller
 
             if ($transaction) {
                 $transaction->update([
-                    'transaction_date' => $deposit->transaction_date,
-                    'payment_mode' => $deposit->payment_mode,
+                    'transaction_date' => $deposit->deposit_date,
+                    'payment_mode' => $this->mapDepositTypeToPaymentMode($deposit->deposit_type),
                     'reference_number' => $deposit->reference_number,
                     'amount' => $deposit->amount,
                     'description' => $deposit->description,
@@ -286,5 +378,22 @@ class DepositController extends Controller
         $deposit->delete();
 
         return Redirect::route('deposits')->with('success', 'Deposit deleted successfully.');
+    }
+
+    /**
+     * Map deposit type to transaction payment mode
+     */
+    private function mapDepositTypeToPaymentMode(string $depositType): string
+    {
+        $mapping = [
+            'cash_deposit' => 'cash',
+            'bank_transfer' => 'bank_transfer',
+            'nafa_deposit' => 'nafa',
+            'wave_deposit' => 'wave',
+            'cheque_deposit' => 'cheque',
+            'daily_sales_deposit' => 'sales',
+        ];
+
+        return $mapping[$depositType] ?? 'other';
     }
 }

@@ -20,7 +20,7 @@
         <div class="text-center">
           <div class="text-sm font-medium text-gray-500">Total Amount</div>
           <div class="text-2xl font-bold text-gray-900 mt-1">
-            {{ $formatAmount(expenseClaim.amount) }}
+            {{ $formatAmount(expenseClaim.total) }}
           </div>
         </div>
         <div class="text-center">
@@ -79,6 +79,34 @@
             </div>
 
             <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+              <input
+                v-model="form.title"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.title ? 'border-red-500' : ''"
+                placeholder="Brief title for the expense claim"
+                required
+              />
+              <div v-if="form.errors.title" class="mt-1 text-sm text-red-600">{{ form.errors.title }}</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                v-model="form.category"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.category ? 'border-red-500' : ''"
+              >
+                <option value="">Select Category</option>
+                <option v-for="category in categories" :key="category" :value="category">
+                  {{ category.replace('_', ' ').charAt(0).toUpperCase() + category.slice(1) }}
+                </option>
+              </select>
+              <div v-if="form.errors.category" class="mt-1 text-sm text-red-600">{{ form.errors.category }}</div>
+            </div>
+
+            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Payee *</label>
               <input
                 v-model="form.payee"
@@ -107,22 +135,6 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account *</label>
-              <select
-                v-model="form.bank_account_id"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.bank_account_id ? 'border-red-500' : ''"
-                required
-              >
-                <option value="">Select Account</option>
-                <option v-for="account in bankAccounts" :key="account.value" :value="account.value">
-                  {{ account.label }}
-                </option>
-              </select>
-              <div v-if="form.errors.bank_account_id" class="mt-1 text-sm text-red-600">{{ form.errors.bank_account_id }}</div>
-            </div>
-
-            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
               <select
                 v-model="form.branch_id"
@@ -135,6 +147,24 @@
                 </option>
               </select>
               <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">{{ form.errors.branch_id }}</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
+              <input
+                @input="form.receipt_image = $event.target.files[0]"
+                type="file"
+                accept="image/*"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.receipt_image ? 'border-red-500' : ''"
+              />
+              <div v-if="form.errors.receipt_image" class="mt-1 text-sm text-red-600">{{ form.errors.receipt_image }}</div>
+              <div v-if="expenseClaim.receipt_image_path" class="mt-2">
+                <button type="button" @click="showImage(expenseClaim.receipt_image_path)" class="text-sm text-blue-600 hover:text-blue-800">
+                  View current receipt
+                </button>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">Optional: Upload receipt or proof of expense</p>
             </div>
           </div>
 
@@ -154,37 +184,8 @@
               </button>
             </div>
 
-            <div v-for="(item, index) in form.items" :key="index" class="bg-gray-50 p-4 rounded-lg mb-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                  <input
-                    v-model="item.expense_date"
-                    type="date"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                    :class="form.errors['items.' + index + '.expense_date'] ? 'border-red-500' : ''"
-                    required
-                  />
-                  <div v-if="form.errors['items.' + index + '.expense_date']" class="mt-1 text-sm text-red-600">
-                    {{ form.errors['items.' + index + '.expense_date'] }}
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                  <input
-                    v-model="item.title"
-                    type="text"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                    :class="form.errors['items.' + index + '.title'] ? 'border-red-500' : ''"
-                    placeholder="Brief title for the expense"
-                    required
-                  />
-                  <div v-if="form.errors['items.' + index + '.title']" class="mt-1 text-sm text-red-600">
-                    {{ form.errors['items.' + index + '.title'] }}
-                  </div>
-                </div>
-
+            <div v-for="(item, index) in (form.items || [])" :key="index" class="bg-gray-50 p-4 rounded-lg mb-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                   <input
@@ -196,6 +197,26 @@
                   />
                   <div v-if="form.errors['items.' + index + '.description']" class="mt-1 text-sm text-red-600">
                     {{ form.errors['items.' + index + '.description'] }}
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-2 text-gray-500">GMD</span>
+                    <input
+                      v-model="item.unit_price"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                      :class="form.errors['items.' + index + '.unit_price'] ? 'border-red-500' : ''"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                  <div v-if="form.errors['items.' + index + '.unit_price']" class="mt-1 text-sm text-red-600">
+                    {{ form.errors['items.' + index + '.unit_price'] }}
                   </div>
                 </div>
 
@@ -216,63 +237,6 @@
                   </div>
                 </div>
 
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
-                  <div class="relative">
-                    <span class="absolute left-3 top-2 text-gray-500">GMD</span>
-                    <input
-                      v-model="item.amount"
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                      :class="form.errors['items.' + index + '.amount'] ? 'border-red-500' : ''"
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
-                  <div v-if="form.errors['items.' + index + '.amount']" class="mt-1 text-sm text-red-600">
-                    {{ form.errors['items.' + index + '.amount'] }}
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <select
-                    v-model="item.category"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                    :class="form.errors['items.' + index + '.category'] ? 'border-red-500' : ''"
-                  >
-                    <option value="">Select Category</option>
-                    <option v-for="category in categories" :key="category" :value="category">
-                      {{ category.replace('_', ' ').charAt(0).toUpperCase() + category.slice(1) }}
-                    </option>
-                  </select>
-                  <div v-if="form.errors['items.' + index + '.category']" class="mt-1 text-sm text-red-600">
-                    {{ form.errors['items.' + index + '.category'] }}
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
-                  <input
-                    @input="item.receipt_image = $event.target.files[0]"
-                    type="file"
-                    accept="image/*"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                    :class="form.errors['items.' + index + '.receipt_image'] ? 'border-red-500' : ''"
-                  />
-                  <div v-if="form.errors['items.' + index + '.receipt_image']" class="mt-1 text-sm text-red-600">
-                    {{ form.errors['items.' + index + '.receipt_image'] }}
-                  </div>
-                  <div v-if="item.receipt_image_path" class="mt-2">
-                    <button type="button" @click="showImage(item.receipt_image_path)" class="text-sm text-blue-600 hover:text-blue-800">
-                      View current receipt
-                    </button>
-                  </div>
-                  <p class="mt-1 text-sm text-gray-500">Optional: Upload new receipt or proof of expense</p>
-                </div>
-
                 <div class="flex items-end">
                   <button
                     type="button"
@@ -284,6 +248,21 @@
                     </svg>
                     Remove
                   </button>
+                </div>
+
+                <div class="col-span-2">
+                  <div class="text-sm font-medium text-gray-700">
+                    Item Total: <span class="text-brand-600">{{ $formatAmount((item.unit_price || 0) * (item.quantity || 1)) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Display -->
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <div class="text-right">
+                <div class="text-lg font-semibold text-gray-900">
+                  Total Amount: <span class="text-brand-600">{{ $formatAmount(calculateTotal()) }}</span>
                 </div>
               </div>
             </div>
@@ -340,10 +319,23 @@
       </form>
     </div>
 
-    <!-- Image Modal -->
-    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeImageModal">
-      <div class="max-w-4xl max-h-full p-4">
-        <img :src="`/storage/${selectedImage}`" class="max-w-full max-h-full rounded-lg" />
+        <!-- Image Modal -->
+    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" @click="closeImageModal">
+      <div class="relative w-1/2 h-4/5 flex items-center justify-center">
+        <img
+          :src="`/storage/${selectedImage}`"
+          alt="Receipt Image"
+          class="w-full h-full object-contain rounded-lg shadow-2xl"
+          @click.stop
+        />
+        <button
+          @click="closeImageModal"
+          class="absolute top-4 right-4 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -374,10 +366,6 @@ export default {
       type: Array,
       required: true,
     },
-    bankAccounts: {
-      type: Array,
-      required: true,
-    },
     branches: {
       type: Array,
       required: true,
@@ -389,21 +377,18 @@ export default {
       form: this.$inertia.form({
         reference_id: this.expenseClaim.reference_id,
         claim_date: this.expenseClaim.claim_date ? this.expenseClaim.claim_date.split('T')[0] : '',
+        title: this.expenseClaim.title || '',
+        category: this.expenseClaim.category || '',
         payee: this.expenseClaim.payee,
         expense_type: this.expenseClaim.expense_type,
-        bank_account_id: this.expenseClaim.bank_account_id,
         branch_id: this.expenseClaim.branch_id,
         notes: this.expenseClaim.notes,
-        items: this.expenseClaim.items.map(item => ({
+        receipt_image: null,
+        items: (this.expenseClaim.items || []).map(item => ({
           id: item.id,
-          expense_date: item.expense_date ? item.expense_date.split('T')[0] : '',
-          title: item.title || '',
-          description: item.description,
+          description: item.description || '',
+          unit_price: item.unit_price || 0,
           quantity: item.quantity || 1,
-          amount: item.amount,
-          category: item.category,
-          receipt_image: null,
-          receipt_image_path: item.receipt_image_path,
         })),
       }),
       showImageModal: false,
@@ -411,7 +396,7 @@ export default {
     }
   },
   methods: {
- 
+
     getStatusClass(status) {
       const classes = {
         'draft': 'bg-gray-100 text-gray-800',
@@ -426,18 +411,19 @@ export default {
       return status.charAt(0).toUpperCase() + status.slice(1);
     },
     addItem() {
+      if (!this.form.items) {
+        this.form.items = [];
+      }
       this.form.items.push({
-        expense_date: new Date().toISOString().split('T')[0],
-        title: '',
         description: '',
+        unit_price: 0,
         quantity: 1,
-        amount: '',
-        category: '',
-        receipt_image: null,
       });
     },
     removeItem(index) {
-      this.form.items.splice(index, 1);
+      if (this.form.items && this.form.items.length > index) {
+        this.form.items.splice(index, 1);
+      }
     },
     showImage(imagePath) {
       this.selectedImage = imagePath;
@@ -447,9 +433,12 @@ export default {
       this.showImageModal = false;
       this.selectedImage = null;
     },
+    calculateTotal() {
+      return (this.form.items || []).reduce((sum, item) => sum + (item.unit_price || 0) * (item.quantity || 1), 0);
+    },
     submit() {
       this.form.put(`/expense-claims/${this.expenseClaim.id}`, {
-        onSuccess: () => this.form.reset('items.*.receipt_image'),
+        onSuccess: () => this.form.reset('receipt_image'),
       });
     },
     destroy() {

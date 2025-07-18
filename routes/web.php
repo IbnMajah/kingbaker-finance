@@ -198,6 +198,9 @@ Route::middleware('auth')->group(function () {
     Route::post('deposits', [DepositController::class, 'store'])
         ->name('deposits.store');
 
+    Route::get('deposits/{deposit}', [DepositController::class, 'show'])
+        ->name('deposits.show');
+
     Route::get('deposits/{deposit}/edit', [DepositController::class, 'edit'])
         ->name('deposits.edit');
 
@@ -323,7 +326,9 @@ Route::middleware('auth')->group(function () {
         ->name('invoices.update');
 
     Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])
-        ->name('invoices.destroy');
+->name('invoices.destroy');
+Route::put('invoices/{invoice}/restore', [InvoiceController::class, 'restore'])
+->name('invoices.restore');
 
     Route::put('invoices/{invoice}/mark-as-sent', [InvoiceController::class, 'markAsSent'])
         ->name('invoices.mark-as-sent');
@@ -375,11 +380,7 @@ Route::middleware('auth')->group(function () {
     Route::post('expense-claims/{expenseClaim}/reject', [ExpenseClaimController::class, 'reject'])
         ->name('expense-claims.reject');
 
-    Route::get('expense-claims/{expenseClaim}/pay', [ExpenseClaimController::class, 'showPayForm'])
-        ->name('expense-claims.pay');
 
-    Route::post('expense-claims/{expenseClaim}/pay', [ExpenseClaimController::class, 'pay'])
-        ->name('expense-claims.process-payment');
 
     // Cheque Payments
     Route::get('cheque-payments', [ChequePaymentController::class, 'index'])

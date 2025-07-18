@@ -15,7 +15,7 @@ class BankAccountSeeder extends Seeder
     {
         $bankAccounts = [
             [
-                'name' => 'King Bakers Main Account',
+                'name' => 'King Baker Main Account',
                 'account_number' => '1001234567890',
                 'bank_name' => 'Ecobank Gambia',
                 'branch' => 'Kanifing Branch',
@@ -25,7 +25,7 @@ class BankAccountSeeder extends Seeder
                 'active' => true,
             ],
             [
-                'name' => 'King Bakers Savings',
+                'name' => 'King Baker Savings',
                 'account_number' => '2001234567891',
                 'bank_name' => 'Standard Chartered Bank Gambia',
                 'branch' => 'Banjul Branch',
@@ -45,7 +45,7 @@ class BankAccountSeeder extends Seeder
                 'active' => true,
             ],
             [
-                'name' => 'King Bakers USD Account',
+                'name' => 'King Baker USD Account',
                 'account_number' => '4001234567893',
                 'bank_name' => 'Guaranty Trust Bank Gambia',
                 'branch' => 'Serrekunda Branch',

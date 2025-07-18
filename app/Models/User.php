@@ -93,7 +93,7 @@ class User extends Authenticatable
 
     public function isDemoUser()
     {
-        return $this->email === 'admin@kingbakers.com';
+        return $this->email === 'admin@kingbaker.com';
     }
 
     public function hasRole($role)

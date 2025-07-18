@@ -13,19 +13,20 @@ class Deposit extends Model
 
     protected $fillable = [
         'bank_account_id',
-        'transaction_date',
-        'payment_mode',
+        'deposit_date',
+        'deposit_type',
         'amount',
         'branch_id',
         'shift_id',
         'reference_number',
         'description',
+        'depositor_name',
         'image_path',
         'created_by'
     ];
 
     protected $casts = [
-        'transaction_date' => 'date',
+        'deposit_date' => 'date',
         'amount' => 'decimal:2'
     ];
 
@@ -49,13 +50,18 @@ class Deposit extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function sales()
+    {
+        return $this->belongsToMany(Sale::class, 'deposit_sales');
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
                 $query->where('description', 'like', '%'.$search.'%')
                     ->orWhere('amount', 'like', '%'.$search.'%')
-                    ->orWhere('payment_mode', 'like', '%'.$search.'%')
+                    ->orWhere('deposit_type', 'like', '%'.$search.'%')
                     ->orWhere('reference_number', 'like', '%'.$search.'%');
             });
         })->when($filters['trashed'] ?? null, function ($query, $trashed) {

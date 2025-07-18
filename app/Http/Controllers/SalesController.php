@@ -68,6 +68,7 @@ class SalesController extends Controller
                 'id' => $sale->id,
                 'sales_date' => $sale->sales_date,
                 'amount' => $sale->amount,
+                'cashier' => $sale->cashier,
                 'branch' => $sale->branch ? [
                     'id' => $sale->branch->id,
                     'name' => $sale->branch->name,
@@ -110,6 +111,7 @@ class SalesController extends Controller
             'shift_id' => ['required', 'exists:shifts,id'],
             'sales_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0.01'],
+            'cashier' => ['nullable', 'string', 'max:255'],
         ]);
 
         Sale::create($validated);
@@ -126,6 +128,7 @@ class SalesController extends Controller
                 'shift_id' => $sale->shift_id,
                 'sales_date' => $sale->sales_date->format('Y-m-d'),
                 'amount' => $sale->amount,
+                'cashier' => $sale->cashier,
                 'branch' => $sale->branch,
                 'shift' => $sale->shift,
                 'deleted_at' => $sale->deleted_at,
@@ -150,6 +153,7 @@ class SalesController extends Controller
             'shift_id' => ['required', 'exists:shifts,id'],
             'sales_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0.01'],
+            'cashier' => ['nullable', 'string', 'max:255'],
         ]);
 
         $sale->update($validated);

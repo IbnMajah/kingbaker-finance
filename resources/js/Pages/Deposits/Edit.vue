@@ -22,17 +22,17 @@
           </div>
         </div>
         <div class="text-center">
-          <div class="text-sm font-medium text-gray-500">Payment Mode</div>
+          <div class="text-sm font-medium text-gray-500">Deposit Type</div>
           <div class="mt-1">
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {{ deposit.payment_mode?.replace('_', ' ').toUpperCase() }}
+              {{ deposit.deposit_type?.replace('_', ' ').toUpperCase() }}
             </span>
           </div>
         </div>
         <div class="text-center">
-          <div class="text-sm font-medium text-gray-500">Transaction Date</div>
+          <div class="text-sm font-medium text-gray-500">Deposit Date</div>
           <div class="text-sm text-gray-900 mt-1">
-            {{ $formatDate(deposit.transaction_date) }}
+            {{ $formatDate(deposit.deposit_date) }}
           </div>
         </div>
         <div class="text-center">
@@ -68,29 +68,29 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Date *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Deposit Date *</label>
               <input
-                v-model="form.transaction_date"
+                v-model="form.deposit_date"
                 type="date"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.transaction_date ? 'border-red-500' : ''"
+                :class="form.errors.deposit_date ? 'border-red-500' : ''"
               />
-              <div v-if="form.errors.transaction_date" class="mt-1 text-sm text-red-600">{{ form.errors.transaction_date }}</div>
+              <div v-if="form.errors.deposit_date" class="mt-1 text-sm text-red-600">{{ form.errors.deposit_date }}</div>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Deposit Type *</label>
               <select
-                v-model="form.payment_mode"
+                v-model="form.deposit_type"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.payment_mode ? 'border-red-500' : ''"
+                :class="form.errors.deposit_type ? 'border-red-500' : ''"
               >
-                <option value="">Select Payment Mode</option>
-                <option v-for="paymentMode in paymentModes" :key="paymentMode.value" :value="paymentMode.value">{{ paymentMode.label }}</option>
+                <option value="">Select Deposit Type</option>
+                <option v-for="depositType in depositTypes" :key="depositType.value" :value="depositType.value">{{ depositType.label }}</option>
               </select>
-              <div v-if="form.errors.payment_mode" class="mt-1 text-sm text-red-600">{{ form.errors.payment_mode }}</div>
+              <div v-if="form.errors.deposit_type" class="mt-1 text-sm text-red-600">{{ form.errors.deposit_type }}</div>
             </div>
 
             <div>
@@ -104,10 +104,14 @@
                   min="0.01"
                   class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
                   :class="form.errors.amount ? 'border-red-500' : ''"
+                  :readonly="form.deposit_type === 'daily_sales_deposit'"
                   placeholder="0.00"
                 />
               </div>
               <div v-if="form.errors.amount" class="mt-1 text-sm text-red-600">{{ form.errors.amount }}</div>
+              <div v-if="form.deposit_type === 'daily_sales_deposit'" class="mt-1 text-sm text-blue-600">
+                Amount will be calculated from associated sales
+              </div>
             </div>
           </div>
 
@@ -173,6 +177,19 @@
             </div>
           </div>
 
+          <!-- Depositor Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Depositor Name *</label>
+            <input
+              v-model="form.depositor_name"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+              :class="form.errors.depositor_name ? 'border-red-500' : ''"
+              placeholder="Name of person making the deposit"
+            />
+            <div v-if="form.errors.depositor_name" class="mt-1 text-sm text-red-600">{{ form.errors.depositor_name }}</div>
+          </div>
+
           <!-- Description -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -184,6 +201,121 @@
               placeholder="Optional: Add notes about this deposit"
             ></textarea>
             <div v-if="form.errors.description" class="mt-1 text-sm text-red-600">{{ form.errors.description }}</div>
+          </div>
+
+          <!-- Associated Sales Management -->
+          <div v-if="form.deposit_type === 'daily_sales_deposit'">
+            <div class="border-t pt-6">
+              <h3 class="text-md font-medium text-gray-900 mb-4">Associated Sales</h3>
+
+              <!-- Current Sales Table -->
+              <div v-if="filteredCurrentSales.length" class="mb-6">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Current Sales ({{ filteredCurrentSales.length }})</h4>
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sales Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cashier</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr v-for="sale in filteredCurrentSales" :key="sale.id">
+                        <td class="px-4 py-2 text-sm">{{ $formatDate(sale.sales_date) }}</td>
+                        <td class="px-4 py-2 text-sm font-medium">{{ $formatAmount(sale.amount) }}</td>
+                        <td class="px-4 py-2 text-sm">{{ sale.cashier || 'N/A' }}</td>
+                        <td class="px-4 py-2 text-sm">{{ sale.branch || 'N/A' }}</td>
+                        <td class="px-4 py-2 text-sm">{{ sale.shift || 'N/A' }}</td>
+                        <td class="px-4 py-2 text-sm">
+                          <button
+                            @click="removeSale(sale.id)"
+                            type="button"
+                            class="text-red-600 hover:text-red-800 text-xs font-medium"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-medium text-gray-700">Current Sales Total:</span>
+                      <span class="text-lg font-semibold text-gray-900">
+                        {{ $formatAmount(currentSalesTotal) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add Sales Section -->
+              <div v-if="filteredAvailableSales.length">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">
+                  Add Sales to Deposit ({{ filteredAvailableSales.length }} available)
+                </h4>
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <label class="flex items-center">
+                      <input
+                        type="checkbox"
+                        :checked="areAllAvailableSelected"
+                        @change="toggleSelectAllAvailable"
+                        class="rounded border-gray-300"
+                      />
+                      <span class="ml-2 text-sm font-medium text-gray-700">Select All Available</span>
+                    </label>
+                  </div>
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Select</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sales Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cashier</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr v-for="sale in filteredAvailableSales" :key="sale.id">
+                        <td class="px-4 py-2">
+                          <input
+                            type="checkbox"
+                            :value="parseInt(sale.id)"
+                            v-model="salesToAdd"
+                            class="rounded border-gray-300"
+                          />
+                        </td>
+                        <td class="px-4 py-2 text-sm">{{ $formatDate(sale.sales_date) }}</td>
+                        <td class="px-4 py-2 text-sm font-medium">{{ $formatAmount(sale.amount) }}</td>
+                        <td class="px-4 py-2 text-sm">{{ sale.cashier || 'N/A' }}</td>
+                        <td class="px-4 py-2 text-sm">{{ sale.branch || 'N/A' }}</td>
+                        <td class="px-4 py-2 text-sm">{{ sale.shift || 'N/A' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div v-if="salesToAdd.length" class="px-4 py-3 bg-blue-50 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-medium text-blue-700">
+                        Selected Sales ({{ salesToAdd.length }}):
+                      </span>
+                      <span class="text-lg font-semibold text-blue-900">
+                        {{ $formatAmount(selectedSalesTotal) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else-if="!filteredCurrentSales.length" class="text-sm text-gray-500">
+                No sales available to add to this deposit.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -224,10 +356,23 @@
       </form>
     </div>
 
-    <!-- Image Modal -->
-    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeImageModal">
-      <div class="max-w-4xl max-h-full p-4">
-        <img :src="`/storage/${deposit.image_path}`" class="max-w-full max-h-full rounded-lg" />
+        <!-- Image Modal -->
+    <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" @click="closeImageModal">
+      <div class="relative w-1/2 h-4/5 flex items-center justify-center">
+        <img
+          :src="`/storage/${deposit.image_path}`"
+          :alt="`Receipt for ${deposit.reference_number}`"
+          class="w-full h-full object-contain rounded-lg shadow-2xl"
+          @click.stop
+        />
+        <button
+          @click="closeImageModal"
+          class="absolute top-4 right-4 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -247,32 +392,89 @@ export default {
   layout: Layout,
   props: {
     deposit: Object,
+    currentSales: Array,
+    availableSales: Array,
     bankAccounts: Array,
     branches: Array,
     shifts: Array,
-    paymentModes: Array,
+    depositTypes: Array,
   },
   remember: 'form',
   data() {
     return {
       form: this.$inertia.form({
         bank_account_id: this.deposit.bank_account_id,
-        transaction_date: this.deposit.transaction_date ? this.deposit.transaction_date.split('T')[0] : '',
-        payment_mode: this.deposit.payment_mode,
+        deposit_date: this.deposit.deposit_date ? this.deposit.deposit_date.split('T')[0] : '',
+        deposit_type: this.deposit.deposit_type,
         amount: this.deposit.amount,
         branch_id: this.deposit.branch_id,
         shift_id: this.deposit.shift_id,
         reference_number: this.deposit.reference_number,
+        depositor_name: this.deposit.depositor_name,
         description: this.deposit.description,
         image: null,
       }),
       showImageModal: false,
+      salesToAdd: [],
+      salesToRemove: [],
     }
+  },
+  computed: {
+    // Filter current sales based on what hasn't been removed
+    filteredCurrentSales() {
+      return this.currentSales?.filter(sale => !this.salesToRemove.includes(sale.id)) || [];
+    },
+    // Filter available sales: not deposited OR being added, but not currently associated unless being removed
+    filteredAvailableSales() {
+      return this.availableSales?.filter(sale => {
+        // Include if not deposited at all
+        if (!sale.is_deposited) return true;
+        // Include if it's currently in this deposit and being removed
+        if (sale.current_deposit_id === this.deposit.id && this.salesToRemove.includes(sale.id)) return true;
+        // Exclude everything else (deposited in other deposits or currently in this deposit but not being removed)
+        return false;
+      }) || [];
+    },
+    currentSalesTotal() {
+      return this.filteredCurrentSales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    },
+    selectedSalesTotal() {
+      const selectedSales = this.filteredAvailableSales.filter(sale => this.salesToAdd.includes(parseInt(sale.id)));
+      return selectedSales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    },
+    areAllAvailableSelected() {
+      return this.filteredAvailableSales.length > 0 && this.salesToAdd.length === this.filteredAvailableSales.length;
+    },
+  },
+  watch: {
+    'form.deposit_type'(newType) {
+      if (newType === 'daily_sales_deposit') {
+        // When switching to sales mode, calculate amount from current sales
+        this.form.amount = this.currentSalesTotal + this.selectedSalesTotal;
+      }
+    },
+    selectedSalesTotal(newTotal) {
+      if (this.form.deposit_type === 'daily_sales_deposit') {
+        this.form.amount = this.currentSalesTotal + newTotal;
+      }
+    },
   },
   methods: {
     update() {
+      // Include sales changes in the form data
+      const formData = {
+        ...this.form.data(),
+        sales_to_add: this.salesToAdd,
+        sales_to_remove: this.salesToRemove,
+      };
+
       this.form.put(`/deposits/${this.deposit.id}`, {
-        onSuccess: () => this.form.reset('image'),
+        data: formData,
+        onSuccess: () => {
+          this.form.reset('image');
+          this.salesToAdd = [];
+          this.salesToRemove = [];
+        },
       })
     },
     destroy() {
@@ -285,6 +487,20 @@ export default {
     },
     closeImageModal() {
       this.showImageModal = false
+    },
+    removeSale(saleId) {
+      this.salesToRemove.push(saleId);
+      // Recalculate amount if in daily sales deposit mode
+      if (this.form.deposit_type === 'daily_sales_deposit') {
+        this.form.amount = this.currentSalesTotal + this.selectedSalesTotal;
+      }
+    },
+    toggleSelectAllAvailable() {
+      if (this.areAllAvailableSelected) {
+        this.salesToAdd = [];
+      } else {
+        this.salesToAdd = this.filteredAvailableSales.map(sale => parseInt(sale.id));
+      }
     },
   },
 }

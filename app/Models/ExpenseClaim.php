@@ -16,20 +16,22 @@ class ExpenseClaim extends Model
         'user_id',
         'reference_id',
         'claim_date',
-        'total_amount',
+        'title',
+        'category',
+        'receipt_image_path',
+        'total',
         'payee',
         'status',
         'expense_type',
         'notes',
         'approved_by',
         'transaction_id',
-        'bank_account_id',
         'branch_id',
     ];
 
     protected $casts = [
         'claim_date' => 'date',
-        'total_amount' => 'decimal:2',
+        'total' => 'decimal:2',
     ];
 
     public function user(): BelongsTo
@@ -47,11 +49,6 @@ class ExpenseClaim extends Model
         return $this->belongsTo(Transaction::class);
     }
 
-    public function bankAccount(): BelongsTo
-    {
-        return $this->belongsTo(BankAccount::class);
-    }
-
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
@@ -64,7 +61,9 @@ class ExpenseClaim extends Model
 
     public function updateTotalAmount(): void
     {
-        $this->total_amount = $this->items()->sum('amount');
+        $this->total = $this->items->sum(function ($item) {
+            return $item->unit_price * $item->quantity;
+        });
         $this->save();
     }
 }

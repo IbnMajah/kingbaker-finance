@@ -3,10 +3,26 @@
     <Head :title="`Print Invoice ${invoice.invoice_number}`" />
 
     <!-- Print Header -->
-    <div class="hidden print:block mb-4">
-      <button @click="printInvoice" class="no-print bg-brand-600 text-white px-4 py-2 rounded mb-4">
-        Print Invoice
-      </button>
+    <div class="no-print mb-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-800">Invoice Preview</h1>
+      <div class="space-x-2">
+        <button @click="printInvoice" :disabled="isPrinting" class="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 transition-colors duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg v-if="!isPrinting" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+          </svg>
+          <svg v-else class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isPrinting ? 'Opening Print Dialog...' : 'Print Invoice' }}
+        </button>
+        <Link :href="`/invoices/${invoice.id}`" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors duration-200 flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back to Invoice
+        </Link>
+      </div>
     </div>
 
     <!-- Invoice Document -->
@@ -15,13 +31,13 @@
       <div class="invoice-header mb-8">
         <div class="flex justify-between items-start">
           <div class="company-info">
-            <h1 class="text-3xl font-bold text-brand-600 mb-2">King Bakers</h1>
+            <h1 class="text-3xl font-bold text-brand-600 mb-2">King Baker</h1>
             <div class="text-gray-600">
               <p>Bakery & Confectionery</p>
               <p>123 Business Street</p>
               <p>Banjul, The Gambia</p>
               <p>Tel: +220 123 4567</p>
-              <p>Email: info@kingbakers.gm</p>
+              <p>Email: info@kingbaker.gm</p>
             </div>
           </div>
           <div class="invoice-title text-right">
@@ -144,7 +160,7 @@
             <div class="text-sm space-y-1 text-gray-600">
               <p>• Payment is due within 30 days of invoice date</p>
               <p>• All prices are in Gambian Dalasi (GMD)</p>
-              <p>• Goods remain property of King Bakers until paid in full</p>
+              <p>• Goods remain property of King Baker until paid in full</p>
             </div>
           </div>
           <div v-if="invoice.notes">
@@ -160,26 +176,47 @@
       <div class="invoice-footer text-center border-t-2 border-gray-200 pt-6">
         <div class="text-sm text-gray-600 space-y-1">
           <p class="font-semibold">Thank you for your business!</p>
-          <p>For any questions regarding this invoice, please contact us at info@kingbakers.gm or +220 123 4567</p>
-          <p class="text-xs">Generated on {{ $formatDate(new Date()) }} by {{ invoice.creator ? `${invoice.creator.first_name} ${invoice.creator.last_name}` : 'King Bakers Staff' }}</p>
+          <p>For any questions regarding this invoice, please contact us at info@kingbaker.gm or +220 123 4567</p>
+          <p class="text-xs">Generated on {{ $formatDate(new Date()) }} by {{ invoice.creator ? `${invoice.creator.first_name} ${invoice.creator.last_name}` : 'King Baker Staff' }}</p>
         </div>
       </div>
     </div>
 
     <!-- Print Actions (visible only on screen) -->
     <div class="no-print mt-8 text-center space-x-4">
-      <button @click="printInvoice" class="bg-brand-600 text-white px-6 py-3 rounded-md hover:bg-brand-700">
-        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button @click="printInvoice" :disabled="isPrinting" class="bg-brand-600 text-white px-6 py-3 rounded-md hover:bg-brand-700 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+        <svg v-if="!isPrinting" class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
         </svg>
-        Print Invoice
+        <svg v-else class="w-5 h-5 inline mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {{ isPrinting ? 'Opening Print Dialog...' : 'Print Invoice' }}
       </button>
-      <Link :href="`/invoices/${invoice.id}`" class="bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700">
+      <Link :href="`/invoices/${invoice.id}`" class="inline-block bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
         </svg>
         Back to Invoice
       </Link>
+    </div>
+
+    <!-- Print Instructions -->
+    <div class="no-print mt-4 text-center">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+        <div class="flex items-center justify-center mb-2">
+          <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-sm font-medium text-blue-800">Print Instructions</p>
+        </div>
+        <div class="text-xs text-blue-700 space-y-1">
+          <p>• Click the "Print Invoice" button above</p>
+          <p>• Use keyboard shortcut <kbd class="px-1 py-0.5 bg-blue-200 rounded text-xs">Ctrl+P</kbd></p>
+          <p>• Make sure to select the correct printer settings</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -199,18 +236,29 @@ export default {
       invoice: Object,
     remaining_amount: Number,
   },
+  data() {
+    return {
+      isPrinting: false,
+    }
+  },
   mounted() {
     // Auto-focus for immediate printing
     if (typeof window !== 'undefined') {
       window.focus()
       // Add keyboard shortcut for printing (Ctrl+P)
       document.addEventListener('keydown', this.handleKeydown)
+
+      // Add print event listeners for better UX
+      window.addEventListener('beforeprint', this.handleBeforePrint)
+      window.addEventListener('afterprint', this.handleAfterPrint)
     }
   },
   beforeUnmount() {
-    // Clean up event listener
+    // Clean up event listeners
     if (typeof document !== 'undefined') {
       document.removeEventListener('keydown', this.handleKeydown)
+      window.removeEventListener('beforeprint', this.handleBeforePrint)
+      window.removeEventListener('afterprint', this.handleAfterPrint)
     }
   },
   methods: {
@@ -260,8 +308,18 @@ export default {
     },
     printInvoice() {
       if (typeof window !== 'undefined' && window.print) {
-        window.print()
+        this.isPrinting = true
+        // Add a small delay to ensure the page is fully rendered
+        setTimeout(() => {
+          window.print()
+          // Reset printing state after a delay
+          setTimeout(() => {
+            this.isPrinting = false
+          }, 1000)
+        }, 100)
       } else {
+        // Fallback for environments where print is not available
+        alert('Print functionality is not available in this browser. Please use Ctrl+P or your browser\'s print menu.')
         console.error('Print functionality not available')
       }
     },
@@ -270,6 +328,14 @@ export default {
         e.preventDefault() // Prevent default browser print dialog
         this.printInvoice()
       }
+    },
+    handleBeforePrint() {
+      // You can add any pre-print logic here
+      console.log('Print dialog opened for invoice:', this.invoice.invoice_number)
+    },
+    handleAfterPrint() {
+      // You can add any post-print logic here
+      console.log('Print dialog closed for invoice:', this.invoice.invoice_number)
     },
   },
 }
@@ -320,12 +386,29 @@ export default {
   body {
     font-size: 12pt;
     line-height: 1.4;
+    color: #000 !important;
   }
 
   h1 { font-size: 24pt; }
   h2 { font-size: 20pt; }
   h3 { font-size: 16pt; }
   h4 { font-size: 14pt; }
+
+  /* Ensure colors print correctly */
+  .text-brand-600 { color: #2563eb !important; }
+  .text-gray-800 { color: #1f2937 !important; }
+  .text-gray-600 { color: #4b5563 !important; }
+  .text-green-600 { color: #059669 !important; }
+  .text-red-600 { color: #dc2626 !important; }
+  .text-blue-800 { color: #1e40af !important; }
+  .text-yellow-800 { color: #92400e !important; }
+
+  /* Print optimization */
+  .invoice-document {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 /* Screen-only styles */

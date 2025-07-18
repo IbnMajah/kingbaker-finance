@@ -82,10 +82,10 @@ class DashboardController extends Controller
             ]);
 
         // Pending Expense Claims
-        $pendingExpenseClaims = ExpenseClaim::where('status', 'pending')
+        $pendingExpenseClaims = ExpenseClaim::where('status', 'submitted')
             ->count();
-        $totalPendingExpenseAmount = ExpenseClaim::where('status', 'pending')
-            ->sum('total_amount');
+        $totalPendingExpenseAmount = ExpenseClaim::where('status', 'submitted')
+            ->sum('total');
 
         return Inertia::render('Dashboard/Index', [
             'summary' => [

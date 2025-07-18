@@ -113,6 +113,25 @@
                 {{ form.errors.amount }}
               </p>
             </div>
+
+            <!-- Cashier -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Cashier
+              </label>
+              <input
+                v-model="form.cashier"
+                type="text"
+                placeholder="Enter cashier name"
+                :class="[
+                  'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
+                  form.errors.cashier ? 'border-red-300' : 'border-gray-300'
+                ]"
+              />
+              <p v-if="form.errors.cashier" class="mt-1 text-sm text-red-600">
+                {{ form.errors.cashier }}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -172,6 +191,7 @@ export default {
         shift_id: '',
         sales_date: new Date().toISOString().split('T')[0],
         amount: '',
+        cashier: '',
       }),
     }
   },

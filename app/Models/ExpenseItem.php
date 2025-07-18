@@ -13,18 +13,13 @@ class ExpenseItem extends Model
 
     protected $fillable = [
         'expense_claim_id',
-        'expense_date',
         'description',
-        'amount',
-        'category',
-        'receipt_image_path',
-        'title',
+        'unit_price',
         'quantity',
     ];
 
     protected $casts = [
-        'expense_date' => 'date',
-        'amount' => 'decimal:2',
+        'unit_price' => 'decimal:2',
         'quantity' => 'integer',
     ];
 

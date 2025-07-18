@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\BankAccount;
+use App\Models\Bill;
 use App\Models\Branch;
 use App\Models\ChequePayment;
 use App\Models\Transaction;
+use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +25,7 @@ class ChequePaymentController extends Controller
     public function index(Request $request): Response
     {
         $query = ChequePayment::query()
-            ->with(['bankAccount', 'branch', 'creator'])
+            ->with(['bankAccount', 'branch', 'creator', 'vendor', 'bill'])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('payee', 'like', "%{$search}%")
@@ -91,6 +93,16 @@ class ChequePaymentController extends Controller
                     'id' => $payment->creator->id,
                     'name' => $payment->creator->first_name . ' ' . $payment->creator->last_name,
                 ] : null,
+                'vendor' => $payment->vendor ? [
+                    'id' => $payment->vendor->id,
+                    'name' => $payment->vendor->name,
+                ] : null,
+                'bill' => $payment->bill ? [
+                    'id' => $payment->bill->id,
+                    'reference' => $payment->bill->reference ?: "BILL-{$payment->bill->id}",
+                    'amount' => $payment->bill->amount,
+                ] : null,
+                'recurring_frequency' => $payment->recurring_frequency,
                 'created_at' => $payment->created_at,
             ]);
 
@@ -139,6 +151,18 @@ class ChequePaymentController extends Controller
                 'value' => $b->id,
                 'label' => $b->name
             ]),
+            'vendors' => Vendor::where('active', true)->orderBy('name')->get()->map(fn($v) => [
+                'value' => $v->id,
+                'label' => $v->name
+            ]),
+            'bills' => Bill::with('vendor')->whereIn('status', ['pending', 'partially_paid'])->orderBy('bill_date', 'desc')->get()->map(fn($b) => [
+                'value' => $b->id,
+                'label' => ($b->reference ?: "BILL-{$b->id}") . " - " . ($b->vendor->name ?? 'No Vendor') . " - " . number_format($b->amount, 2),
+                'vendor_id' => $b->vendor_id,
+                'amount' => $b->amount,
+                'due_date' => $b->due_date?->format('Y-m-d'),
+                'description' => $b->description,
+            ]),
             'paymentCategories' => [
                 ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
                 ['value' => 'recurring_bill', 'label' => 'Recurring Bill'],
@@ -154,6 +178,13 @@ class ChequePaymentController extends Controller
                 ['value' => 'nafa', 'label' => 'NAFA'],
                 ['value' => 'wave', 'label' => 'Wave'],
                 ['value' => 'other', 'label' => 'Other'],
+            ],
+            'recurringFrequencies' => [
+                ['value' => 'daily', 'label' => 'Daily'],
+                ['value' => 'weekly', 'label' => 'Weekly'],
+                ['value' => 'monthly', 'label' => 'Monthly'],
+                ['value' => 'quarterly', 'label' => 'Quarterly'],
+                ['value' => 'annually', 'label' => 'Annually'],
             ],
         ]);
     }
@@ -171,6 +202,9 @@ class ChequePaymentController extends Controller
             'payment_mode' => 'required|in:cheque,bank_transfer,cash,nafa,wave,other',
             'bank_account_id' => 'required|exists:bank_accounts,id',
             'branch_id' => 'nullable|exists:branches,id',
+            'vendor_id' => 'nullable|exists:vendors,id|required_if:payment_category,vendor_payment',
+            'bill_id' => 'nullable|exists:bills,id|required_if:payment_category,recurring_bill',
+            'recurring_frequency' => 'nullable|in:daily,weekly,monthly,quarterly,annually|required_if:payment_category,recurring_bill',
             'cheque_number' => 'nullable|string|max:255',
             'reference_number' => 'nullable|string|max:255',
             'description' => 'required|string',
@@ -255,7 +289,7 @@ class ChequePaymentController extends Controller
     public function edit(ChequePayment $chequePayment): Response
     {
         return Inertia::render('ChequePayments/Edit', [
-            'payment' => $chequePayment->load(['bankAccount', 'branch']),
+            'payment' => $chequePayment->load(['bankAccount', 'branch', 'vendor', 'bill']),
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
                 'value' => $a->id,
                 'label' => $a->name
@@ -263,6 +297,18 @@ class ChequePaymentController extends Controller
             'branches' => Branch::orderBy('name')->get()->map(fn($b) => [
                 'value' => $b->id,
                 'label' => $b->name
+            ]),
+            'vendors' => Vendor::where('active', true)->orderBy('name')->get()->map(fn($v) => [
+                'value' => $v->id,
+                'label' => $v->name
+            ]),
+            'bills' => Bill::with('vendor')->whereIn('status', ['pending', 'partially_paid'])->orderBy('bill_date', 'desc')->get()->map(fn($b) => [
+                'value' => $b->id,
+                'label' => ($b->reference ?: "BILL-{$b->id}") . " - " . ($b->vendor->name ?? 'No Vendor') . " - " . number_format($b->amount, 2),
+                'vendor_id' => $b->vendor_id,
+                'amount' => $b->amount,
+                'due_date' => $b->due_date?->format('Y-m-d'),
+                'description' => $b->description,
             ]),
             'paymentCategories' => [
                 ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
@@ -286,6 +332,13 @@ class ChequePaymentController extends Controller
                 ['value' => 'cleared', 'label' => 'Cleared'],
                 ['value' => 'cancelled', 'label' => 'Cancelled'],
             ],
+            'recurringFrequencies' => [
+                ['value' => 'daily', 'label' => 'Daily'],
+                ['value' => 'weekly', 'label' => 'Weekly'],
+                ['value' => 'monthly', 'label' => 'Monthly'],
+                ['value' => 'quarterly', 'label' => 'Quarterly'],
+                ['value' => 'annually', 'label' => 'Annually'],
+            ],
         ]);
     }
 
@@ -302,6 +355,9 @@ class ChequePaymentController extends Controller
             'payment_mode' => 'required|in:cheque,bank_transfer,cash,nafa,wave,other',
             'bank_account_id' => 'required|exists:bank_accounts,id',
             'branch_id' => 'nullable|exists:branches,id',
+            'vendor_id' => 'nullable|exists:vendors,id|required_if:payment_category,vendor_payment',
+            'bill_id' => 'nullable|exists:bills,id|required_if:payment_category,recurring_bill',
+            'recurring_frequency' => 'nullable|in:daily,weekly,monthly,quarterly,annually|required_if:payment_category,recurring_bill',
             'cheque_number' => 'nullable|string|max:255',
             'reference_number' => 'nullable|string|max:255',
             'description' => 'required|string',
