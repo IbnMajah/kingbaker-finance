@@ -340,7 +340,7 @@ Route::put('invoices/{invoice}/restore', [InvoiceController::class, 'restore'])
     Route::post('invoices/{invoice}/record-payment', [InvoiceController::class, 'recordPayment'])
         ->name('invoices.record-payment');
 
-    Route::patch('invoices/{invoice}/mark-as-paid', [InvoiceController::class, 'markAsPaid'])
+    Route::put('invoices/{invoice}/mark-as-paid', [InvoiceController::class, 'markAsPaid'])
         ->name('invoices.mark-as-paid');
 
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])
