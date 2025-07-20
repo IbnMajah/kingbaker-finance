@@ -216,14 +216,12 @@
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { router } from '@inertiajs/vue3'
-import { formatterMixin } from '@/Utils/formatters'
 
 export default {
   components: {
     Head,
     Link,
   },
-  mixins: [formatterMixin],
   layout: Layout,
   props: {
     invoice: Object,
@@ -305,15 +303,13 @@ export default {
     },
     markAsPaid() {
       this.processing = true
-      router.patch(`/invoices/${this.invoice.id}`, {
-        status: 'paid',
-        amount_paid: this.invoice.amount
-      }, {
+      router.put(`/invoices/${this.invoice.id}/mark-as-paid`, {}, {
         onSuccess: () => {
           // Page will refresh with updated data
         },
-        onError: () => {
-          // Handle error
+        onError: (errors) => {
+          console.error('Error marking invoice as paid:', errors)
+          alert('Error marking invoice as paid. Please try again.')
         },
         onFinish: () => {
           this.processing = false
