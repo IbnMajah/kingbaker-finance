@@ -37,12 +37,18 @@ class ExpenseClaimController extends Controller
             ->when($request->input('status'), function ($query, $status) {
                 $query->where('status', $status);
             })
+            ->when($request->input('category'), function ($query, $category) {
+                $query->where('category', $category);
+            })
+            ->when($request->input('expense_type'), function ($query, $expenseType) {
+                $query->where('expense_type', $expenseType);
+            })
             ->latest();
 
         $claims = $query->paginate(10);
 
         return Inertia::render('ExpenseClaims/Index', [
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status', 'category', 'expense_type']),
             'claims' => [
                 'data' => collect($claims->items())->map(function ($claim) {
                     return [
@@ -51,6 +57,7 @@ class ExpenseClaimController extends Controller
                         'claim_date' => $claim->claim_date,
                         'title' => $claim->title,
                         'category' => $claim->category,
+                        'expense_type' => $claim->expense_type,
                         'payee' => $claim->payee,
                         'description' => $claim->notes,
                         'total' => $claim->total,
@@ -89,6 +96,19 @@ class ExpenseClaimController extends Controller
             'activeClaims' => ExpenseClaim::where('status', 'active')->count(),
             'cancelledClaims' => ExpenseClaim::where('status', 'cancelled')->count(),
             'totalAmount' => ExpenseClaim::sum('total'),
+            'categories' => [
+                'office_supplies' => 'Office Supplies',
+                'travel' => 'Travel',
+                'meals' => 'Meals',
+                'utilities' => 'Utilities',
+                'maintenance' => 'Maintenance',
+                'other' => 'Other'
+            ],
+            'expenseTypes' => [
+                'petty_cash' => 'Petty Cash',
+                'cash_on_hand' => 'Cash on Hand',
+                'other' => 'Other'
+            ],
         ]);
     }
 
