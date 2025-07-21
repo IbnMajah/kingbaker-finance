@@ -22,7 +22,7 @@ class Transaction extends Model
         'amount',
         'description',
         'branch_id',
-        'shift_id',
+
         'category',
         'image_path',
         'created_by',
@@ -45,10 +45,7 @@ class Transaction extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function shift(): BelongsTo
-    {
-        return $this->belongsTo(Shift::class);
-    }
+
 
     public function creator(): BelongsTo
     {

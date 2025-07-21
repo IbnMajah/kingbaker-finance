@@ -115,7 +115,7 @@
             </div>
           </div>
 
-          <!-- Branch and Shift Information -->
+          <!-- Branch Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
@@ -128,19 +128,6 @@
                 <option v-for="branch in branches" :key="branch.value" :value="branch.value">{{ branch.label }}</option>
               </select>
               <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">{{ form.errors.branch_id }}</div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Shift</label>
-              <select
-                v-model="form.shift_id"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.shift_id ? 'border-red-500' : ''"
-              >
-                <option value="">Select Shift</option>
-                <option v-for="shift in shifts" :key="shift.value" :value="shift.value">{{ shift.label }}</option>
-              </select>
-              <div v-if="form.errors.shift_id" class="mt-1 text-sm text-red-600">{{ form.errors.shift_id }}</div>
             </div>
           </div>
 
@@ -396,7 +383,7 @@ export default {
     availableSales: Array,
     bankAccounts: Array,
     branches: Array,
-    shifts: Array,
+
     depositTypes: Array,
   },
   remember: 'form',
@@ -408,7 +395,7 @@ export default {
         deposit_type: this.deposit.deposit_type,
         amount: this.deposit.amount,
         branch_id: this.deposit.branch_id,
-        shift_id: this.deposit.shift_id,
+
         reference_number: this.deposit.reference_number,
         depositor_name: this.deposit.depositor_name,
         description: this.deposit.description,

@@ -245,6 +245,9 @@ Route::middleware('auth')->group(function () {
     Route::post('transactions', [TransactionController::class, 'store'])
         ->name('transactions.store');
 
+    Route::get('transactions/{transaction}', [TransactionController::class, 'show'])
+        ->name('transactions.show');
+
     Route::get('transactions/{transaction}/edit', [TransactionController::class, 'edit'])
         ->name('transactions.edit');
 
@@ -257,7 +260,8 @@ Route::middleware('auth')->group(function () {
     Route::put('transactions/{transaction}/reconcile', [TransactionController::class, 'reconcile'])
         ->name('transactions.reconcile');
 
-    Route::put('transactions/{transaction}/unreconcile', [TransactionController::class, 'unreconcile']);
+    Route::put('transactions/{transaction}/unreconcile', [TransactionController::class, 'unreconcile'])
+        ->name('transactions.unreconcile');
 
     // Vendors
     Route::get('vendors', [VendorController::class, 'index'])
@@ -371,14 +375,7 @@ Route::put('invoices/{invoice}/restore', [InvoiceController::class, 'restore'])
     Route::delete('expense-claims/{expenseClaim}', [ExpenseClaimController::class, 'destroy'])
         ->name('expense-claims.destroy');
 
-    Route::post('expense-claims/{expenseClaim}/submit', [ExpenseClaimController::class, 'submit'])
-        ->name('expense-claims.submit');
 
-    Route::post('expense-claims/{expenseClaim}/approve', [ExpenseClaimController::class, 'approve'])
-        ->name('expense-claims.approve');
-
-    Route::post('expense-claims/{expenseClaim}/reject', [ExpenseClaimController::class, 'reject'])
-        ->name('expense-claims.reject');
 
 
 

@@ -17,17 +17,18 @@ class Deposit extends Model
         'deposit_type',
         'amount',
         'branch_id',
-        'shift_id',
         'reference_number',
         'description',
         'depositor_name',
         'image_path',
+        'attachments',
         'created_by'
     ];
 
     protected $casts = [
         'deposit_date' => 'date',
-        'amount' => 'decimal:2'
+        'amount' => 'decimal:2',
+        'attachments' => 'array'
     ];
 
     public function bankAccount(): BelongsTo
@@ -40,10 +41,7 @@ class Deposit extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function shift(): BelongsTo
-    {
-        return $this->belongsTo(Shift::class);
-    }
+
 
     public function creator(): BelongsTo
     {

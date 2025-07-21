@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\BankAccount;
 use App\Models\Branch;
-use App\Models\Shift;
 use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +21,7 @@ class TransactionController extends Controller
     public function index(Request $request): Response
     {
         $query = Transaction::query()
-            ->with(['bankAccount', 'branch', 'shift', 'creator'])
+            ->with(['bankAccount', 'branch', 'creator'])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('description', 'like', "%{$search}%")
@@ -66,10 +65,7 @@ class TransactionController extends Controller
                     'id' => $transaction->branch->id,
                     'name' => $transaction->branch->name,
                 ] : null,
-                'shift' => $transaction->shift ? [
-                    'id' => $transaction->shift->id,
-                    'name' => $transaction->shift->name,
-                ] : null,
+
                 'creator' => $transaction->creator ? [
                     'id' => $transaction->creator->id,
                     'name' => $transaction->creator->name,
@@ -124,12 +120,10 @@ class TransactionController extends Controller
     {
         $bankAccounts = BankAccount::where('active', true)->orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
-        $shifts = Shift::all();
 
         return Inertia::render('Transactions/Create', [
             'bankAccounts' => $bankAccounts,
             'branches' => $branches,
-            'shifts' => $shifts,
             'paymentTypes' => ['credit', 'debit'],
             'paymentModes' => ['cash', 'cheque', 'bank_transfer', 'nafa', 'wave', 'other'],
             'categories' => [
@@ -158,7 +152,6 @@ class TransactionController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string',
             'branch_id' => 'nullable|exists:branches,id',
-            'shift_id' => 'nullable|exists:shifts,id',
             'category' => 'nullable|string|max:255',
             'receipt_image' => 'nullable|image|max:2048',
         ]);
@@ -182,7 +175,7 @@ class TransactionController extends Controller
      */
     public function show(Transaction $transaction): Response
     {
-        $transaction->load(['bankAccount', 'branch', 'shift', 'creator']);
+        $transaction->load(['bankAccount', 'branch', 'creator']);
 
         return Inertia::render('Transactions/Show', [
             'transaction' => $transaction,
@@ -196,13 +189,11 @@ class TransactionController extends Controller
     {
         $bankAccounts = BankAccount::where('active', true)->orderBy('name')->get();
         $branches = Branch::orderBy('name')->get();
-        $shifts = Shift::all();
 
         return Inertia::render('Transactions/Edit', [
             'transaction' => $transaction,
             'bankAccounts' => $bankAccounts,
             'branches' => $branches,
-            'shifts' => $shifts,
             'paymentTypes' => ['credit', 'debit'],
             'paymentModes' => ['cash', 'cheque', 'bank_transfer', 'nafa', 'wave', 'other'],
             'categories' => [
@@ -231,7 +222,6 @@ class TransactionController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string',
             'branch_id' => 'nullable|exists:branches,id',
-            'shift_id' => 'nullable|exists:shifts,id',
             'category' => 'nullable|string|max:255',
             'receipt_image' => 'nullable|image|max:2048',
         ]);
