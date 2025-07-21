@@ -12,7 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First update any existing claims with approval statuses to 'active'
+        // First, temporarily modify the column to allow all values
+        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'");
+
+        // Update any existing claims with approval statuses to 'active'
         DB::table('expense_claims')
             ->whereIn('status', ['submitted', 'approved', 'paid'])
             ->update(['status' => 'active']);
@@ -21,7 +24,7 @@ return new class extends Migration
             ->where('status', 'rejected')
             ->update(['status' => 'cancelled']);
 
-        // Modify the status enum to only include: draft, active, cancelled
+        // Now modify the status enum to only include: draft, active, cancelled
         DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status ENUM('draft', 'active', 'cancelled') DEFAULT 'active'");
 
         // Remove approval-related columns
