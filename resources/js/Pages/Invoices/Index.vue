@@ -220,6 +220,9 @@
                 <span v-else-if="invoice.status === 'overdue'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   Overdue
                 </span>
+                <span v-else-if="invoice.status === 'partially_paid'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Partially Paid
+                </span>
                 <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                   {{ invoice.status || 'Unknown' }}
                 </span>

@@ -24,7 +24,6 @@ class ExpenseClaim extends Model
         'status',
         'expense_type',
         'notes',
-        'approved_by',
         'transaction_id',
         'branch_id',
     ];
@@ -39,10 +38,7 @@ class ExpenseClaim extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function approver(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
+
 
     public function transaction(): BelongsTo
     {

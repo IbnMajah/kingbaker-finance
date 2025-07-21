@@ -26,7 +26,7 @@ class ExpenseClaimController extends Controller
     public function index(Request $request): Response
     {
         $query = ExpenseClaim::query()
-            ->with(['user', 'approver', 'transaction', 'transaction.bankAccount', 'items'])
+            ->with(['user', 'transaction', 'transaction.bankAccount', 'items'])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('reference_id', 'like', "%{$search}%")
@@ -64,10 +64,7 @@ class ExpenseClaimController extends Controller
                             'first_name' => $claim->user->first_name,
                             'last_name' => $claim->user->last_name,
                         ] : null,
-                        'approver' => $claim->approver ? [
-                            'id' => $claim->approver->id,
-                            'name' => $claim->approver->name,
-                        ] : null,
+
                         'transaction' => $claim->transaction ? [
                             'id' => $claim->transaction->id,
                             'reference_number' => $claim->transaction->reference_number,
@@ -88,8 +85,9 @@ class ExpenseClaimController extends Controller
                 'next_page_url' => $claims->nextPageUrl(),
             ],
             'totalClaims' => ExpenseClaim::count(),
-            'pendingClaims' => ExpenseClaim::where('status', 'submitted')->count(),
-            'approvedClaims' => ExpenseClaim::where('status', 'approved')->count(),
+            'draftClaims' => ExpenseClaim::where('status', 'draft')->count(),
+            'activeClaims' => ExpenseClaim::where('status', 'active')->count(),
+            'cancelledClaims' => ExpenseClaim::where('status', 'cancelled')->count(),
             'totalAmount' => ExpenseClaim::sum('total'),
         ]);
     }
@@ -142,7 +140,7 @@ class ExpenseClaimController extends Controller
                 'title' => $validated['title'],
                 'category' => $validated['category'],
                 'receipt_image_path' => $receiptPath,
-                'status' => 'draft',
+                'status' => 'active',
                 'expense_type' => $validated['expense_type'],
                 'branch_id' => $validated['branch_id'],
                 'payee' => $validated['payee'],
@@ -176,7 +174,7 @@ class ExpenseClaimController extends Controller
      */
     public function show(ExpenseClaim $expenseClaim): Response
     {
-        $expenseClaim->load(['user', 'approver', 'transaction', 'transaction.bankAccount', 'items', 'branch']);
+        $expenseClaim->load(['user', 'transaction', 'transaction.bankAccount', 'items', 'branch']);
 
         return Inertia::render('ExpenseClaims/Show', [
             'expenseClaim' => [
@@ -200,10 +198,7 @@ class ExpenseClaimController extends Controller
                     'first_name' => $expenseClaim->user->first_name,
                     'last_name' => $expenseClaim->user->last_name,
                 ] : null,
-                'approver' => $expenseClaim->approver ? [
-                    'id' => $expenseClaim->approver->id,
-                    'name' => $expenseClaim->approver->name,
-                ] : null,
+
                 'transaction' => $expenseClaim->transaction ? [
                     'id' => $expenseClaim->transaction->id,
                     'reference_number' => $expenseClaim->transaction->reference_number,
@@ -336,63 +331,6 @@ class ExpenseClaimController extends Controller
         }
     }
 
-    /**
-     * Submit the expense claim for approval.
-     */
-    public function submit(ExpenseClaim $expenseClaim): RedirectResponse
-    {
-        if ($expenseClaim->status !== 'draft') {
-            return Redirect::back()->with('error', 'Only draft expense claims can be submitted.');
-        }
-
-        $expenseClaim->update([
-            'status' => 'submitted',
-        ]);
-
-        return Redirect::route('expense-claims')->with('success', 'Expense claim submitted for approval.');
-    }
-
-    /**
-     * Approve the expense claim.
-     */
-    public function approve(ExpenseClaim $expenseClaim): RedirectResponse
-    {
-        if ($expenseClaim->status !== 'submitted') {
-            return Redirect::back()->with('error', 'Only submitted expense claims can be approved.');
-        }
-
-        $expenseClaim->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id(),
-        ]);
-
-        return Redirect::route('expense-claims')->with('success', 'Expense claim approved.');
-    }
-
-    /**
-     * Reject the expense claim.
-     */
-    public function reject(Request $request, ExpenseClaim $expenseClaim): RedirectResponse
-    {
-        if ($expenseClaim->status !== 'submitted') {
-            return Redirect::back()->with('error', 'Only submitted expense claims can be rejected.');
-        }
-
-        $validated = $request->validate([
-            'rejection_reason' => 'required|string',
-        ]);
-
-        $notes = $expenseClaim->notes ?? '';
-        $notes .= "\n\nRejection Reason: " . $validated['rejection_reason'];
-
-        $expenseClaim->update([
-            'status' => 'rejected',
-            'notes' => $notes,
-        ]);
-
-        return Redirect::route('expense-claims')->with('success', 'Expense claim rejected.');
-    }
-
 
 
     /**
@@ -400,8 +338,8 @@ class ExpenseClaimController extends Controller
      */
     public function destroy(ExpenseClaim $expenseClaim): RedirectResponse
     {
-        if ($expenseClaim->status !== 'draft' && $expenseClaim->status !== 'rejected') {
-            return Redirect::back()->with('error', 'Only draft or rejected expense claims can be deleted.');
+        if ($expenseClaim->status !== 'draft' && $expenseClaim->status !== 'cancelled') {
+            return Redirect::back()->with('error', 'Only draft or cancelled expense claims can be deleted.');
         }
 
         // Delete receipt image if it exists

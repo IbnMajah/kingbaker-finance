@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\BankAccount;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -193,7 +195,7 @@ class InvoiceController extends Controller
             'customer_address' => 'nullable|string',
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'nullable|numeric|min:0', // Amount will be calculated from items
             'invoice_type' => 'required|in:bulk_sales,credit_customer,loans,daily_supply,partner_billing,other',
             'customer_type' => 'required|in:individual,shop,partner,branch,hotel,other',
             'description' => 'nullable|string',
@@ -205,6 +207,10 @@ class InvoiceController extends Controller
             'recurring_frequency' => 'nullable|required_if:is_recurring,true|in:monthly,quarterly,annually',
             'next_invoice_date' => 'nullable|date|after:invoice_date',
             'attachment' => 'nullable|file|max:2048',
+            'items' => 'required|array|min:1',
+            'items.*.description' => 'required|string|max:255',
+            'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         // Generate invoice number if not provided
@@ -220,16 +226,34 @@ class InvoiceController extends Controller
             $attachmentPath = $request->file('attachment')->store('invoices', 'public');
         }
 
-        // Remove attachment from validated data since it's not a database column
-        unset($validated['attachment']);
+        // Remove attachment and items from validated data since they're not invoice columns
+        $items = $validated['items'];
+        unset($validated['attachment'], $validated['items']);
+
+        // Calculate total amount from items
+        $totalAmount = 0;
+        foreach ($items as $item) {
+            $totalAmount += $item['unit_price'] * $item['quantity'];
+        }
 
         $invoice = Invoice::create([
             ...$validated,
+            'amount' => $totalAmount,
             'status' => 'draft',
             'amount_paid' => 0,
             'attachment_path' => $attachmentPath,
             'created_by' => Auth::id(),
         ]);
+
+        // Create invoice items
+        foreach ($items as $item) {
+            $invoice->items()->create([
+                'description' => $item['description'],
+                'unit_price' => $item['unit_price'],
+                'quantity' => $item['quantity'],
+                'total' => $item['unit_price'] * $item['quantity'],
+            ]);
+        }
 
         return Redirect::route('invoices')->with('success', 'Invoice created successfully.');
     }
@@ -239,7 +263,7 @@ class InvoiceController extends Controller
      */
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['bankAccount', 'branch', 'creator']);
+        $invoice->load(['bankAccount', 'branch', 'creator', 'items', 'payments']);
 
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice,
@@ -251,7 +275,7 @@ class InvoiceController extends Controller
      */
     public function edit(Invoice $invoice): Response
     {
-        $invoice->load(['bankAccount', 'branch', 'payments']);
+        $invoice->load(['bankAccount', 'branch', 'payments', 'items']);
 
         return Inertia::render('Invoices/Edit', [
             'invoice' => [
@@ -279,6 +303,13 @@ class InvoiceController extends Controller
                 'bankAccount' => $invoice->bankAccount,
                 'branch' => $invoice->branch,
                 'payments' => $invoice->payments,
+                'items' => $invoice->items->map(fn($item) => [
+                    'id' => $item->id,
+                    'description' => $item->description,
+                    'unit_price' => $item->unit_price,
+                    'quantity' => $item->quantity,
+                    'total' => $item->total,
+                ]),
                 'created_at' => $invoice->created_at,
                 'updated_at' => $invoice->updated_at,
                 'deleted_at' => $invoice->deleted_at,
@@ -328,7 +359,6 @@ class InvoiceController extends Controller
             'customer_address' => 'nullable|string',
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
-            'amount' => 'required|numeric|min:0.01',
             'invoice_type' => 'required|in:bulk_sales,credit_customer,loans,daily_supply,partner_billing,other',
             'customer_type' => 'required|in:individual,shop,partner,branch,hotel,other',
             'description' => 'nullable|string',
@@ -340,6 +370,11 @@ class InvoiceController extends Controller
             'recurring_frequency' => 'nullable|required_if:is_recurring,true|in:monthly,quarterly,annually',
             'next_invoice_date' => 'nullable|date|after:invoice_date',
             'attachment' => 'nullable|file|max:2048',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'nullable|exists:invoice_items,id',
+            'items.*.description' => 'required|string|max:255',
+            'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         // Handle file upload separately
@@ -351,10 +386,31 @@ class InvoiceController extends Controller
             $validated['attachment_path'] = $request->file('attachment')->store('invoices', 'public');
         }
 
-        // Remove attachment from validated data since it's not a database column
-        unset($validated['attachment']);
+        // Remove attachment and items from validated data since they're not invoice columns
+        $items = $validated['items'];
+        unset($validated['attachment'], $validated['items']);
 
-        $invoice->update($validated);
+        // Calculate total amount from items
+        $totalAmount = 0;
+        foreach ($items as $item) {
+            $totalAmount += $item['unit_price'] * $item['quantity'];
+        }
+
+        $invoice->update([
+            ...$validated,
+            'amount' => $totalAmount,
+        ]);
+
+        // Update items - delete old ones and create new ones
+        $invoice->items()->delete();
+        foreach ($items as $item) {
+            $invoice->items()->create([
+                'description' => $item['description'],
+                'unit_price' => $item['unit_price'],
+                'quantity' => $item['quantity'],
+                'total' => $item['unit_price'] * $item['quantity'],
+            ]);
+        }
 
         // Update status in case amount changed
         $invoice->updateStatus();
@@ -532,4 +588,5 @@ class InvoiceController extends Controller
 
         return Redirect::route('invoices')->with('success', 'Invoice restored successfully.');
     }
+
 }

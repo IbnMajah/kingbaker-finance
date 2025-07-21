@@ -6,7 +6,6 @@ use App\Models\BankAccount;
 use App\Models\Branch;
 use App\Models\Deposit;
 use App\Models\Sale;
-use App\Models\Shift;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +19,7 @@ class DepositController extends Controller
     public function index(Request $request): Response
     {
         $query = Deposit::query()
-            ->with(['bankAccount', 'branch', 'shift', 'creator'])
+            ->with(['bankAccount', 'branch', 'creator'])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('description', 'like', "%{$search}%")
@@ -75,10 +74,7 @@ class DepositController extends Controller
                     'id' => $deposit->branch->id,
                     'name' => $deposit->branch->name,
                 ] : null,
-                'shift' => $deposit->shift ? [
-                    'id' => $deposit->shift->id,
-                    'name' => $deposit->shift->name,
-                ] : null,
+
                 'creator' => $deposit->creator ? [
                     'id' => $deposit->creator->id,
                     'name' => $deposit->creator->first_name . ' ' . $deposit->creator->last_name,
@@ -129,10 +125,7 @@ class DepositController extends Controller
                 'value' => $b->id,
                 'label' => $b->name
             ]),
-            'shifts' => Shift::all()->map(fn($s) => [
-                'value' => $s->id,
-                'label' => $s->name
-            ]),
+
             'availableSales' => $availableSales,
             'depositTypes' => [
                 ['value' => 'cash_deposit', 'label' => 'Cash Deposit'],
@@ -153,11 +146,13 @@ class DepositController extends Controller
             'deposit_type' => 'required|in:cash_deposit,bank_transfer,nafa_deposit,wave_deposit,cheque_deposit,daily_sales_deposit',
             'amount' => 'required|numeric|min:0.01',
             'branch_id' => 'nullable|exists:branches,id',
-            'shift_id' => 'nullable|exists:shifts,id',
+
             'reference_number' => 'required|string|max:255',
             'depositor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|mimes:jpeg,jpg,png,pdf|max:2048',
             'selected_sales' => 'nullable|array',
             'selected_sales.*' => 'exists:sales,id',
         ]);
@@ -168,19 +163,34 @@ class DepositController extends Controller
             $validated['amount'] = $selectedSales->sum('amount');
         }
 
-        // Handle file upload separately
+        // Handle file uploads separately
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('deposits', 'public');
         }
 
+        // Handle multiple attachments
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('deposits/attachments', 'public');
+                $attachments[] = [
+                    'filename' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'type' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                ];
+            }
+        }
+
         // Remove non-database fields from validated data
         $selectedSalesIds = $validated['selected_sales'] ?? [];
-        unset($validated['image'], $validated['selected_sales']);
+        unset($validated['image'], $validated['attachments'], $validated['selected_sales']);
 
         $deposit = Deposit::create([
             ...$validated,
             'image_path' => $imagePath,
+            'attachments' => $attachments,
             'created_by' => Auth::id(),
         ]);
 
@@ -197,9 +207,8 @@ class DepositController extends Controller
                 'payment_mode' => $this->mapDepositTypeToPaymentMode($deposit->deposit_type),
                 'reference_number' => $deposit->reference_number,
                 'amount' => $deposit->amount,
-                'description' => $deposit->description,
+                'description' => 'Deposit of ' . $deposit->reference_number . ' to ' . $deposit->bankAccount->name,
                 'branch_id' => $deposit->branch_id,
-                'shift_id' => $deposit->shift_id,
                 'category' => 'deposit',
                 'image_path' => $deposit->image_path,
                 'created_by' => $deposit->created_by,
@@ -212,7 +221,7 @@ class DepositController extends Controller
     public function show(Deposit $deposit): Response
     {
         return Inertia::render('Deposits/Show', [
-            'deposit' => $deposit->load(['bankAccount', 'branch', 'shift', 'sales.branch', 'sales.shift']),
+            'deposit' => $deposit->load(['bankAccount', 'branch', 'sales.branch']),
         ]);
     }
 
@@ -244,7 +253,7 @@ class DepositController extends Controller
             ]);
 
         return Inertia::render('Deposits/Edit', [
-            'deposit' => $deposit->load(['bankAccount', 'branch', 'shift']),
+            'deposit' => $deposit->load(['bankAccount', 'branch']),
             'currentSales' => $currentSales,
             'availableSales' => $availableSales,
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
@@ -255,10 +264,7 @@ class DepositController extends Controller
                 'value' => $b->id,
                 'label' => $b->name
             ]),
-            'shifts' => Shift::all()->map(fn($s) => [
-                'value' => $s->id,
-                'label' => $s->name
-            ]),
+
             'depositTypes' => [
                 ['value' => 'cash_deposit', 'label' => 'Cash Deposit'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -278,18 +284,22 @@ class DepositController extends Controller
             'deposit_type' => 'required|in:cash_deposit,bank_transfer,nafa_deposit,wave_deposit,cheque_deposit,daily_sales_deposit',
             'amount' => 'required|numeric|min:0.01',
             'branch_id' => 'nullable|exists:branches,id',
-            'shift_id' => 'nullable|exists:shifts,id',
+
             'reference_number' => 'required|string|max:255',
             'depositor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|mimes:jpeg,jpg,png,pdf|max:2048',
+            'remove_attachments' => 'nullable|array',
+            'remove_attachments.*' => 'string',
             'sales_to_add' => 'nullable|array',
             'sales_to_add.*' => 'exists:sales,id',
             'sales_to_remove' => 'nullable|array',
             'sales_to_remove.*' => 'exists:sales,id',
         ]);
 
-        // Handle file upload separately
+        // Handle file uploads separately
         if ($request->hasFile('image')) {
             // Delete old image if exists
             if ($deposit->image_path) {
@@ -298,12 +308,42 @@ class DepositController extends Controller
             $validated['image_path'] = $request->file('image')->store('deposits', 'public');
         }
 
+        // Handle multiple attachments
+        $currentAttachments = $deposit->attachments ?? [];
+
+        // Remove selected attachments
+        if (!empty($validated['remove_attachments'])) {
+            foreach ($validated['remove_attachments'] as $pathToRemove) {
+                // Delete file from storage
+                Storage::disk('public')->delete($pathToRemove);
+                // Remove from attachments array
+                $currentAttachments = array_filter($currentAttachments, function($attachment) use ($pathToRemove) {
+                    return $attachment['path'] !== $pathToRemove;
+                });
+            }
+        }
+
+        // Add new attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('deposits/attachments', 'public');
+                $currentAttachments[] = [
+                    'filename' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'type' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                ];
+            }
+        }
+
+        $validated['attachments'] = array_values($currentAttachments); // Re-index array
+
         // Handle sales relationship changes
         $salesToAdd = $validated['sales_to_add'] ?? [];
         $salesToRemove = $validated['sales_to_remove'] ?? [];
 
         // Remove non-database fields from validated data
-        unset($validated['image'], $validated['sales_to_add'], $validated['sales_to_remove']);
+        unset($validated['image'], $validated['remove_attachments'], $validated['sales_to_add'], $validated['sales_to_remove']);
 
         // If sales mode and sales are being modified, recalculate amount
         if ($validated['deposit_type'] === 'daily_sales_deposit' && (!empty($salesToAdd) || !empty($salesToRemove))) {
@@ -347,7 +387,6 @@ class DepositController extends Controller
                     'amount' => $deposit->amount,
                     'description' => $deposit->description,
                     'branch_id' => $deposit->branch_id,
-                    'shift_id' => $deposit->shift_id,
                     'image_path' => $deposit->image_path,
                 ]);
             }
@@ -361,6 +400,13 @@ class DepositController extends Controller
         // Delete associated image if exists
         if ($deposit->image_path) {
             Storage::disk('public')->delete($deposit->image_path);
+        }
+
+        // Delete all attachments
+        if ($deposit->attachments) {
+            foreach ($deposit->attachments as $attachment) {
+                Storage::disk('public')->delete($attachment['path']);
+            }
         }
 
         // Delete corresponding transaction if bank account exists

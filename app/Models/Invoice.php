@@ -66,6 +66,11 @@ class Invoice extends Model
         return $this->hasMany(InvoicePayment::class);
     }
 
+    public function items(): HasMany
+    {
+        return $this->hasMany(InvoiceItem::class);
+    }
+
     public function updateStatus(): void
     {
         if ($this->amount_paid >= $this->amount) {
@@ -111,5 +116,23 @@ class Invoice extends Model
                 'payment_date' => now(),
             ]));
         }
+    }
+
+    /**
+     * Calculate total amount from items
+     */
+    public function calculateTotalFromItems(): void
+    {
+        $this->amount = $this->items->sum('total');
+        $this->save();
+    }
+
+    /**
+     * Update total when items change
+     */
+    public function updateTotalAmount(): void
+    {
+        $this->amount = $this->items()->sum('total');
+        $this->save();
     }
 }

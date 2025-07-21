@@ -20,7 +20,7 @@
           {{ form.deposit_type === 'daily_sales_deposit' ? 'Daily Sales Entry' : 'Deposit Information' }}
         </h2>
                   <p v-if="form.deposit_type === 'daily_sales_deposit'" class="text-sm text-gray-600 mt-1">
-          Record daily shift sales to credit the selected bank account
+          Record daily sales to credit the selected bank account
         </p>
       </div>
 
@@ -89,7 +89,7 @@
             </div>
           </div>
 
-          <!-- Branch and Shift Information -->
+          <!-- Branch Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -105,21 +105,6 @@
               </select>
               <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">{{ form.errors.branch_id }}</div>
             </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                {{ form.deposit_type === 'daily_sales_deposit' ? 'Shift *' : 'Shift' }}
-              </label>
-              <select
-                v-model="form.shift_id"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.shift_id ? 'border-red-500' : ''"
-              >
-                <option value="">Select Shift</option>
-                <option v-for="shift in shifts" :key="shift.value" :value="shift.value">{{ shift.label }}</option>
-              </select>
-              <div v-if="form.errors.shift_id" class="mt-1 text-sm text-red-600">{{ form.errors.shift_id }}</div>
-            </div>
           </div>
 
           <!-- Reference and Documentation -->
@@ -131,7 +116,7 @@
                 type="text"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
                 :class="form.errors.reference_number ? 'border-red-500' : ''"
-                placeholder="Enter reference number"
+                placeholder="Enter unique reference number"
                 required
               />
               <div v-if="form.errors.reference_number" class="mt-1 text-sm text-red-600">{{ form.errors.reference_number }}</div>
@@ -256,6 +241,45 @@
                 {{ form.deposit_type === 'daily_sales_deposit' ? 'Optional: Upload a photo of the sales summary or receipt' : 'Optional: Upload deposit slip or receipt' }}
               </p>
           </div>
+
+          <!-- Multiple Attachments Upload -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Supporting Documents (Optional)</label>
+            <input
+              @change="handleAttachmentsUpload"
+              type="file"
+              accept="image/*,.pdf"
+              multiple
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+              :class="form.errors.attachments ? 'border-red-500' : ''"
+            />
+            <div v-if="form.errors.attachments" class="mt-1 text-sm text-red-600">{{ form.errors.attachments }}</div>
+            <p class="text-xs text-gray-500 mt-1">Upload up to 5 supporting documents (images or PDFs, max 2MB each)</p>
+
+            <!-- Show selected files -->
+            <div v-if="form.attachments && form.attachments.length" class="mt-3">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Files:</h4>
+              <div class="space-y-2">
+                <div v-for="(file, index) in form.attachments" :key="index" class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                  <div class="flex items-center space-x-2">
+                    <svg v-if="file.type?.includes('pdf')" class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg v-else class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm text-gray-900">{{ file.name }}</span>
+                    <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+                  </div>
+                  <button @click="removeAttachment(index)" type="button" class="text-red-600 hover:text-red-800">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Form Actions -->
@@ -298,7 +322,7 @@ export default {
   props: {
     bankAccounts: Array,
     branches: Array,
-    shifts: Array,
+
     depositTypes: Array,
     availableSales: Array,
   },
@@ -311,11 +335,12 @@ export default {
         deposit_type: '',
         amount: '',
         branch_id: '',
-        shift_id: '',
+
         reference_number: '',
         depositor_name: '',
         description: '',
         image: null,
+        attachments: [],
         selected_sales: [], // New for sales mode
       }),
     }
@@ -341,11 +366,6 @@ export default {
         // Clear any manually entered amount since it will be calculated from selected sales
         this.form.amount = '';
         this.form.selected_sales = [];
-        if (!this.form.reference_number) {
-          // Auto-generate sales reference
-          const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
-          this.form.reference_number = `SALES-${today}-`
-        }
       } else {
         // Clear sales selection when switching away from daily sales deposit mode
         this.form.selected_sales = [];
@@ -372,6 +392,44 @@ export default {
     },
     store() {
       this.form.post('/deposits')
+    },
+    handleAttachmentsUpload(event) {
+      const files = Array.from(event.target.files);
+
+      // Validate file count
+      if (this.form.attachments.length + files.length > 5) {
+        alert('You can only upload up to 5 files total.');
+        return;
+      }
+
+      // Validate each file
+      for (let file of files) {
+        // Check file size (2MB = 2048KB)
+        if (file.size > 2048 * 1024) {
+          alert(`File "${file.name}" is too large. Maximum size is 2MB.`);
+          return;
+        }
+
+        // Check file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+          alert(`File "${file.name}" is not supported. Only images and PDFs are allowed.`);
+          return;
+        }
+      }
+
+      // Add files to form
+      this.form.attachments = [...this.form.attachments, ...files];
+    },
+    removeAttachment(index) {
+      this.form.attachments.splice(index, 1);
+    },
+    formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
   },
 }

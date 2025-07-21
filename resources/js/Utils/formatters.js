@@ -49,11 +49,56 @@ export function formatAmount(amount) {
 }
 
 /**
+ * Format date and time to human readable format: 'Wed, 31st May 2025, 2:30 PM'
+ * @param {string|Date} dateTime - DateTime to format
+ * @returns {string} Formatted datetime string
+ */
+export function formatDateTime(dateTime) {
+    if (!dateTime) return ''
+
+    const dateObj = new Date(dateTime)
+    if (isNaN(dateObj.getTime())) return ''
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ]
+
+    const dayName = days[dateObj.getDay()]
+    const day = dateObj.getDate()
+    const month = months[dateObj.getMonth()]
+    const year = dateObj.getFullYear()
+
+    // Add ordinal suffix to day
+    const getOrdinalSuffix = (num) => {
+        if (num > 3 && num < 21) return 'th'
+        switch (num % 10) {
+            case 1: return 'st'
+            case 2: return 'nd'
+            case 3: return 'rd'
+            default: return 'th'
+        }
+    }
+
+    // Format time
+    let hours = dateObj.getHours()
+    const minutes = dateObj.getMinutes()
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+    hours = hours % 12
+    hours = hours ? hours : 12 // 0 should be 12
+    const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`
+
+    return `${dayName}, ${day}${getOrdinalSuffix(day)} ${month} ${year}, ${formattedTime}`
+}
+
+/**
  * Global mixin to be used in Vue components
  */
 export const formatterMixin = {
     methods: {
         $formatDate: formatDate,
-        $formatAmount: formatAmount
+        $formatAmount: formatAmount,
+        $formatDateTime: formatDateTime
     }
 }
