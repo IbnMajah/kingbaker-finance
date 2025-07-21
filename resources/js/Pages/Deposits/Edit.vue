@@ -162,6 +162,74 @@
               </div>
               <p class="mt-1 text-sm text-gray-500">Optional: Upload new receipt or proof of deposit</p>
             </div>
+
+            <!-- Multiple Attachments Management -->
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Supporting Documents</label>
+
+              <!-- Current Attachments -->
+              <div v-if="currentAttachments.length" class="mb-4">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Current Documents:</h4>
+                <div class="space-y-2">
+                  <div v-for="(attachment, index) in currentAttachments" :key="index" class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                      <svg v-if="attachment.type?.includes('pdf')" class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                      </svg>
+                      <img v-else :src="`/storage/${attachment.path}`" :alt="attachment.filename" class="w-5 h-5 object-cover rounded" />
+                      <div>
+                        <span class="text-sm font-medium text-gray-900">{{ attachment.filename }}</span>
+                        <p class="text-xs text-gray-500">{{ formatFileSize(attachment.size) }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <button @click="viewAttachment(attachment)" type="button" class="text-blue-600 hover:text-blue-800 text-sm">
+                        View
+                      </button>
+                      <button @click="removeCurrentAttachment(attachment.path)" type="button" class="text-red-600 hover:text-red-800 text-sm">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Upload New Attachments -->
+              <input
+                @change="handleAttachmentsUpload"
+                type="file"
+                accept="image/*,.pdf"
+                multiple
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.attachments ? 'border-red-500' : ''"
+              />
+              <div v-if="form.errors.attachments" class="mt-1 text-sm text-red-600">{{ form.errors.attachments }}</div>
+              <p class="text-xs text-gray-500 mt-1">Upload additional supporting documents (images or PDFs, max 2MB each)</p>
+
+              <!-- Show selected new files -->
+              <div v-if="newAttachments.length" class="mt-3">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">New Files to Upload:</h4>
+                <div class="space-y-2">
+                  <div v-for="(file, index) in newAttachments" :key="index" class="flex items-center justify-between bg-blue-50 p-2 rounded">
+                    <div class="flex items-center space-x-2">
+                      <svg v-if="file.type?.includes('pdf')" class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                      </svg>
+                      <svg v-else class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span class="text-sm text-gray-900">{{ file.name }}</span>
+                      <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+                    </div>
+                    <button @click="removeNewAttachment(index)" type="button" class="text-red-600 hover:text-red-800">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Depositor Name -->
@@ -404,6 +472,9 @@ export default {
       showImageModal: false,
       salesToAdd: [],
       salesToRemove: [],
+      currentAttachments: this.deposit.attachments || [],
+      newAttachments: [],
+      removeAttachments: [],
     }
   },
   computed: {
@@ -448,11 +519,13 @@ export default {
   },
   methods: {
     update() {
-      // Include sales changes in the form data
+      // Include sales changes and attachment changes in the form data
       const formData = {
         ...this.form.data(),
         sales_to_add: this.salesToAdd,
         sales_to_remove: this.salesToRemove,
+        attachments: this.newAttachments,
+        remove_attachments: this.removeAttachments,
       };
 
       this.form.put(`/deposits/${this.deposit.id}`, {
@@ -461,6 +534,12 @@ export default {
           this.form.reset('image');
           this.salesToAdd = [];
           this.salesToRemove = [];
+          this.newAttachments = [];
+          this.removeAttachments = [];
+          // Refresh current attachments from response if available
+          if (this.$page.props.deposit.attachments) {
+            this.currentAttachments = this.$page.props.deposit.attachments;
+          }
         },
       })
     },
@@ -488,6 +567,61 @@ export default {
       } else {
         this.salesToAdd = this.filteredAvailableSales.map(sale => parseInt(sale.id));
       }
+    },
+    handleAttachmentsUpload(event) {
+      const files = Array.from(event.target.files);
+
+      // Validate file count (current + new + pending new files)
+      const totalFiles = this.currentAttachments.length + this.newAttachments.length + files.length - this.removeAttachments.length;
+      if (totalFiles > 5) {
+        alert('You can only have up to 5 files total.');
+        return;
+      }
+
+      // Validate each file
+      for (let file of files) {
+        // Check file size (2MB = 2048KB)
+        if (file.size > 2048 * 1024) {
+          alert(`File "${file.name}" is too large. Maximum size is 2MB.`);
+          return;
+        }
+
+        // Check file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+          alert(`File "${file.name}" is not supported. Only images and PDFs are allowed.`);
+          return;
+        }
+      }
+
+      // Add files to new attachments
+      this.newAttachments = [...this.newAttachments, ...files];
+    },
+    removeCurrentAttachment(path) {
+      // Add to removal list
+      this.removeAttachments.push(path);
+      // Remove from current display
+      this.currentAttachments = this.currentAttachments.filter(attachment => attachment.path !== path);
+    },
+    removeNewAttachment(index) {
+      this.newAttachments.splice(index, 1);
+    },
+    viewAttachment(attachment) {
+      if (attachment.type?.includes('pdf')) {
+        // Open PDF in new tab
+        window.open(`/storage/${attachment.path}`, '_blank');
+      } else {
+        // Show image in modal (assuming you have an image modal)
+        this.showImageModal = true;
+        // You might need to adjust this based on your modal setup
+      }
+    },
+    formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
   },
 }
