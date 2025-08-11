@@ -129,12 +129,12 @@
     <div class="filters">
         <strong>Report Filters:</strong>
         @if(isset($filters['type']) && $filters['type'])
-        <p><strong>Type:</strong> {{ ucfirst($filters['type']) }}</p>
+        <p><strong>Type:</strong> {{ \Illuminate\Support\Str::ucfirst($filters['type'] ?? '') }}</p>
         @else
         <p><strong>Type:</strong> Both Invoices and Bills</p>
         @endif
         @if(isset($filters['status']) && $filters['status'])
-        <p><strong>Status:</strong> {{ ucfirst($filters['status']) }}</p>
+        <p><strong>Status:</strong> {{ \Illuminate\Support\Str::ucfirst($filters['status'] ?? '') }}</p>
         @endif
     </div>
 
@@ -174,8 +174,8 @@
                 <tr>
                     <td>{{ $invoice->invoice_number }}</td>
                     <td>{{ $invoice->customer_name }}</td>
-                    <td>{{ $invoice->invoice_date->format('Y-m-d') }}</td>
-                    <td>{{ $invoice->due_date->format('Y-m-d') }}</td>
+                    <td>{{ $invoice->invoice_date ? $invoice->invoice_date->format('Y-m-d') : 'N/A' }}</td>
+                    <td>{{ $invoice->due_date ? $invoice->due_date->format('Y-m-d') : 'N/A' }}</td>
                     <td class="amount">GMD {{ number_format($invoice->amount, 2) }}</td>
                     <td class="amount">GMD {{ number_format($invoice->amount_paid, 2) }}</td>
                     <td class="amount">GMD {{ number_format($invoice->amount - $invoice->amount_paid, 2) }}</td>
@@ -208,8 +208,8 @@
                 <tr>
                     <td>{{ $bill->bill_number }}</td>
                     <td>{{ $bill->vendor ? $bill->vendor->name : 'N/A' }}</td>
-                    <td>{{ $bill->bill_date->format('Y-m-d') }}</td>
-                    <td>{{ $bill->due_date->format('Y-m-d') }}</td>
+                    <td>{{ $bill->bill_date ? $bill->bill_date->format('Y-m-d') : 'N/A' }}</td>
+                    <td>{{ $bill->due_date ? $bill->due_date->format('Y-m-d') : 'N/A' }}</td>
                     <td class="amount">GMD {{ number_format($bill->amount, 2) }}</td>
                     <td class="amount">GMD {{ number_format($bill->amount_paid, 2) }}</td>
                     <td class="amount">GMD {{ number_format($bill->amount - $bill->amount_paid, 2) }}</td>

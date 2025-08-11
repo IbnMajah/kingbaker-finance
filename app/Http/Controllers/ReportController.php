@@ -380,7 +380,11 @@ class ReportController extends Controller
     {
         $type = Request::input('type');
         $format = Request::input('format');
-        $filters = json_decode(Request::input('filters', '{}'), true);
+        $filters = json_decode(Request::input('filters', '{}'), true) ?? [];
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $filters = [];
+        }
 
         switch ($type) {
             case 'transactions':
