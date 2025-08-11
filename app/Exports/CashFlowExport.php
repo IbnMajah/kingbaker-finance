@@ -5,44 +5,58 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class CashFlowExport implements FromCollection, WithHeadings, WithMapping
+class CashFlowExport implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
-    protected $transactions;
-    protected $summaryType;
+    protected $data;
 
-    public function __construct($transactions, $summaryType)
+    public function __construct($data)
     {
-        $this->transactions = $transactions;
-        $this->summaryType = $summaryType;
+        $this->data = $data;
     }
 
     public function collection()
     {
-        return $this->transactions;
+        $collection = collect();
+
+        for ($i = 0; $i < count($this->data['labels']); $i++) {
+            $collection->push((object) [
+                'period' => $this->data['labels'][$i] ?? '',
+                'inflow' => $this->data['inflow'][$i] ?? 0,
+                'outflow' => $this->data['outflow'][$i] ?? 0,
+                'net_flow' => $this->data['net'][$i] ?? 0,
+            ]);
+        }
+
+        return $collection;
     }
 
     public function headings(): array
     {
         return [
             'Period',
-            'Credits',
-            'Debits',
-            'Net Flow',
+            'Cash Inflow',
+            'Cash Outflow',
+            'Net Cash Flow',
         ];
     }
 
-    public function map($group): array
+    public function map($row): array
     {
-        $credits = $group->where('type', 'credit')->sum('amount');
-        $debits = $group->where('type', 'debit')->sum('amount');
-        $netFlow = $credits - $debits;
-
         return [
-            $group->first()->transaction_date, // This will be formatted in the period format
-            $credits,
-            $debits,
-            $netFlow,
+            $row->period,
+            $row->inflow,
+            $row->outflow,
+            $row->net_flow,
+        ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        return [
+            1 => ['font' => ['bold' => true]],
         ];
     }
 }

@@ -33,7 +33,7 @@ class BankAccountController extends Controller
             ->orderBy('name');
 
         $bankAccounts = $query->paginate(10)
-            ->through(fn ($account) => [
+            ->through(fn($account) => [
                 'id' => $account->id,
                 'name' => $account->name,
                 'account_number' => $account->account_number,
@@ -87,7 +87,7 @@ class BankAccountController extends Controller
     public function show(Request $request, BankAccount $bankAccount): Response
     {
         $query = $bankAccount->transactions()
-            ->with(['branch', 'shift', 'creator'])
+            ->with(['branch', 'creator'])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('description', 'like', "%{$search}%")
@@ -114,7 +114,7 @@ class BankAccountController extends Controller
             ->orderBy('created_at', 'desc');
 
         $transactions = $query->paginate(25)
-            ->through(fn ($transaction) => [
+            ->through(fn($transaction) => [
                 'id' => $transaction->id,
                 'transaction_date' => $transaction->transaction_date,
                 'type' => $transaction->type,
@@ -128,10 +128,6 @@ class BankAccountController extends Controller
                 'branch' => $transaction->branch ? [
                     'id' => $transaction->branch->id,
                     'name' => $transaction->branch->name,
-                ] : null,
-                'shift' => $transaction->shift ? [
-                    'id' => $transaction->shift->id,
-                    'name' => $transaction->shift->name,
                 ] : null,
                 'creator' => $transaction->creator ? [
                     'id' => $transaction->creator->id,
@@ -237,7 +233,8 @@ class BankAccountController extends Controller
         $depositsCount = $bankAccount->deposits()->withTrashed()->count();
 
         if ($depositsCount > 0) {
-            return Redirect::back()->with('error',
+            return Redirect::back()->with(
+                'error',
                 "Cannot delete bank account '{$bankAccount->name}' because it has {$depositsCount} related deposit(s). Please deactivate the account instead."
             );
         }
@@ -246,7 +243,8 @@ class BankAccountController extends Controller
         $transactionsCount = $bankAccount->transactions()->count();
 
         if ($transactionsCount > 0) {
-            return Redirect::back()->with('error',
+            return Redirect::back()->with(
+                'error',
                 "Cannot delete bank account '{$bankAccount->name}' because it has {$transactionsCount} related transaction(s). Please deactivate the account instead."
             );
         }
