@@ -8,8 +8,8 @@
       <p class="text-gray-600">Manage and track all cheque payment transactions</p>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <!-- Admin Summary Cards -->
+    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -89,7 +89,7 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Filter Cheque Payments</h2>
-        <Link class="btn-kingbaker" href="/cheque-payments/create">
+        <Link v-if="canCreateChequePayments" class="btn-kingbaker" href="/cheque-payments/create">
           <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
           </svg>
@@ -262,8 +262,8 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
-                  <Link :href="`/cheque-payments/${payment.id}`" class="text-brand-600 hover:text-brand-900">View</Link>
-                  <Link :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900">Edit</Link>
+                  <Link v-if="canViewChequePayments" :href="`/cheque-payments/${payment.id}`" class="text-brand-600 hover:text-brand-900">View</Link>
+                  <Link v-if="canEditChequePayments" :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900">Edit</Link>
                   <button
                     v-if="payment.status === 'pending'"
                     @click="markAsIssued(payment.id)"
@@ -363,6 +363,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
 
 export default {
@@ -372,6 +373,10 @@ export default {
   },
   mixins: [formatterMixin],
   layout: Layout,
+  setup() {
+    const { canCreateChequePayments, canViewChequePayments, canEditChequePayments, isAdmin } = usePermissions()
+    return { canCreateChequePayments, canViewChequePayments, canEditChequePayments, isAdmin }
+  },
   props: {
     payments: Object,
     summary: Object,

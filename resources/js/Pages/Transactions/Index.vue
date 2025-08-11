@@ -8,8 +8,8 @@
       <p class="text-gray-600">All account transactions across the system</p>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <!-- Admin Summary Cards -->
+    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -197,6 +197,7 @@
                 <div class="flex items-center justify-center space-x-2">
                   <Link
                     :href="`/transactions/${transaction.id}`"
+                    v-if="canViewTransactions"
                     class="flex items-center space-x-1 text-blue-600 hover:text-blue-900 text-sm font-medium"
                   >
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -272,6 +273,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
@@ -284,6 +286,10 @@ export default {
   },
   mixins: [formatterMixin],
   layout: Layout,
+  setup() {
+    const { canViewTransactions, isAdmin } = usePermissions()
+    return { canViewTransactions, isAdmin }
+  },
   props: {
     filters: {
       type: Object,

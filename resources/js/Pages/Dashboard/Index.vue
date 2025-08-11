@@ -1,10 +1,10 @@
 <template>
   <div>
     <Head title="Dashboard" />
-    <h1 class="mb-8 text-3xl font-bold">Financial Dashboard</h1>
+    <h1 class="mb-8 text-3xl font-bold">Dashboard</h1>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Admin Financial Summary Cards -->
+    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <Card
         title="Total Balance"
         :icon="BanknotesIcon"
@@ -25,8 +25,8 @@
       />
     </div>
 
-    <!-- Invoices & Bills Status -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Admin Reports Section -->
+    <div v-if="isAdmin" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold">Invoices & Bills Status</h2>
@@ -83,8 +83,8 @@
       </div>
     </div>
 
-    <!-- Transaction History Chart -->
-    <div class="bg-white rounded-lg shadow mb-8">
+    <!-- Admin Transaction History Chart -->
+    <div v-if="isAdmin" class="bg-white rounded-lg shadow mb-8">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold">Transaction History</h2>
       </div>
@@ -93,8 +93,8 @@
       </div>
     </div>
 
-    <!-- Recent Transactions & Expense Categories -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Admin Recent Transactions & Expense Categories -->
+    <div v-if="isAdmin" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold">Recent Transactions</h2>
@@ -126,6 +126,22 @@
         </div>
       </div>
     </div>
+
+    <!-- Non-Admin User Dashboard -->
+    <div v-if="!isAdmin" class="bg-white rounded-lg shadow p-8 text-center">
+      <div class="max-w-md mx-auto">
+        <svg class="mx-auto h-12 w-12 text-brand-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Welcome, {{ $page.props.auth.user?.first_name }}!</h3>
+        <p class="text-gray-600 mb-4">
+          You're logged in as <strong>{{ formatRoleName(userRole) }}</strong>
+        </p>
+        <p class="text-gray-500 text-sm">
+          Use the navigation menu to access the modules available to your role.
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -135,6 +151,7 @@ import Layout from '@/Shared/Layout.vue'
 import Chart from 'chart.js/auto'
 import Card from '@/Shared/Card.vue'
 import { formatterMixin } from '@/Utils/formatters'
+import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -143,6 +160,10 @@ export default {
   },
   layout: Layout,
   mixins: [formatterMixin],
+  setup() {
+    const permissions = usePermissions()
+    return { permissions }
+  },
   props: {
     summary: {
       type: Object,
@@ -175,9 +196,21 @@ export default {
       expenseChart: null,
     }
   },
+  computed: {
+    isAdmin() {
+      const hasAdminRole = this.permissions.hasRole('admin')
+      const isOwner = this.$page.props.auth.user?.owner
+      return hasAdminRole || isOwner
+    },
+    userRole() {
+      return this.$page.props.auth.user?.role || ''
+    }
+  },
   mounted() {
-    this.initTransactionChart()
-    this.initExpenseChart()
+    if (this.isAdmin) {
+      this.initTransactionChart()
+      this.initExpenseChart()
+    }
   },
   methods: {
     formatCurrency(value) {
@@ -193,6 +226,10 @@ export default {
     },
     getActivityBreakdown(credits, debits) {
       return `+${this.formatCurrency(credits)} / -${this.formatCurrency(debits)}`
+    },
+    formatRoleName(roleName) {
+      if (!roleName) return 'User'
+      return roleName.charAt(0).toUpperCase() + roleName.slice(1).replace('_', ' ')
     },
     initTransactionChart() {
       const ctx = this.$refs.transactionChart.getContext('2d')

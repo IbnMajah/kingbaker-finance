@@ -11,7 +11,7 @@
           <option value="only">Only Trashed</option>
         </select>
       </search-filter>
-      <Link class="btn-indigo" href="/organizations/create">
+      <Link v-if="canCreateOrganizations" class="btn-indigo" href="/organizations/create">
         <span>Create</span>
         <span class="hidden md:inline">&nbsp;Organization</span>
       </Link>
@@ -64,6 +64,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import Icon from '@/Shared/Icon.vue'
 import pickBy from 'lodash/pickBy'
 import Layout from '@/Shared/Layout.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import mapValues from 'lodash/mapValues'
 import Pagination from '@/Shared/Pagination.vue'
@@ -78,6 +79,10 @@ export default {
     SearchFilter,
   },
   layout: Layout,
+  setup() {
+    const { canCreateOrganizations } = usePermissions()
+    return { canCreateOrganizations }
+  },
   props: {
     filters: Object,
     organizations: Object,

@@ -32,11 +32,9 @@
           class="pl-3 pr-8 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
         >
           <option value="">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="manager">Manager</option>
-          <option value="accountant">Accountant</option>
-          <option value="cashier">Cashier</option>
-          <option value="staff">Staff</option>
+          <option v-for="role in roles" :key="role.id" :value="role.name">
+            {{ formatRoleName(role.name) }}
+          </option>
         </select>
 
         <select
@@ -50,6 +48,7 @@
         </select>
 
         <Link
+          v-if="canCreateUsers"
           href="/users/create"
           class="btn-kingbaker"
         >
@@ -102,12 +101,26 @@
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="getRoleBadgeClass(user.role)"
-              >
-                {{ formatRole(user.role) }}
-              </span>
+              <div v-if="user.primary_role" class="flex flex-wrap gap-1">
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="getRoleBadgeClass(user.primary_role)"
+                >
+                  {{ formatRoleName(user.primary_role) }}
+                </span>
+                <span v-if="user.roles && user.roles.length > 1" class="text-xs text-gray-500">
+                  +{{ user.roles.length - 1 }} more
+                </span>
+              </div>
+              <div v-else-if="user.role" class="flex flex-wrap gap-1">
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="getRoleBadgeClass(user.role)"
+                >
+                  {{ formatRoleName(user.role) }}
+                </span>
+              </div>
+              <span v-else class="text-gray-500 text-sm">No role</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-900">
@@ -128,12 +141,14 @@
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <div class="flex items-center justify-end space-x-3">
                 <Link
+                  v-if="canViewUsers"
                   :href="`/users/${user.id}`"
                   class="text-brand-600 hover:text-brand-900"
                 >
                   View
                 </Link>
                 <Link
+                  v-if="canEditUsers"
                   :href="`/users/${user.id}/edit`"
                   class="text-brand-600 hover:text-brand-900"
                 >
@@ -151,7 +166,7 @@
           </tr>
           <tr v-if="users.length === 0">
             <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-              No users found. <Link href="/users/create" class="text-brand-600 hover:text-brand-900">Create one</Link>
+              No users found. <Link v-if="canCreateUsers" href="/users/create" class="text-brand-600 hover:text-brand-900">Create one</Link>
             </td>
           </tr>
         </tbody>
@@ -250,6 +265,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import { watch } from 'vue'
 import Layout from '@/Shared/Layout.vue'
 import Modal from '@/Shared/Modal.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import debounce from 'lodash/debounce'
 
 export default {
@@ -259,12 +275,20 @@ export default {
     Modal,
   },
   layout: Layout,
+  setup() {
+    const { canCreateUsers, canViewUsers, canEditUsers } = usePermissions()
+    return { canCreateUsers, canViewUsers, canEditUsers }
+  },
   props: {
     users: {
       type: Array,
       required: true,
     },
     branches: {
+      type: Array,
+      required: true,
+    },
+    roles: {
       type: Array,
       required: true,
     },
@@ -306,15 +330,22 @@ export default {
       if (!firstName || !lastName) return '—'
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
     },
-    formatRole(role) {
-      if (!role) return '—'
-      return role.charAt(0).toUpperCase() + role.slice(1)
+    formatRoleName(roleName) {
+      if (!roleName) return '—'
+      return roleName.charAt(0).toUpperCase() + roleName.slice(1).replace('_', ' ')
     },
     getRoleBadgeClass(role) {
       const classes = {
         admin: 'bg-purple-100 text-purple-800',
-        manager: 'bg-blue-100 text-blue-800',
+        finance_manager: 'bg-blue-100 text-blue-800',
         accountant: 'bg-green-100 text-green-800',
+        sales_staff: 'bg-yellow-100 text-yellow-800',
+        inventory_supervisor: 'bg-orange-100 text-orange-800',
+        procurement_staff: 'bg-teal-100 text-teal-800',
+        auditor: 'bg-indigo-100 text-indigo-800',
+        branch_supervisor: 'bg-pink-100 text-pink-800',
+        // Legacy roles fallback
+        manager: 'bg-blue-100 text-blue-800',
         cashier: 'bg-yellow-100 text-yellow-800',
         staff: 'bg-gray-100 text-gray-800',
       }

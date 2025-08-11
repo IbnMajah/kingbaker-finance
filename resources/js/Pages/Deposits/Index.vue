@@ -8,8 +8,8 @@
       <p class="text-gray-600">Manage and track all deposit transactions</p>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <!-- Admin Summary Cards -->
+    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -82,7 +82,7 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Filter Deposits</h2>
-        <Link class="btn-kingbaker" href="/deposits/create">
+        <Link v-if="canCreateDeposits" class="btn-kingbaker" href="/deposits/create">
           <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
           </svg>
@@ -195,13 +195,13 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-center">
                 <div class="flex items-center justify-center space-x-2">
-                  <Link :href="`/deposits/${deposit.id}`" class="text-blue-600 hover:text-blue-900" title="View Details">
+                  <Link v-if="canViewDeposits" :href="`/deposits/${deposit.id}`" class="text-blue-600 hover:text-blue-900" title="View Details">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
                       <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
                     </svg>
                   </Link>
-                  <Link :href="`/deposits/${deposit.id}/edit`" class="text-brand-600 hover:text-brand-900" title="Edit">
+                  <Link v-if="canEditDeposits" :href="`/deposits/${deposit.id}/edit`" class="text-brand-600 hover:text-brand-900" title="Edit">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
                     </svg>
@@ -279,6 +279,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
 import mapValues from 'lodash/mapValues'
@@ -292,6 +293,10 @@ export default {
   },
   mixins: [formatterMixin],
   layout: Layout,
+  setup() {
+    const { canCreateDeposits, canViewDeposits, canEditDeposits, isAdmin } = usePermissions()
+    return { canCreateDeposits, canViewDeposits, canEditDeposits, isAdmin }
+  },
   props: {
     filters: {
       type: Object,

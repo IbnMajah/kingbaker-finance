@@ -330,9 +330,9 @@ Route::middleware('auth')->group(function () {
         ->name('invoices.update');
 
     Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])
-->name('invoices.destroy');
-Route::put('invoices/{invoice}/restore', [InvoiceController::class, 'restore'])
-->name('invoices.restore');
+        ->name('invoices.destroy');
+    Route::put('invoices/{invoice}/restore', [InvoiceController::class, 'restore'])
+        ->name('invoices.restore');
 
     Route::put('invoices/{invoice}/mark-as-sent', [InvoiceController::class, 'markAsSent'])
         ->name('invoices.mark-as-sent');
@@ -410,4 +410,3 @@ Route::put('invoices/{invoice}/restore', [InvoiceController::class, 'restore'])
     Route::patch('cheque-payments/{chequePayment}/cancel', [ChequePaymentController::class, 'cancel'])
         ->name('cheque-payments.cancel');
 });
-
