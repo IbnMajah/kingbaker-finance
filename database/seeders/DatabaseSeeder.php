@@ -13,11 +13,17 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AccountSeeder::class,
-            UserSeeder::class,
-            OrganizationSeeder::class,
             BranchSeeder::class,
             ShiftSeeder::class,
             BankAccountSeeder::class,
+            OrganizationSeeder::class,
+            
+            // Role-based permissions system
+            PermissionSeeder::class,
+            RoleSeeder::class,
+            RolePermissionSeeder::class,
+            
+            UserSeeder::class, // Keep this last so users can be assigned roles
         ]);
     }
 }

@@ -41,14 +41,7 @@
             <div class="ml-6 flex-grow">
               <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-semibold">Edit Profile</h2>
-                <file-input
-                  v-model="form.photo"
-                  :error="form.errors.photo"
-                  class="btn-kingbaker"
-                  type="file"
-                  accept="image/*"
-                  label="Change Photo"
-                />
+
               </div>
             </div>
           </div>
@@ -100,19 +93,19 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <select-input
-                    v-model="form.role"
-                    :error="form.errors.role"
+                    v-model="form.role_name"
+                    :error="form.errors.role_name"
                     label="Role"
                     required
-                    @change="handleRoleChange"
                   >
                     <option value="">Select Role</option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="accountant">Accountant</option>
-                    <option value="cashier">Cashier</option>
-                    <option value="staff">Staff</option>
+                    <option v-for="role in roles" :key="role.id" :value="role.name">
+                      {{ formatRoleName(role.name) }}
+                    </option>
                   </select-input>
+                  <div v-if="getSelectedRoleDescription()" class="mt-1 text-sm text-gray-500">
+                    {{ getSelectedRoleDescription() }}
+                  </div>
                 </div>
                 <div>
                   <select-input
@@ -152,30 +145,18 @@
               </div>
             </div>
 
-            <!-- Permissions -->
-            <div v-if="form.role && form.role !== 'admin'">
-              <h3 class="text-lg font-medium mb-4">Permissions</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div v-for="(permissions, group) in availablePermissions" :key="group">
-                  <h4 class="font-medium text-gray-700 mb-2">{{ formatGroupName(group) }}</h4>
-                  <div class="space-y-2">
-                    <label
-                      v-for="permission in permissions"
-                      :key="permission.value"
-                      class="flex items-center"
-                    >
-                      <input
-                        type="checkbox"
-                        v-model="form.permissions"
-                        :value="permission.value"
-                        :disabled="isPermissionDisabled(permission.value)"
-                        class="rounded border-gray-300 text-brand-600 shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
-                      />
-                      <span class="ml-2 text-sm text-gray-600">{{ permission.label }}</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
+            <!-- Role Information -->
+            <div v-if="form.role_name" class="border rounded-md p-4 bg-gray-50">
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Role Information</h3>
+              <p class="text-sm text-gray-600 mb-3">
+                This user will have the <strong>{{ formatRoleName(form.role_name) }}</strong> role.
+              </p>
+              <p class="text-sm text-gray-500">
+                {{ getSelectedRoleDescription() }}
+              </p>
+              <p class="text-sm text-gray-500 mt-2">
+                <em>Permissions are automatically assigned based on the selected role.</em>
+              </p>
             </div>
           </div>
         </div>
@@ -276,6 +257,10 @@ export default {
       type: Array,
       required: true,
     },
+    roles: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
@@ -284,87 +269,38 @@ export default {
         last_name: this.user.last_name,
         email: this.user.email,
         phone: this.user.phone,
-        role: this.user.role,
+        role_name: this.user.current_role || '',
         branch_id: this.user.branch_id,
         password: '',
         photo: null,
-        permissions: this.user.permissions || [],
         active: this.user.active,
       }),
       showDeleteModal: false,
-      processing: false,
-      availablePermissions: {
-        accounts: [
-          { value: 'view_accounts', label: 'View Accounts' },
-          { value: 'create_accounts', label: 'Create Accounts' },
-          { value: 'edit_accounts', label: 'Edit Accounts' },
-          { value: 'delete_accounts', label: 'Delete Accounts' },
-        ],
-        transactions: [
-          { value: 'view_transactions', label: 'View Transactions' },
-          { value: 'create_transactions', label: 'Create Transactions' },
-          { value: 'edit_transactions', label: 'Edit Transactions' },
-          { value: 'delete_transactions', label: 'Delete Transactions' },
-        ],
-        deposits: [
-          { value: 'view_deposits', label: 'View Deposits' },
-          { value: 'create_deposits', label: 'Create Deposits' },
-          { value: 'edit_deposits', label: 'Edit Deposits' },
-          { value: 'delete_deposits', label: 'Delete Deposits' },
-        ],
-        expenses: [
-          { value: 'view_expenses', label: 'View Expenses' },
-          { value: 'create_expenses', label: 'Create Expenses' },
-          { value: 'edit_expenses', label: 'Edit Expenses' },
-          { value: 'delete_expenses', label: 'Delete Expenses' },
-        ],
-        reports: [
-          { value: 'view_reports', label: 'View Reports' },
-          { value: 'export_reports', label: 'Export Reports' },
-        ],
-      },
-      rolePermissions: {
-        manager: [
-          'view_accounts', 'view_transactions', 'view_deposits', 'view_expenses',
-          'create_deposits', 'create_expenses', 'edit_deposits', 'edit_expenses',
-          'view_reports', 'export_reports'
-        ],
-        accountant: [
-          'view_accounts', 'view_transactions', 'view_deposits', 'view_expenses',
-          'create_transactions', 'edit_transactions', 'create_deposits', 'edit_deposits',
-          'view_reports', 'export_reports'
-        ],
-        cashier: [
-          'view_transactions', 'create_deposits', 'edit_deposits', 'view_deposits'
-        ],
-        staff: [
-          'view_transactions', 'view_deposits'
-        ]
-      }
+      processing: false
     }
   },
+
   methods: {
     getInitials(firstName, lastName) {
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
     },
     update() {
-      this.form.post(`/users/${this.user.id}`, {
+      this.form.put(`/users/${this.user.id}`, {
         onSuccess: () => this.form.reset('password', 'photo'),
+        onError: (errors) => {
+          console.log('Validation errors:', errors);
+        },
+        preserveScroll: true
       })
     },
-    handleRoleChange() {
-      if (this.form.role === 'admin') {
-        this.form.permissions = []
-      } else {
-        this.form.permissions = this.rolePermissions[this.form.role] || []
-      }
+    formatRoleName(roleName) {
+      if (!roleName) return ''
+      return roleName.charAt(0).toUpperCase() + roleName.slice(1).replace('_', ' ')
     },
-    formatGroupName(name) {
-      return name.charAt(0).toUpperCase() + name.slice(1)
-    },
-    isPermissionDisabled(permission) {
-      if (!this.form.role || this.form.role === 'admin') return true
-      return !this.rolePermissions[this.form.role].includes(permission)
+    getSelectedRoleDescription() {
+      if (!this.form.role_name) return ''
+      const selectedRole = this.roles.find(role => role.name === this.form.role_name)
+      return selectedRole ? selectedRole.description : ''
     },
     confirmDelete() {
       this.showDeleteModal = true

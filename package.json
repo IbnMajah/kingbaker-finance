@@ -31,8 +31,9 @@
         "vue": "^3.2.27"
     },
     "dependencies": {
-        "chart.js": "^4.4.9",
+        "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
-        "@headlessui/vue": "^1.7.23"
+        "chart.js": "^4.4.9",
+        "pinia": "^3.0.3"
     }
 }

@@ -37,6 +37,7 @@
         </select>
 
         <Link
+          v-if="canCreateBranches"
           href="/branches/create"
           class="btn-kingbaker"
         >
@@ -114,13 +115,14 @@
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <div class="flex items-center justify-end space-x-3">
                 <Link
+                  v-if="canViewBranches"
                   :href="`/branches/${branch.id}`"
                   class="text-brand-600 hover:text-brand-900"
                 >
                   View
                 </Link>
                 <Link
-                  v-if="!branch.deleted_at"
+                  v-if="canEditBranches && !branch.deleted_at"
                   :href="`/branches/${branch.id}/edit`"
                   class="text-brand-600 hover:text-brand-900"
                 >
@@ -246,6 +248,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import { watch } from 'vue'
 import Layout from '@/Shared/Layout.vue'
 import Modal from '@/Shared/Modal.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import debounce from 'lodash/debounce'
 
 export default {
@@ -255,6 +258,10 @@ export default {
     Modal,
   },
   layout: Layout,
+  setup() {
+    const { canCreateBranches, canViewBranches, canEditBranches } = usePermissions()
+    return { canCreateBranches, canViewBranches, canEditBranches }
+  },
   props: {
     branches: {
       type: Object,

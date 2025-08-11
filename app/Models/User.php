@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -81,6 +82,14 @@ class User extends Authenticatable
         return $this->hasMany(Transaction::class, 'created_by');
     }
 
+    /**
+     * The roles that belong to the user.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
     public function getNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
@@ -103,11 +112,105 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
+        // Admin and owner always have all permissions
         if ($this->role === 'admin' || $this->owner) {
             return true;
         }
 
+        // Check role-based permissions
+        if ($this->hasRolePermission($permission)) {
+            return true;
+        }
+
+        // Fallback to old permission system for backward compatibility
         return in_array($permission, $this->permissions ?? []);
+    }
+
+    /**
+     * Check if user has permission through their roles
+     */
+    public function hasRolePermission(string $permission): bool
+    {
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permission) {
+                $query->where('name', $permission)->where('active', true);
+            })
+            ->where('active', true)
+            ->exists();
+    }
+
+    /**
+     * Check if user has any of the given permissions
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        if ($this->role === 'admin' || $this->owner) {
+            return true;
+        }
+
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user has all of the given permissions
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        if ($this->role === 'admin' || $this->owner) {
+            return true;
+        }
+
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRoleName(string $roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->where('active', true)->exists();
+    }
+
+    /**
+     * Check if user has any of the given roles
+     */
+    public function hasAnyRole(array $roleNames): bool
+    {
+        return $this->roles()->whereIn('name', $roleNames)->where('active', true)->exists();
+    }
+
+    /**
+     * Get all permissions for this user through their roles
+     */
+    public function getAllPermissions(): \Illuminate\Support\Collection
+    {
+        if ($this->role === 'admin' || $this->owner) {
+            return \App\Models\Permission::where('active', true)->get();
+        }
+
+        return \App\Models\Permission::whereHas('roles', function ($query) {
+            $query->whereIn('role_id', $this->roles()->pluck('roles.id'));
+        })->where('active', true)->get();
+    }
+
+    /**
+     * Get permissions by module
+     */
+    public function getPermissionsByModule(string $module): \Illuminate\Support\Collection
+    {
+        return $this->getAllPermissions()->where('module', $module);
     }
 
     public function canAccessBranch($branchId)
@@ -138,10 +241,10 @@ class User extends Authenticatable
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('first_name', 'like', '%'.$search.'%')
-                    ->orWhere('last_name', 'like', '%'.$search.'%')
-                    ->orWhere('email', 'like', '%'.$search.'%')
-                    ->orWhere('phone', 'like', '%'.$search.'%');
+                $query->where('first_name', 'like', '%' . $search . '%')
+                    ->orWhere('last_name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('phone', 'like', '%' . $search . '%');
             });
         })->when($filters['role'] ?? null, function ($query, $role) {
             $query->where('role', $role);

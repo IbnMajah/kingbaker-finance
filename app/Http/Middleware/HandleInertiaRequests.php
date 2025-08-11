@@ -35,18 +35,27 @@ class HandleInertiaRequests extends Middleware
     {
         return array_merge(parent::share($request), [
             'auth' => function () use ($request) {
+                $user = $request->user();
+                if (!$user) {
+                    return ['user' => null];
+                }
+
                 return [
-                    'user' => $request->user() ? [
-                        'id' => $request->user()->id,
-                        'first_name' => $request->user()->first_name,
-                        'last_name' => $request->user()->last_name,
-                        'email' => $request->user()->email,
-                        'owner' => $request->user()->owner,
-                        'account' => [
-                            'id' => $request->user()->account->id,
-                            'name' => $request->user()->account->name,
-                        ],
-                    ] : null,
+                    'user' => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                        'owner' => $user->owner,
+                        'branch_id' => $user->branch_id,
+                        'account' => $user->account ? [
+                            'id' => $user->account->id,
+                            'name' => $user->account->name,
+                        ] : null,
+                    ],
+                    'userRoles' => $user->roles()->pluck('name')->toArray(),
+                    'userPermissions' => $user->getAllPermissions()->pluck('name')->toArray(),
                 ];
             },
             'flash' => function () use ($request) {
