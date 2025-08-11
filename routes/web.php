@@ -158,6 +158,9 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/generate', [ReportController::class, 'generate'])
         ->name('reports.generate');
 
+    Route::get('reports/chart-data', [ReportController::class, 'getChartData'])
+        ->name('reports.chart-data');
+
     // Images
     Route::get('/img/{path}', [ImagesController::class, 'show'])
         ->where('path', '.*')
