@@ -1,7 +1,7 @@
 php artisan down &&
 echo "Application is now in maintenance mode" &&
-git pull origin master &&
-echo "Pulled latest changes from master" &&
+git pull origin main &&
+echo "Pulled latest changes from main" &&
 composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -o &&
 echo "Composer install completed" &&
 php artisan migrate &&
