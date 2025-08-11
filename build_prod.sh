@@ -10,7 +10,7 @@ npm install &&
 echo "NPM install completed" &&
 sudo chown -R root:staff /var/www/html/finance/ &&
 echo "Changed ownership to root:staff" &&
-npm run prod && 
+npm run build &&
 echo "Built successfully!" &&
 sudo chown -R www-data:www-data /var/www/html/finance &&
 echo "Changed ownership to www-data:www-data" &&
