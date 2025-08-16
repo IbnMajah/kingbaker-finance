@@ -222,6 +222,8 @@ class ReportController extends Controller
         $labels = $expenses->pluck('category')->filter()->toArray();
         $values = $expenses->pluck('total')->toArray();
 
+
+
         return compact('labels', 'values');
     }
 
@@ -380,11 +382,7 @@ class ReportController extends Controller
     {
         $type = Request::input('type');
         $format = Request::input('format');
-        $filters = json_decode(Request::input('filters', '{}'), true) ?? [];
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $filters = [];
-        }
+        $filters = json_decode(Request::input('filters', '{}'), true);
 
         switch ($type) {
             case 'transactions':

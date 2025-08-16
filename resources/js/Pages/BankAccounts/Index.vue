@@ -70,7 +70,8 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Balance</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(totalBalance) }}</p>
+            <p v-if="isAdmin" class="text-2xl font-semibold text-gray-900">{{ $formatAmount(totalBalance) }}</p>
+            <p v-else class="text-2xl font-semibold text-gray-500">••••••</p>
           </div>
         </div>
       </div>
@@ -163,8 +164,11 @@
                 {{ account.bank_name || 'N/A' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                <span :class="account.current_balance >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
+                <span v-if="isAdmin" :class="account.current_balance >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
                   {{ $formatAmount(account.current_balance) }}
+                </span>
+                <span v-else class="text-gray-500 font-medium">
+                  ••••••
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-center">

@@ -16,26 +16,38 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Current Balance</div>
-        <div class="text-2xl font-bold" :class="bankAccount.current_balance >= 0 ? 'text-green-600' : 'text-red-600'">
+        <div v-if="isAdmin" class="text-2xl font-bold" :class="bankAccount.current_balance >= 0 ? 'text-green-600' : 'text-red-600'">
           {{ $formatAmount(bankAccount.current_balance) }}
+        </div>
+        <div v-else class="text-2xl font-bold text-gray-500">
+          ••••••
         </div>
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Total Credits</div>
-        <div class="text-2xl font-bold text-green-600">
+        <div v-if="isAdmin" class="text-2xl font-bold text-green-600">
           {{ $formatAmount(summary.total_credits) }}
+        </div>
+        <div v-else class="text-2xl font-bold text-gray-500">
+          ••••••
         </div>
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Total Debits</div>
-        <div class="text-2xl font-bold text-red-600">
+        <div v-if="isAdmin" class="text-2xl font-bold text-red-600">
           {{ $formatAmount(summary.total_debits) }}
+        </div>
+        <div v-else class="text-2xl font-bold text-gray-500">
+          ••••••
         </div>
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Net Movement</div>
-        <div class="text-2xl font-bold" :class="summary.net_movement >= 0 ? 'text-green-600' : 'text-red-600'">
+        <div v-if="isAdmin" class="text-2xl font-bold" :class="summary.net_movement >= 0 ? 'text-green-600' : 'text-red-600'">
           {{ $formatAmount(summary.net_movement) }}
+        </div>
+        <div v-else class="text-2xl font-bold text-gray-500">
+          ••••••
         </div>
       </div>
     </div>
@@ -169,14 +181,20 @@
                 {{ transaction.payee || '-' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                <span v-if="transaction.type === 'debit'" class="text-red-600 font-medium">
+                <span v-if="isAdmin && transaction.type === 'debit'" class="text-red-600 font-medium">
                   {{ $formatAmount(transaction.amount) }}
+                </span>
+                <span v-else-if="!isAdmin && transaction.type === 'debit'" class="text-gray-500 font-medium">
+                  ••••••
                 </span>
                 <span v-else class="text-gray-400">-</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                <span v-if="transaction.type === 'credit'" class="text-green-600 font-medium">
+                <span v-if="isAdmin && transaction.type === 'credit'" class="text-green-600 font-medium">
                   {{ $formatAmount(transaction.amount) }}
+                </span>
+                <span v-else-if="!isAdmin && transaction.type === 'credit'" class="text-gray-500 font-medium">
+                  ••••••
                 </span>
                 <span v-else class="text-gray-400">-</span>
               </td>
@@ -230,6 +248,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { formatterMixin } from '@/Utils/formatters'
+import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
 import mapValues from 'lodash/mapValues'
@@ -241,6 +260,10 @@ export default {
   },
   mixins: [formatterMixin],
   layout: Layout,
+  setup() {
+    const { isAdmin } = usePermissions()
+    return { isAdmin }
+  },
   props: {
     bankAccount: Object,
     transactions: Object,

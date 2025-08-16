@@ -1,7 +1,7 @@
 <template>
   <div>
     <Head title="Reports" />
-    
+
     <!-- Header Section -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900">Financial Reports & Analytics</h1>
@@ -496,6 +496,7 @@ export default {
     },
   },
   mounted() {
+
     this.initializeCharts()
   },
   beforeUnmount() {
@@ -567,13 +568,13 @@ export default {
     },
     updateTransactionsChart() {
       if (!this.$refs.transactionsChart) return
-      
+
       if (this.charts.transactions) {
         this.charts.transactions.destroy()
       }
 
       const data = this.chartData.transactions || { labels: [], credits: [], debits: [] }
-      
+
       this.charts.transactions = new Chart(this.$refs.transactionsChart, {
         type: 'bar',
         data: {
@@ -600,13 +601,14 @@ export default {
     },
     updateSalesChart() {
       if (!this.$refs.salesChart) return
-      
+
       if (this.charts.sales) {
         this.charts.sales.destroy()
       }
 
       const data = this.chartData.sales || { labels: [], values: [] }
-      
+
+
       this.charts.sales = new Chart(this.$refs.salesChart, {
         type: 'line',
         data: {
@@ -628,13 +630,14 @@ export default {
     },
     updateExpensesChart() {
       if (!this.$refs.expensesChart) return
-      
+
       if (this.charts.expenses) {
         this.charts.expenses.destroy()
       }
 
       const data = this.chartData.expenses || { labels: [], values: [] }
-      
+
+
       this.charts.expenses = new Chart(this.$refs.expensesChart, {
         type: 'doughnut',
         data: {
@@ -666,13 +669,14 @@ export default {
     },
     updateInvoicesBillsChart() {
       if (!this.$refs.invoicesBillsChart) return
-      
+
       if (this.charts.invoicesBills) {
         this.charts.invoicesBills.destroy()
       }
 
       const data = this.chartData.invoicesBills || { labels: [], invoices: [], bills: [] }
-      
+
+
       this.charts.invoicesBills = new Chart(this.$refs.invoicesBillsChart, {
         type: 'bar',
         data: {
@@ -699,13 +703,13 @@ export default {
     },
     updateBankAccountsChart() {
       if (!this.$refs.bankAccountsChart) return
-      
+
       if (this.charts.bankAccounts) {
         this.charts.bankAccounts.destroy()
       }
 
       const data = this.chartData.bankAccounts || { labels: [], values: [] }
-      
+
       this.charts.bankAccounts = new Chart(this.$refs.bankAccountsChart, {
         type: 'pie',
         data: {
@@ -735,13 +739,13 @@ export default {
     },
     updateCashFlowChart() {
       if (!this.$refs.cashFlowChart) return
-      
+
       if (this.charts.cashFlow) {
         this.charts.cashFlow.destroy()
       }
 
       const data = this.chartData.cashFlow || { labels: [], inflow: [], outflow: [], net: [] }
-      
+
       this.charts.cashFlow = new Chart(this.$refs.cashFlowChart, {
         type: 'line',
         data: {
@@ -782,7 +786,7 @@ export default {
         format,
         filters: JSON.stringify(this.filters[type.replace('-', '')] || {}),
       })
-      
+
       window.location.href = `/reports/generate?${params.toString()}`
     },
   },

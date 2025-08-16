@@ -161,6 +161,8 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/chart-data', [ReportController::class, 'getChartData'])
         ->name('reports.chart-data');
 
+
+
     // Images
     Route::get('/img/{path}', [ImagesController::class, 'show'])
         ->where('path', '.*')
