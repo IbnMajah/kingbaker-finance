@@ -129,6 +129,10 @@ class BankAccountController extends Controller
                     'id' => $transaction->branch->id,
                     'name' => $transaction->branch->name,
                 ] : null,
+                'shift' => $transaction->shift ? [
+                    'id' => $transaction->shift->id,
+                    'name' => $transaction->shift->name,
+                ] : null,
                 'creator' => $transaction->creator ? [
                     'id' => $transaction->creator->id,
                     'name' => $transaction->creator->name,
