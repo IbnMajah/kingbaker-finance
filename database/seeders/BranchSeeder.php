@@ -37,12 +37,6 @@ class BranchSeeder extends Seeder
                 'description' => 'Strategic location for western area coverage',
                 'active' => true,
             ],
-            [
-                'name' => 'Brikama Branch',
-                'location' => 'Brikama Area',
-                'description' => 'Brikama Area',
-                'active' => true,
-            ],
         ];
 
         foreach ($branches as $branch) {
