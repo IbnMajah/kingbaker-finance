@@ -185,7 +185,7 @@
     </div>
     <transition name="fade">
       <div v-show="open.reports">
-        <div v-if="permissions.hasPermission('view_reports')" class="mb-4">
+        <div v-if="isAdmin" class="mb-4">
           <Link class="group flex items-center py-3" href="/reports">
             <svg class="mr-2 w-4 h-4" :class="isUrl('reports') ? 'fill-white' : 'fill-brand-400 group-hover:fill-white'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
               <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/>
@@ -210,7 +210,10 @@ export default {
   },
   setup() {
     const permissions = usePermissions()
-    return { permissions }
+
+    const { canCreateBankAccounts, canViewBankAccounts, canEditBankAccounts, isAdmin } = usePermissions()
+    return { canCreateBankAccounts, canViewBankAccounts, canEditBankAccounts, isAdmin, permissions}
+
   },
   data() {
     return {

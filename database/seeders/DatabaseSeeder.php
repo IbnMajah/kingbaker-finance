@@ -15,14 +15,14 @@ class DatabaseSeeder extends Seeder
             AccountSeeder::class,
             BranchSeeder::class,
             ShiftSeeder::class,
-            BankAccountSeeder::class,
+            // BankAccountSeeder::class,
             OrganizationSeeder::class,
-            
+
             // Role-based permissions system
             PermissionSeeder::class,
             RoleSeeder::class,
             RolePermissionSeeder::class,
-            
+
             UserSeeder::class, // Keep this last so users can be assigned roles
         ]);
     }

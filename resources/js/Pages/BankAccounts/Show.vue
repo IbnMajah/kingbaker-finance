@@ -181,20 +181,14 @@
                 {{ transaction.payee || '-' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                <span v-if="isAdmin && transaction.type === 'debit'" class="text-red-600 font-medium">
+                <span v-if="transaction.type === 'debit'" class="text-red-600 font-medium">
                   {{ $formatAmount(transaction.amount) }}
-                </span>
-                <span v-else-if="!isAdmin && transaction.type === 'debit'" class="text-gray-500 font-medium">
-                  ••••••
                 </span>
                 <span v-else class="text-gray-400">-</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                <span v-if="isAdmin && transaction.type === 'credit'" class="text-green-600 font-medium">
+                <span v-if="transaction.type === 'credit'" class="text-green-600 font-medium">
                   {{ $formatAmount(transaction.amount) }}
-                </span>
-                <span v-else-if="!isAdmin && transaction.type === 'credit'" class="text-gray-500 font-medium">
-                  ••••••
                 </span>
                 <span v-else class="text-gray-400">-</span>
               </td>
