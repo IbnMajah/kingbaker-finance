@@ -283,6 +283,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
+import { useFormTokenRefresh } from '@/composables/useFormTokenRefresh.js';
 
 export default {
   components: {
@@ -290,6 +291,13 @@ export default {
     Link,
   },
   layout: Layout,
+  setup() {
+    const { ensureValidToken } = useFormTokenRefresh();
+    
+    return {
+      ensureValidToken
+    };
+  },
   props: {
     referenceId: {
       type: String,
@@ -342,7 +350,10 @@ export default {
     removeItem(index) {
       this.form.items.splice(index, 1);
     },
-    submit() {
+    async submit() {
+      // Ensure CSRF token is valid before submission
+      await this.ensureValidToken();
+      
       this.form.post('/expense-claims');
     },
   },

@@ -354,6 +354,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
 import { formatterMixin } from '@/Utils/formatters'
+import { useFormTokenRefresh } from '@/composables/useFormTokenRefresh.js';
 
 export default {
   components: {
@@ -362,6 +363,13 @@ export default {
   },
   layout: Layout,
   mixins: [formatterMixin],
+  setup() {
+    const { ensureValidToken } = useFormTokenRefresh();
+    
+    return {
+      ensureValidToken
+    };
+  },
   props: {
     expenseClaim: {
       type: Object,
@@ -445,13 +453,19 @@ export default {
     calculateTotal() {
       return (this.form.items || []).reduce((sum, item) => sum + (item.unit_price || 0) * (item.quantity || 1), 0);
     },
-    submit() {
+    async submit() {
+      // Ensure CSRF token is valid before submission
+      await this.ensureValidToken();
+      
       this.form.put(`/expense-claims/${this.expenseClaim.id}`, {
         onSuccess: () => this.form.reset('receipt_image'),
       });
     },
-    destroy() {
+    async destroy() {
       if (confirm('Are you sure you want to delete this expense claim?')) {
+        // Ensure CSRF token is valid before deletion
+        await this.ensureValidToken();
+        
         this.$inertia.delete(`/expense-claims/${this.expenseClaim.id}`);
       }
     },

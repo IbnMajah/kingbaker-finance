@@ -135,6 +135,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import { useFormTokenRefresh } from '@/composables/useFormTokenRefresh.js'
 
 export default {
   components: {
@@ -143,6 +144,13 @@ export default {
   },
   layout: Layout,
   remember: 'form',
+  setup() {
+    const { ensureValidToken } = useFormTokenRefresh()
+    
+    return {
+      ensureValidToken
+    }
+  },
   data() {
     return {
       form: this.$inertia.form({
@@ -156,7 +164,10 @@ export default {
     }
   },
   methods: {
-    store() {
+    async store() {
+      // Ensure CSRF token is valid before submission
+      await this.ensureValidToken()
+      
       this.form.post('/bank-accounts')
     },
   },

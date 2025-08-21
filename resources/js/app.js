@@ -4,6 +4,7 @@ import { createInertiaApp, router } from '@inertiajs/vue3'
 import { createPinia } from 'pinia'
 import { formatDate, formatAmount } from './Utils/formatters.js'
 import { usePermissionsStore } from './stores/permissions.js'
+import { useSessionKeepAlive } from './composables/useSessionKeepAlive.js'
 
 createInertiaApp({
   resolve: name => {
@@ -32,6 +33,9 @@ createInertiaApp({
         roles: props.initialPage.props.auth.userRoles || [],
         permissions: props.initialPage.props.auth.userPermissions || []
       })
+
+      // Initialize session keep-alive for authenticated users
+      useSessionKeepAlive()
     }
 
     // Make permissions available globally always (even if no user)
