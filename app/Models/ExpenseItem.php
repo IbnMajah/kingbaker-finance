@@ -14,6 +14,8 @@ class ExpenseItem extends Model
     protected $fillable = [
         'expense_claim_id',
         'description',
+        'category',
+        'receipt_image_path',
         'unit_price',
         'quantity',
     ];
@@ -31,6 +33,12 @@ class ExpenseItem extends Model
     {
         return $this->belongsTo(ExpenseClaim::class);
     }
+
+    // // category
+    // public function category(): BelongsTo
+    // {
+    //     return $this->belongsTo(Category::class);
+    // }
 
     protected static function booted()
     {

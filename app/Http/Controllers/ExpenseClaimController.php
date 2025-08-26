@@ -25,8 +25,16 @@ class ExpenseClaimController extends Controller
      */
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+
         $query = ExpenseClaim::query()
             ->with(['user', 'transaction', 'transaction.bankAccount', 'items'])
+            // Apply branch filtering for non-admin users
+            ->when(!($user->role === 'admin' || $user->owner), function ($query) use ($user) {
+                if ($user->branch_id) {
+                    $query->where('branch_id', $user->branch_id);
+                }
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('reference_id', 'like', "%{$search}%")
@@ -117,10 +125,19 @@ class ExpenseClaimController extends Controller
      */
     public function create(): Response
     {
+        $user = Auth::user();
+
         return Inertia::render('ExpenseClaims/Create', [
             'expenseTypes' => ['petty_cash', 'cash_on_hand', 'other'],
             'categories' => ['office_supplies', 'travel', 'meals', 'utilities', 'maintenance', 'other'],
-            'branches' => Branch::select('id as value', 'name as label')->get(),
+            'branches' => ($user->role === 'admin' || $user->owner
+                ? Branch::select('id as value', 'name as label')->get()
+                : Branch::where('id', $user->branch_id)->select('id as value', 'name as label')->get()
+            ),
+            'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
+                'value' => $a->id,
+                'label' => $a->name
+            ]),
             'referenceId' => 'EXP-' . strtoupper(Str::random(7)),
         ]);
     }
@@ -134,49 +151,55 @@ class ExpenseClaimController extends Controller
             'reference_id' => 'required|string|unique:expense_claims,reference_id',
             'claim_date' => 'required|date',
             'title' => 'required|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'receipt_image' => 'nullable|image|max:2048',
             'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
             'branch_id' => 'nullable|exists:branches,id',
+            'bank_account_id' => 'required|exists:bank_accounts,id',
             'payee' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string|max:255',
+            'items.*.category' => 'nullable|string|max:255',
+            'items.*.receipt_image' => 'nullable|image|max:2048',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         DB::beginTransaction();
         try {
-            $receiptPath = null;
-            if ($request->hasFile('receipt_image')) {
-                $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
-            }
+            $total = collect($validated['items'])->sum(function ($item) {
+                return $item['unit_price'] * ($item['quantity'] ?? 1);
+            });
 
             $expenseClaim = ExpenseClaim::create([
                 'user_id' => auth()->id(),
                 'reference_id' => $validated['reference_id'],
                 'claim_date' => $validated['claim_date'],
                 'title' => $validated['title'],
-                'category' => $validated['category'],
-                'receipt_image_path' => $receiptPath,
                 'status' => 'active',
                 'expense_type' => $validated['expense_type'],
                 'branch_id' => $validated['branch_id'],
+                'bank_account_id' => $validated['bank_account_id'],
                 'payee' => $validated['payee'],
                 'notes' => $validated['notes'],
-                'total' => collect($validated['items'])->sum(function($item) {
-                    return $item['unit_price'] * ($item['quantity'] ?? 1);
-                }),
+                'total' => $total,
             ]);
 
-            foreach ($validated['items'] as $item) {
+            foreach ($validated['items'] as $index => $item) {
+                $receiptPath = null;
+                if ($request->hasFile("items.{$index}.receipt_image")) {
+                    $receiptPath = $request->file("items.{$index}.receipt_image")->store('receipts', 'public');
+                }
+
                 $expenseClaim->items()->create([
                     'description' => $item['description'],
+                    'category' => $item['category'] ?? null,
+                    'receipt_image_path' => $receiptPath,
                     'unit_price' => $item['unit_price'],
                     'quantity' => $item['quantity'] ?? 1,
                 ]);
             }
+
+
 
             DB::commit();
             return Redirect::route('expense-claims.show', $expenseClaim->id)
@@ -194,7 +217,14 @@ class ExpenseClaimController extends Controller
      */
     public function show(ExpenseClaim $expenseClaim): Response
     {
-        $expenseClaim->load(['user', 'transaction', 'transaction.bankAccount', 'items', 'branch']);
+        $user = Auth::user();
+
+        // Ensure non-admin users can only view expense claims from their branch
+        if (!($user->role === 'admin' || $user->owner) && $expenseClaim->branch_id !== $user->branch_id) {
+            abort(403, 'You can only view expense claims from your branch.');
+        }
+
+        $expenseClaim->load(['user', 'transaction', 'transaction.bankAccount', 'items', 'branch', 'bankAccount']);
 
         return Inertia::render('ExpenseClaims/Show', [
             'expenseClaim' => [
@@ -228,9 +258,15 @@ class ExpenseClaimController extends Controller
                         'name' => $expenseClaim->transaction->bankAccount->name,
                     ] : null,
                 ] : null,
+                'bank_account' => $expenseClaim->bankAccount ? [
+                    'id' => $expenseClaim->bankAccount->id,
+                    'name' => $expenseClaim->bankAccount->name,
+                ] : null,
                 'items' => $expenseClaim->items->map(fn($item) => [
                     'id' => $item->id,
                     'description' => $item->description,
+                    'category' => $item->category,
+                    'receipt_image_path' => $item->receipt_image_path,
                     'unit_price' => $item->unit_price,
                     'quantity' => $item->quantity,
                 ]),
@@ -245,9 +281,16 @@ class ExpenseClaimController extends Controller
      */
     public function edit(ExpenseClaim $expenseClaim): Response|RedirectResponse
     {
-        if ($expenseClaim->status !== 'draft') {
+        $user = Auth::user();
+
+        // Ensure non-admin users can only edit expense claims from their branch
+        if (!($user->role === 'admin' || $user->owner) && $expenseClaim->branch_id !== $user->branch_id) {
+            abort(403, 'You can only edit expense claims from your branch.');
+        }
+
+        if ($expenseClaim->status !== 'active' && $expenseClaim->status !== 'draft') {
             return Redirect::route('expense-claims.show', $expenseClaim->id)
-                ->with('error', 'Only draft expense claims can be edited.');
+                ->with('error', 'Only active or draft expense claims can be edited.');
         }
 
         $expenseClaim->load(['user', 'items', 'branch']);
@@ -258,24 +301,35 @@ class ExpenseClaimController extends Controller
                 'reference_id' => $expenseClaim->reference_id,
                 'claim_date' => $expenseClaim->claim_date->format('Y-m-d'),
                 'title' => $expenseClaim->title,
-                'category' => $expenseClaim->category,
-                'receipt_image_path' => $expenseClaim->receipt_image_path,
                 'payee' => $expenseClaim->payee,
                 'expense_type' => $expenseClaim->expense_type,
                 'total' => $expenseClaim->total,
                 'status' => $expenseClaim->status,
                 'branch_id' => $expenseClaim->branch_id,
+                'bank_account_id' => $expenseClaim->bank_account_id,
                 'notes' => $expenseClaim->notes,
-                'items' => $expenseClaim->items,
+                'items' => $expenseClaim->items->map(fn($item) => [
+                    'id' => $item->id,
+                    'description' => $item->description,
+                    'category' => $item->category,
+                    'receipt_image_path' => $item->receipt_image_path,
+                    'unit_price' => $item->unit_price,
+                    'quantity' => $item->quantity,
+                ]),
             ],
             'expenseTypes' => ['petty_cash', 'cash_on_hand', 'other'],
             'categories' => ['office_supplies', 'travel', 'meals', 'utilities', 'maintenance', 'other'],
-            'branches' => Branch::orderBy('name')
-                ->get()
-                ->map(fn($branch) => [
-                    'value' => $branch->id,
-                    'label' => $branch->name,
-                ]),
+            'branches' => ($user->role === 'admin' || $user->owner
+                ? Branch::orderBy('name')->get()
+                : Branch::where('id', $user->branch_id)->orderBy('name')->get()
+            )->map(fn($branch) => [
+                'value' => $branch->id,
+                'label' => $branch->name,
+            ]),
+            'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($account) => [
+                'value' => $account->id,
+                'label' => $account->name,
+            ]),
         ]);
     }
 
@@ -284,54 +338,65 @@ class ExpenseClaimController extends Controller
      */
     public function update(Request $request, ExpenseClaim $expenseClaim): RedirectResponse
     {
-        if ($expenseClaim->status !== 'draft') {
-            return Redirect::back()->with('error', 'Only draft expense claims can be updated.');
+        $user = Auth::user();
+
+        // Ensure non-admin users can only update expense claims from their branch
+        if (!($user->role === 'admin' || $user->owner) && $expenseClaim->branch_id !== $user->branch_id) {
+            abort(403, 'You can only update expense claims from your branch.');
+        }
+
+        if ($expenseClaim->status !== 'active' && $expenseClaim->status !== 'draft') {
+            return Redirect::back()->with('error', 'Only active or draft expense claims can be updated.');
         }
 
         $validated = $request->validate([
             'claim_date' => 'required|date',
             'title' => 'required|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'receipt_image' => 'nullable|image|max:2048',
             'payee' => 'required|string|max:255',
             'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
             'branch_id' => 'nullable|exists:branches,id',
+            'bank_account_id' => 'required|exists:bank_accounts,id',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string|max:255',
+            'items.*.category' => 'nullable|string|max:255',
+            'items.*.receipt_image' => 'nullable|image|max:2048',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         DB::beginTransaction();
         try {
-            $receiptPath = $expenseClaim->receipt_image_path;
-            if ($request->hasFile('receipt_image')) {
-                if ($receiptPath) {
-                    Storage::disk('public')->delete($receiptPath);
-                }
-                $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
-            }
-
             // Update the expense claim
             $expenseClaim->update([
                 'claim_date' => $validated['claim_date'],
                 'title' => $validated['title'],
-                'category' => $validated['category'],
-                'receipt_image_path' => $receiptPath,
                 'payee' => $validated['payee'],
                 'expense_type' => $validated['expense_type'],
                 'branch_id' => $validated['branch_id'],
+                'bank_account_id' => $validated['bank_account_id'],
                 'notes' => $validated['notes'],
             ]);
 
-            // Delete existing items
+            // Delete existing items and their receipts
+            foreach ($expenseClaim->items as $existingItem) {
+                if ($existingItem->receipt_image_path) {
+                    Storage::disk('public')->delete($existingItem->receipt_image_path);
+                }
+            }
             $expenseClaim->items()->delete();
 
             // Create new items
-            foreach ($validated['items'] as $itemData) {
+            foreach ($validated['items'] as $index => $itemData) {
+                $receiptPath = null;
+                if ($request->hasFile("items.{$index}.receipt_image")) {
+                    $receiptPath = $request->file("items.{$index}.receipt_image")->store('receipts', 'public');
+                }
+
                 $expenseClaim->items()->create([
                     'description' => $itemData['description'],
+                    'category' => $itemData['category'] ?? null,
+                    'receipt_image_path' => $receiptPath,
                     'unit_price' => $itemData['unit_price'],
                     'quantity' => $itemData['quantity'],
                 ]);
@@ -339,6 +404,8 @@ class ExpenseClaimController extends Controller
 
             // Update total amount
             $expenseClaim->updateTotalAmount();
+
+
 
             DB::commit();
             return Redirect::route('expense-claims.show', $expenseClaim->id)
@@ -358,17 +425,28 @@ class ExpenseClaimController extends Controller
      */
     public function destroy(ExpenseClaim $expenseClaim): RedirectResponse
     {
-        if ($expenseClaim->status !== 'draft' && $expenseClaim->status !== 'cancelled') {
-            return Redirect::back()->with('error', 'Only draft or cancelled expense claims can be deleted.');
+        $user = Auth::user();
+
+        // Ensure non-admin users can only delete expense claims from their branch
+        if (!($user->role === 'admin' || $user->owner) && $expenseClaim->branch_id !== $user->branch_id) {
+            abort(403, 'You can only delete expense claims from your branch.');
         }
 
-        // Delete receipt image if it exists
-        if ($expenseClaim->receipt_image_path) {
-            Storage::disk('public')->delete($expenseClaim->receipt_image_path);
+        if ($expenseClaim->status !== 'active' && $expenseClaim->status !== 'cancelled') {
+            return Redirect::back()->with('error', 'Only active or cancelled expense claims can be deleted.');
+        }
+
+        // Delete receipt images from items if they exist
+        foreach ($expenseClaim->items as $item) {
+            if ($item->receipt_image_path) {
+                Storage::disk('public')->delete($item->receipt_image_path);
+            }
         }
 
         // Delete all expense items first
         $expenseClaim->items()->delete();
+
+
 
         $expenseClaim->delete();
 

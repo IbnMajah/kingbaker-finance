@@ -99,10 +99,12 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div
               v-for="permission in user.permissions"
-              :key="permission"
-              class="px-3 py-2 bg-gray-50 rounded-md text-sm"
+              :key="permission.name"
+              class="px-3 py-2 bg-gray-50 rounded-md"
             >
-              {{ formatPermission(permission) }}
+              <div class="text-sm font-medium">{{ formatPermission(permission.name) }}</div>
+              <div v-if="permission.description" class="text-xs text-gray-500 mt-1">{{ permission.description }}</div>
+              <div class="text-xs text-blue-600 mt-1 font-medium">{{ permission.module }}</div>
             </div>
           </div>
         </div>
@@ -214,6 +216,7 @@ export default {
       return classes[role] || 'bg-gray-100 text-gray-800'
     },
     formatPermission(permission) {
+      if (!permission || typeof permission !== 'string') return '—'
       return permission
         .split('_')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))

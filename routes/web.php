@@ -384,6 +384,8 @@ Route::middleware('auth')->group(function () {
 
 
 
+
+
     // Cheque Payments
     Route::get('cheque-payments', [ChequePaymentController::class, 'index'])
         ->name('cheque-payments');

@@ -60,32 +60,20 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account *</label>
               <select
-                v-model="form.category"
+                v-model="form.bank_account_id"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.category ? 'border-red-500' : ''"
+                :class="form.errors.bank_account_id ? 'border-red-500' : ''"
                 required
               >
-                <option value="">Select Category</option>
-                <option v-for="category in categories" :key="category" :value="category">
-                  {{ category.replace('_', ' ').charAt(0).toUpperCase() + category.slice(1) }}
+                <option value="">Select Bank Account</option>
+                <option v-for="account in bankAccounts" :key="account.value" :value="account.value">
+                  {{ account.label }}
                 </option>
               </select>
-              <div v-if="form.errors.category" class="mt-1 text-sm text-red-600">{{ form.errors.category }}</div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
-              <input
-                @input="form.receipt_image = $event.target.files[0]"
-                type="file"
-                accept="image/*"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.receipt_image ? 'border-red-500' : ''"
-              />
-              <div v-if="form.errors.receipt_image" class="mt-1 text-sm text-red-600">{{ form.errors.receipt_image }}</div>
-              <p class="mt-1 text-sm text-gray-500">Optional: Upload receipt or proof of claim</p>
+              <div v-if="form.errors.bank_account_id" class="mt-1 text-sm text-red-600">{{ form.errors.bank_account_id }}</div>
+              <p class="mt-1 text-sm text-gray-500">Select the bank account to debit for this expense</p>
             </div>
 
             <div>
@@ -139,9 +127,11 @@
               <!-- Items Header -->
               <div class="bg-gray-50 px-4 py-3 border-b border-gray-300">
                 <div class="grid grid-cols-12 gap-3 text-sm font-medium text-gray-700">
-                  <div class="col-span-5">Description</div>
-                  <div class="col-span-2">Unit Price (GMD)</div>
-                  <div class="col-span-2">Quantity</div>
+                  <div class="col-span-3">Description</div>
+                  <div class="col-span-2">Category</div>
+                  <div class="col-span-2">Receipt</div>
+                  <div class="col-span-1">Unit Price</div>
+                  <div class="col-span-1">Quantity</div>
                   <div class="col-span-2">Total</div>
                   <div class="col-span-1">Action</div>
                 </div>
@@ -151,7 +141,7 @@
                 <div v-for="(item, index) in form.items" :key="index" class="px-4 py-3">
                   <div class="grid grid-cols-12 gap-3 items-start">
                     <!-- Description -->
-                    <div class="col-span-5">
+                    <div class="col-span-3">
                       <input
                         v-model="item.description"
                         type="text"
@@ -164,14 +154,43 @@
                         {{ form.errors[`items.${index}.description`] }}
                       </div>
                     </div>
-                    <!-- Unit Price -->
+                    <!-- Category -->
                     <div class="col-span-2">
+                      <select
+                        v-model="item.category"
+                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        :class="form.errors[`items.${index}.category`] ? 'border-red-300' : 'border-gray-300'"
+                      >
+                        <option value="">Select Category</option>
+                        <option v-for="category in categories" :key="category" :value="category">
+                          {{ category.replace('_', ' ').charAt(0).toUpperCase() + category.slice(1) }}
+                        </option>
+                      </select>
+                      <div v-if="form.errors[`items.${index}.category`]" class="mt-1 text-sm text-red-600">
+                        {{ form.errors[`items.${index}.category`] }}
+                      </div>
+                    </div>
+                    <!-- Receipt -->
+                    <div class="col-span-2">
+                      <input
+                        @input="handleReceiptUpload(index, $event)"
+                        type="file"
+                        accept="image/*"
+                        class="w-full px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-xs"
+                        :class="form.errors[`items.${index}.receipt_image`] ? 'border-red-300' : 'border-gray-300'"
+                      />
+                      <div v-if="form.errors[`items.${index}.receipt_image`]" class="mt-1 text-sm text-red-600">
+                        {{ form.errors[`items.${index}.receipt_image`] }}
+                      </div>
+                    </div>
+                    <!-- Unit Price -->
+                    <div class="col-span-1">
                       <input
                         v-model.number="item.unit_price"
                         type="number"
                         step="0.01"
                         min="0.01"
-                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.unit_price`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="0.00"
                         required
@@ -181,12 +200,12 @@
                       </div>
                     </div>
                     <!-- Quantity -->
-                    <div class="col-span-2">
+                    <div class="col-span-1">
                       <input
                         v-model.number="item.quantity"
                         type="number"
                         min="1"
-                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.quantity`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="1"
                         required
@@ -197,7 +216,7 @@
                     </div>
                     <!-- Total -->
                     <div class="col-span-2">
-                      <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700">
+                      <div class="px-2 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700 text-sm">
                         GMD {{ ((item.unit_price || 0) * (item.quantity || 0)).toFixed(2) }}
                       </div>
                     </div>
@@ -315,6 +334,10 @@ export default {
       type: Array,
       required: true,
     },
+    bankAccounts: {
+      type: Array,
+      required: true,
+    },
   },
   remember: 'form',
   data() {
@@ -323,15 +346,16 @@ export default {
         reference_id: this.referenceId,
         claim_date: new Date().toISOString().split('T')[0],
         title: '',
-        category: '',
         payee: '',
         expense_type: '',
         branch_id: '',
+        bank_account_id: '',
         notes: '',
-        receipt_image: null,
         items: [
           {
             description: '',
+            category: '',
+            receipt_image: null,
             unit_price: '',
             quantity: 1,
           },
@@ -343,12 +367,17 @@ export default {
     addItem() {
       this.form.items.push({
         description: '',
+        category: '',
+        receipt_image: null,
         unit_price: '',
         quantity: 1,
       });
     },
     removeItem(index) {
       this.form.items.splice(index, 1);
+    },
+    handleReceiptUpload(index, event) {
+      this.form.items[index].receipt_image = event.target.files[0];
     },
     async submit() {
       // Ensure CSRF token is valid before submission
