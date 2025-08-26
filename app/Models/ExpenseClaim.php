@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ExpenseClaim extends Model
 {
@@ -94,21 +95,24 @@ class ExpenseClaim extends Model
         // Update transaction when expense claim is updated
         static::updated(function ($expenseClaim) {
             if ($expenseClaim->bankAccount) {
-                $transaction = $expenseClaim->bankAccount->transactions()
-                    ->where('category', 'expense_claim')
-                    ->where('reference_number', $expenseClaim->reference_id)
-                    ->first();
+                DB::transaction(function () use ($expenseClaim) {
+                    $transaction = $expenseClaim->bankAccount->transactions()
+                        ->where('category', 'expense_claim')
+                        ->where('reference_number', $expenseClaim->reference_id)
+                        ->lockForUpdate()
+                        ->first();
 
-                if ($transaction) {
-                    $transaction->update([
-                        'transaction_date' => $expenseClaim->claim_date,
-                        'payment_mode' => $expenseClaim->mapExpenseTypeToPaymentMode($expenseClaim->expense_type),
-                        'payee' => $expenseClaim->payee,
-                        'amount' => $expenseClaim->total,
-                        'description' => "Expense Claim: {$expenseClaim->title}",
-                        'branch_id' => $expenseClaim->branch_id,
-                    ]);
-                }
+                    if ($transaction) {
+                        $transaction->update([
+                            'transaction_date' => $expenseClaim->claim_date,
+                            'payment_mode'     => $expenseClaim->mapExpenseTypeToPaymentMode($expenseClaim->expense_type),
+                            'payee'            => $expenseClaim->payee,
+                            'amount'           => $expenseClaim->total,
+                            'description'      => "Expense Claim: {$expenseClaim->title}",
+                            'branch_id'        => $expenseClaim->branch_id,
+                        ]);
+                    }
+                });
             }
         });
 

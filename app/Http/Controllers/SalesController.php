@@ -24,6 +24,9 @@ class SalesController extends Controller
             ->when(!($user->role === 'admin' || $user->owner), function ($query) use ($user) {
                 if ($user->branch_id) {
                     $query->where('branch_id', $user->branch_id);
+                } else {
+                    // Non-admin users without a branch should see no sales
+                    $query->whereRaw('1 = 0');
                 }
             })
             ->when($request->input('search'), function ($query, $search) {

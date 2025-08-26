@@ -432,8 +432,8 @@ class ExpenseClaimController extends Controller
             abort(403, 'You can only delete expense claims from your branch.');
         }
 
-        if ($expenseClaim->status !== 'active' || $expenseClaim->status !== 'cancelled') {
-            return Redirect::back()->with('error', 'Only draft or cancelled expense claims can be deleted.');
+        if ($expenseClaim->status !== 'active' && $expenseClaim->status !== 'cancelled') {
+            return Redirect::back()->with('error', 'Only active or cancelled expense claims can be deleted.');
         }
 
         // Delete receipt images from items if they exist

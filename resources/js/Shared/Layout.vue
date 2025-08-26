@@ -76,9 +76,7 @@ export default {
     auth: Object,
   },
   setup() {
-    const permissions = usePermissions()
-
-    const { isAdmin } = usePermissions()
+    const { isAdmin, permissions } = usePermissions()
     return { isAdmin, permissions}
   },
 }
