@@ -94,13 +94,8 @@
           <div class="text-gray-900">{{ expenseClaim.title || 'No title' }}</div>
         </div>
         <div>
-          <div class="text-sm font-medium text-gray-500">Category</div>
-          <div class="text-gray-900">
-            <span v-if="expenseClaim.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              {{ expenseClaim.category.replace('_', ' ') }}
-            </span>
-            <span v-else class="text-gray-400">No category</span>
-          </div>
+          <div class="text-sm font-medium text-gray-500">Bank Account</div>
+          <div class="text-gray-900">{{ expenseClaim.bank_account?.name ?? 'Not specified' }}</div>
         </div>
         <div>
           <div class="text-sm font-medium text-gray-500">Payee</div>
@@ -118,18 +113,7 @@
           <div class="text-sm font-medium text-gray-500">Approved By</div>
           <div class="text-gray-900">{{ expenseClaim.approver.name }}</div>
         </div>
-        <div v-if="expenseClaim.receipt_image_path">
-          <div class="text-sm font-medium text-gray-500">Receipt</div>
-          <button
-            @click="showImage(expenseClaim.receipt_image_path)"
-            class="text-brand-600 hover:text-brand-900 text-sm"
-          >
-            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
-            </svg>
-            View Receipt
-          </button>
-        </div>
+
       </div>
     </div>
 
@@ -154,6 +138,8 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
@@ -164,6 +150,24 @@
               <td class="px-6 py-4 text-sm text-gray-900">
                 <div class="font-medium">{{ item.description }}</div>
                 <div v-if="item.notes" class="text-xs text-gray-500 truncate max-w-xs">{{ item.notes }}</div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900">
+                <span v-if="item.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  {{ item.category.replace('_', ' ') }}
+                </span>
+                <span v-else class="text-gray-400">No category</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                <button
+                  v-if="item.receipt_image_path"
+                  @click="showImage(item.receipt_image_path)"
+                  class="text-brand-600 hover:text-brand-900"
+                >
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <span v-else class="text-gray-400">No receipt</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                 {{ item.quantity || 1 }}
@@ -176,12 +180,12 @@
               </td>
             </tr>
             <tr v-if="!expenseClaim.items?.length">
-              <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="6" class="px-6 py-4 text-center text-gray-500">
                 No expense items found.
               </td>
             </tr>
             <tr class="bg-gray-50">
-              <td colspan="3" class="px-6 py-4 text-right font-semibold text-gray-900">
+              <td colspan="5" class="px-6 py-4 text-right font-semibold text-gray-900">
                 Total:
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900">
@@ -198,7 +202,7 @@
       <h2 class="text-lg font-semibold mb-4">Actions</h2>
       <div class="flex flex-wrap gap-3">
         <Link
-          v-if="expenseClaim.status === 'draft'"
+          v-if="expenseClaim.status === 'active'"
           :href="'/expense-claims/' + expenseClaim.id + '/edit'"
           class="btn-kingbaker flex items-center"
         >
@@ -208,21 +212,7 @@
           Edit Claim
         </Link>
 
-        <button
-          v-if="expenseClaim.status === 'draft'"
-          @click="submitClaim"
-          :disabled="processing"
-          class="btn-kingbaker flex items-center"
-        >
-          <svg v-if="processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {{ processing ? 'Submitting...' : 'Submit for Approval' }}
-        </button>
+
 
         <button
           v-if="expenseClaim.status === 'submitted' && canApprove"
@@ -314,7 +304,7 @@ export default {
   methods: {
     getStatusTextClass(status) {
       const classes = {
-        'draft': 'text-gray-600',
+        'active': 'text-gray-600',
         'submitted': 'text-yellow-600',
         'approved': 'text-green-600',
           'rejected': 'text-red-600',

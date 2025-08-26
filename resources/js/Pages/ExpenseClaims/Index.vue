@@ -36,8 +36,8 @@
             </div>
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Approved Claims</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ approvedClaims }}</p>
+            <p class="text-sm font-medium text-gray-600">Active Claims</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ activeClaims }}</p>
           </div>
         </div>
       </div>
@@ -52,8 +52,8 @@
             </div>
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Pending Claims</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ pendingClaims }}</p>
+            <p class="text-sm font-medium text-gray-600">Draft Claims</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ draftClaims }}</p>
           </div>
         </div>
       </div>
@@ -193,10 +193,8 @@
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                   :class="{
                     'bg-gray-100 text-gray-800': claim.status === 'draft',
-                    'bg-yellow-100 text-yellow-800': claim.status === 'submitted',
-                    'bg-green-100 text-green-800': claim.status === 'approved',
-                    'bg-red-100 text-red-800': claim.status === 'rejected',
-                    'bg-blue-100 text-blue-800': claim.status === 'paid'
+                    'bg-green-100 text-green-800': claim.status === 'active',
+                    'bg-red-100 text-red-800': claim.status === 'cancelled'
                   }"
                 >
                   {{ claim.status.charAt(0).toUpperCase() + claim.status.slice(1) }}
@@ -212,7 +210,7 @@
                     <span>View</span>
                   </Link>
                   <Link
-                    v-if="canEditExpenses && claim.status === 'draft'"
+                    v-if="canEditExpenses && claim.status === 'active'"
                     class="flex items-center space-x-1 text-gray-600 hover:text-gray-900 text-sm font-medium"
                     :href="`/expense-claims/${claim.id}/edit`"
                   >
@@ -221,36 +219,7 @@
                     </svg>
                     <span>Edit</span>
                   </Link>
-                  <button
-                    v-if="claim.status === 'draft'"
-                    @click="submitClaim(claim)"
-                    class="flex items-center space-x-1 text-blue-600 hover:text-blue-900 text-sm font-medium"
-                  >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>Submit</span>
-                  </button>
-                  <button
-                    v-if="claim.status === 'submitted'"
-                    @click="approveClaim(claim)"
-                    class="flex items-center space-x-1 text-green-600 hover:text-green-900 text-sm font-medium"
-                  >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>Approve</span>
-                  </button>
-                  <button
-                    v-if="claim.status === 'submitted'"
-                    @click="openRejectModal(claim)"
-                    class="flex items-center space-x-1 text-red-600 hover:text-red-900 text-sm font-medium"
-                  >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>Reject</span>
-                  </button>
+
 
                 </div>
               </td>
@@ -292,41 +261,7 @@
       </div>
     </div>
 
-    <!-- Reject Modal -->
-    <div v-if="showRejectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Reject Expense Claim</h3>
-          <form @submit.prevent="rejectClaim">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Reason for Rejection</label>
-              <textarea
-                v-model="rejectForm.rejection_reason"
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                required
-              ></textarea>
-            </div>
-            <div class="flex items-center justify-end space-x-2">
-              <button
-                type="button"
-                @click="closeRejectModal"
-                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="rejectForm.processing"
-                class="btn-kingbaker"
-              >
-                {{ rejectForm.processing ? 'Rejecting...' : 'Reject Claim' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+
   </div>
 </template>
 
@@ -364,11 +299,11 @@ export default {
       type: Number,
       default: 0
     },
-    pendingClaims: {
+    draftClaims: {
       type: Number,
       default: 0
     },
-    approvedClaims: {
+    activeClaims: {
       type: Number,
       default: 0
     },
@@ -393,11 +328,6 @@ export default {
         category: this.filters.category,
         expenseType: this.filters.expense_type,
       },
-      showRejectModal: false,
-      selectedClaim: null,
-      rejectForm: this.$inertia.form({
-        rejection_reason: '',
-      }),
     }
   },
   watch: {
@@ -414,29 +344,6 @@ export default {
   methods: {
     reset() {
       this.form = mapValues(this.form, () => '')
-    },
-    submitClaim(claim) {
-      this.$inertia.post(`/expense-claims/${claim.id}/submit`)
-    },
-    approveClaim(claim) {
-      this.$inertia.post(`/expense-claims/${claim.id}/approve`)
-    },
-    openRejectModal(claim) {
-      this.selectedClaim = claim
-      this.showRejectModal = true
-      this.rejectForm.reset()
-    },
-    closeRejectModal() {
-      this.showRejectModal = false
-      this.selectedClaim = null
-      this.rejectForm.reset()
-    },
-    rejectClaim() {
-      this.rejectForm.post(`/expense-claims/${this.selectedClaim.id}/reject`, {
-        onSuccess: () => {
-          this.closeRejectModal()
-        }
-      })
     }
   },
 }

@@ -92,18 +92,20 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account *</label>
               <select
-                v-model="form.category"
+                v-model="form.bank_account_id"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.category ? 'border-red-500' : ''"
+                :class="form.errors.bank_account_id ? 'border-red-500' : ''"
+                required
               >
-                <option value="">Select Category</option>
-                <option v-for="category in categories" :key="category" :value="category">
-                  {{ category.replace('_', ' ').charAt(0).toUpperCase() + category.slice(1) }}
+                <option value="">Select Bank Account</option>
+                <option v-for="account in bankAccounts" :key="account.value" :value="account.value">
+                  {{ account.label }}
                 </option>
               </select>
-              <div v-if="form.errors.category" class="mt-1 text-sm text-red-600">{{ form.errors.category }}</div>
+              <div v-if="form.errors.bank_account_id" class="mt-1 text-sm text-red-600">{{ form.errors.bank_account_id }}</div>
+              <p class="mt-1 text-sm text-gray-500">Select the bank account to debit for this expense</p>
             </div>
 
             <div>
@@ -149,23 +151,7 @@
               <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">{{ form.errors.branch_id }}</div>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
-              <input
-                @input="form.receipt_image = $event.target.files[0]"
-                type="file"
-                accept="image/*"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.receipt_image ? 'border-red-500' : ''"
-              />
-              <div v-if="form.errors.receipt_image" class="mt-1 text-sm text-red-600">{{ form.errors.receipt_image }}</div>
-              <div v-if="expenseClaim.receipt_image_path" class="mt-2">
-                <button type="button" @click="showImage(expenseClaim.receipt_image_path)" class="text-sm text-blue-600 hover:text-blue-800">
-                  View current receipt
-                </button>
-              </div>
-              <p class="mt-1 text-sm text-gray-500">Optional: Upload receipt or proof of expense</p>
-            </div>
+
           </div>
 
           <!-- Expense Items -->
@@ -175,9 +161,11 @@
               <!-- Items Header -->
               <div class="bg-gray-50 px-4 py-3 border-b border-gray-300">
                 <div class="grid grid-cols-12 gap-3 text-sm font-medium text-gray-700">
-                  <div class="col-span-5">Description</div>
-                  <div class="col-span-2">Unit Price (GMD)</div>
-                  <div class="col-span-2">Quantity</div>
+                  <div class="col-span-3">Description</div>
+                  <div class="col-span-2">Category</div>
+                  <div class="col-span-2">Receipt</div>
+                  <div class="col-span-1">Unit Price</div>
+                  <div class="col-span-1">Quantity</div>
                   <div class="col-span-2">Total</div>
                   <div class="col-span-1">Action</div>
                 </div>
@@ -187,7 +175,7 @@
                 <div v-for="(item, index) in (form.items || [])" :key="index" class="px-4 py-3">
                   <div class="grid grid-cols-12 gap-3 items-start">
                     <!-- Description -->
-                    <div class="col-span-5">
+                    <div class="col-span-3">
                       <input
                         v-model="item.description"
                         type="text"
@@ -200,14 +188,48 @@
                         {{ form.errors[`items.${index}.description`] }}
                       </div>
                     </div>
-                    <!-- Unit Price -->
+                    <!-- Category -->
                     <div class="col-span-2">
+                      <select
+                        v-model="item.category"
+                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        :class="form.errors[`items.${index}.category`] ? 'border-red-300' : 'border-gray-300'"
+                      >
+                        <option value="">Select Category</option>
+                        <option v-for="category in categories" :key="category" :value="category">
+                          {{ category.replace('_', ' ').charAt(0).toUpperCase() + category.slice(1) }}
+                        </option>
+                      </select>
+                      <div v-if="form.errors[`items.${index}.category`]" class="mt-1 text-sm text-red-600">
+                        {{ form.errors[`items.${index}.category`] }}
+                      </div>
+                    </div>
+                    <!-- Receipt -->
+                    <div class="col-span-2">
+                      <input
+                        @input="handleReceiptUpload(index, $event)"
+                        type="file"
+                        accept="image/*"
+                        class="w-full px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-xs"
+                        :class="form.errors[`items.${index}.receipt_image`] ? 'border-red-300' : 'border-gray-300'"
+                      />
+                      <div v-if="item.receipt_image_path" class="mt-1">
+                        <button type="button" @click="showImage(item.receipt_image_path)" class="text-xs text-blue-600 hover:text-blue-800">
+                          View current
+                        </button>
+                      </div>
+                      <div v-if="form.errors[`items.${index}.receipt_image`]" class="mt-1 text-sm text-red-600">
+                        {{ form.errors[`items.${index}.receipt_image`] }}
+                      </div>
+                    </div>
+                    <!-- Unit Price -->
+                    <div class="col-span-1">
                       <input
                         v-model.number="item.unit_price"
                         type="number"
                         step="0.01"
                         min="0.01"
-                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.unit_price`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="0.00"
                         required
@@ -217,12 +239,12 @@
                       </div>
                     </div>
                     <!-- Quantity -->
-                    <div class="col-span-2">
+                    <div class="col-span-1">
                       <input
                         v-model.number="item.quantity"
                         type="number"
                         min="1"
-                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.quantity`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="1"
                         required
@@ -233,7 +255,7 @@
                     </div>
                     <!-- Total -->
                     <div class="col-span-2">
-                      <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700">
+                      <div class="px-2 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700 text-sm">
                         GMD {{ ((item.unit_price || 0) * (item.quantity || 0)).toFixed(2) }}
                       </div>
                     </div>
@@ -387,6 +409,10 @@ export default {
       type: Array,
       required: true,
     },
+    bankAccounts: {
+      type: Array,
+      required: true,
+    },
   },
   remember: 'form',
   data() {
@@ -395,15 +421,17 @@ export default {
         reference_id: this.expenseClaim.reference_id,
         claim_date: this.expenseClaim.claim_date ? this.expenseClaim.claim_date.split('T')[0] : '',
         title: this.expenseClaim.title || '',
-        category: this.expenseClaim.category || '',
         payee: this.expenseClaim.payee,
         expense_type: this.expenseClaim.expense_type,
         branch_id: this.expenseClaim.branch_id,
+        bank_account_id: this.expenseClaim.bank_account_id,
         notes: this.expenseClaim.notes,
-        receipt_image: null,
         items: (this.expenseClaim.items || []).map(item => ({
           id: item.id,
           description: item.description || '',
+          category: item.category || '',
+          receipt_image: null,
+          receipt_image_path: item.receipt_image_path || null,
           unit_price: item.unit_price || 0,
           quantity: item.quantity || 1,
         })),
@@ -416,7 +444,7 @@ export default {
 
     getStatusClass(status) {
       const classes = {
-        'draft': 'bg-gray-100 text-gray-800',
+        'active': 'bg-gray-100 text-gray-800',
         'submitted': 'bg-yellow-100 text-yellow-800',
         'approved': 'bg-green-100 text-green-800',
         'rejected': 'bg-red-100 text-red-800',
@@ -433,9 +461,14 @@ export default {
       }
       this.form.items.push({
         description: '',
+        category: '',
+        receipt_image: null,
         unit_price: 0,
         quantity: 1,
       });
+    },
+    handleReceiptUpload(index, event) {
+      this.form.items[index].receipt_image = event.target.files[0];
     },
     removeItem(index) {
       if (this.form.items && this.form.items.length > index) {
@@ -457,9 +490,7 @@ export default {
       // Ensure CSRF token is valid before submission
       await this.ensureValidToken();
       
-      this.form.put(`/expense-claims/${this.expenseClaim.id}`, {
-        onSuccess: () => this.form.reset('receipt_image'),
-      });
+      this.form.put(`/expense-claims/${this.expenseClaim.id}`);
     },
     async destroy() {
       if (confirm('Are you sure you want to delete this expense claim?')) {

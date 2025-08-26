@@ -16,8 +16,16 @@ class SalesController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = Auth::user();
+
         $query = Sale::query()
             ->with(['branch', 'shift'])
+            // Apply branch filtering for non-admin users
+            ->when(!($user->role === 'admin' || $user->owner), function ($query) use ($user) {
+                if ($user->branch_id) {
+                    $query->where('branch_id', $user->branch_id);
+                }
+            })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('amount', 'like', "%{$search}%")
@@ -57,14 +65,14 @@ class SalesController extends Controller
             'total_sales' => $summaryQuery->count(),
             'total_amount' => $summaryQuery->sum('amount'),
             'this_month' => $summaryQuery->whereMonth('sales_date', now()->month)
-                                       ->whereYear('sales_date', now()->year)
-                                       ->sum('amount'),
+                ->whereYear('sales_date', now()->year)
+                ->sum('amount'),
             'today' => $summaryQuery->whereDate('sales_date', now()->toDateString())
-                                   ->sum('amount'),
+                ->sum('amount'),
         ];
 
         $sales = $query->paginate(25)
-            ->through(fn ($sale) => [
+            ->through(fn($sale) => [
                 'id' => $sale->id,
                 'sales_date' => $sale->sales_date,
                 'amount' => $sale->amount,
@@ -92,8 +100,13 @@ class SalesController extends Controller
 
     public function create(): Response
     {
+        $user = Auth::user();
+
         return Inertia::render('Sales/Create', [
-            'branches' => Branch::orderBy('name')->get()->map(fn($b) => [
+            'branches' => ($user->role === 'admin' || $user->owner
+                ? Branch::orderBy('name')->get()
+                : Branch::where('id', $user->branch_id)->orderBy('name')->get()
+            )->map(fn($b) => [
                 'value' => $b->id,
                 'label' => $b->name
             ]),
@@ -121,6 +134,13 @@ class SalesController extends Controller
 
     public function edit(Sale $sale): Response
     {
+        $user = Auth::user();
+
+        // Ensure non-admin users can only edit sales from their branch
+        if (!($user->role === 'admin' || $user->owner) && $sale->branch_id !== $user->branch_id) {
+            abort(403, 'You can only edit sales from your branch.');
+        }
+
         return Inertia::render('Sales/Edit', [
             'sale' => [
                 'id' => $sale->id,
@@ -135,7 +155,10 @@ class SalesController extends Controller
                 'created_at' => $sale->created_at,
                 'updated_at' => $sale->updated_at,
             ],
-            'branches' => Branch::orderBy('name')->get()->map(fn($b) => [
+            'branches' => ($user->role === 'admin' || $user->owner
+                ? Branch::orderBy('name')->get()
+                : Branch::where('id', $user->branch_id)->orderBy('name')->get()
+            )->map(fn($b) => [
                 'value' => $b->id,
                 'label' => $b->name
             ]),
@@ -148,6 +171,13 @@ class SalesController extends Controller
 
     public function update(Request $request, Sale $sale): RedirectResponse
     {
+        $user = Auth::user();
+
+        // Ensure non-admin users can only update sales from their branch
+        if (!($user->role === 'admin' || $user->owner) && $sale->branch_id !== $user->branch_id) {
+            abort(403, 'You can only update sales from your branch.');
+        }
+
         $validated = $request->validate([
             'branch_id' => ['required', 'exists:branches,id'],
             'shift_id' => ['required', 'exists:shifts,id'],
@@ -163,6 +193,13 @@ class SalesController extends Controller
 
     public function destroy(Sale $sale): RedirectResponse
     {
+        $user = Auth::user();
+
+        // Ensure non-admin users can only delete sales from their branch
+        if (!($user->role === 'admin' || $user->owner) && $sale->branch_id !== $user->branch_id) {
+            abort(403, 'You can only delete sales from your branch.');
+        }
+
         $sale->delete();
 
         return Redirect::route('sales')->with('success', 'Sale deleted successfully.');
@@ -170,6 +207,13 @@ class SalesController extends Controller
 
     public function restore(Sale $sale): RedirectResponse
     {
+        $user = Auth::user();
+
+        // Ensure non-admin users can only restore sales from their branch
+        if (!($user->role === 'admin' || $user->owner) && $sale->branch_id !== $user->branch_id) {
+            abort(403, 'You can only restore sales from your branch.');
+        }
+
         $sale->restore();
 
         return Redirect::route('sales')->with('success', 'Sale restored successfully.');

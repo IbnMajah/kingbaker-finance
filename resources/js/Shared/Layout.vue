@@ -34,7 +34,8 @@
               <template #dropdown>
                 <div class="mt-2 py-2 text-sm bg-white rounded shadow-xl">
                   <Link class="block px-6 py-2 hover:text-white hover:bg-brand-500" :href="`/users/${auth.user.id}/edit`">My Profile</Link>
-                  <Link class="block px-6 py-2 hover:text-white hover:bg-brand-500" href="/users">Manage Users</Link>
+                  <!-- Only admins can manage users -->
+                  <Link v-if="isAdmin" class="block px-6 py-2 hover:text-white hover:bg-brand-500" href="/users">Manage Users</Link>
                   <Link class="block px-6 py-2 w-full text-left hover:text-white hover:bg-brand-500" href="/logout" method="delete" as="button">Logout</Link>
                 </div>
               </template>
@@ -60,6 +61,7 @@ import Logo from '@/Shared/Logo.vue'
 import Dropdown from '@/Shared/Dropdown.vue'
 import MainMenu from '@/Shared/MainMenu.vue'
 import FlashMessages from '@/Shared/FlashMessages.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -72,6 +74,12 @@ export default {
   },
   props: {
     auth: Object,
+  },
+  setup() {
+    const permissions = usePermissions()
+
+    const { isAdmin } = usePermissions()
+    return { isAdmin, permissions}
   },
 }
 </script>
