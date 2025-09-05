@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bill;
-use App\Models\Vendor;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Storage;
+use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Vendor;
+use App\Models\BankAccount;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Redirect;
 
 class BillController extends Controller
 {
@@ -39,7 +41,7 @@ class BillController extends Controller
             ->orderBy('due_date', 'desc');
 
         $bills = $query->paginate(10)
-            ->through(fn ($bill) => [
+            ->through(fn($bill) => [
                 'id' => $bill->id,
                 'reference' => $bill->reference,
                 'description' => $bill->description,
@@ -78,34 +80,71 @@ class BillController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $baseRules = [
             'vendor_id' => 'required|exists:vendors,id',
             'bill_number' => 'nullable|string|max:255',
             'bill_date' => 'required|date',
             'due_date' => 'nullable|date',
-            'amount' => 'required|numeric|min:0.01',
             'bill_type' => 'required|string|max:255',
             'description' => 'nullable|string',
             'recurring_frequency' => 'nullable|string|max:255',
             'next_due_date' => 'nullable|date',
             'bill_image' => 'nullable|image|max:2048',
-        ]);
+        ];
+
+        // For inventory bills, require items; for others, require amount
+        if ($request->input('bill_type') === 'inventory') {
+            $baseRules = array_merge($baseRules, [
+                'items' => 'required|array|min:1',
+                'items.*.description' => 'required|string|max:255',
+                'items.*.unit_price' => 'required|numeric|min:0.01',
+                'items.*.unit_measurement' => 'nullable|string|max:50',
+                'items.*.quantity' => 'required|integer|min:1',
+            ]);
+        } else {
+            $baseRules['amount'] = 'required|numeric|min:0.01';
+        }
+
+        $validated = $request->validate($baseRules);
 
         $imagePath = null;
         if ($request->hasFile('bill_image')) {
             $imagePath = $request->file('bill_image')->store('bills', 'public');
         }
 
-        // Remove bill_image from validated data since it's not a database column
-        unset($validated['bill_image']);
+        // Remove bill_image and items from validated data since they're not bill columns
+        $items = $validated['items'] ?? [];
+        unset($validated['bill_image'], $validated['items']);
 
-        Bill::create([
+        // For inventory bills, calculate total amount from items; for others, use provided amount
+        if ($request->input('bill_type') === 'inventory') {
+            $totalAmount = 0;
+            foreach ($items as $item) {
+                $totalAmount += $item['unit_price'] * $item['quantity'];
+            }
+            $validated['amount'] = $totalAmount;
+        }
+
+        $bill = Bill::create([
             ...$validated,
             'status' => 'pending',
             'amount_paid' => 0,
             'image_path' => $imagePath,
             'created_by' => Auth::id(),
         ]);
+
+        // Create bill items only for inventory bills
+        if ($request->input('bill_type') === 'inventory' && !empty($items)) {
+            foreach ($items as $item) {
+                $bill->items()->create([
+                    'description' => $item['description'],
+                    'unit_price' => $item['unit_price'],
+                    'unit_measurement' => $item['unit_measurement'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'total' => $item['unit_price'] * $item['quantity'],
+                ]);
+            }
+        }
 
         return Redirect::route('bills')->with('success', 'Bill created successfully.');
     }
@@ -115,7 +154,7 @@ class BillController extends Controller
      */
     public function show(Bill $bill): Response
     {
-        $bill->load(['vendor', 'creator', 'payments.bankAccount']);
+        $bill->load(['vendor', 'creator', 'payments.bankAccount', 'items']);
 
         return Inertia::render('Bills/Show', [
             'bill' => [
@@ -146,7 +185,15 @@ class BillController extends Controller
                             'name' => $payment->bankAccount->name,
                         ] : null
                     ];
-                })
+                }),
+                'items' => $bill->items->map(fn($item) => [
+                    'id' => $item->id,
+                    'description' => $item->description,
+                    'unit_price' => $item->unit_price,
+                    'unit_measurement' => $item->unit_measurement,
+                    'quantity' => $item->quantity,
+                    'total' => $item->total,
+                ])
             ]
         ]);
     }
@@ -157,6 +204,7 @@ class BillController extends Controller
     public function edit(Bill $bill): Response
     {
         $vendors = Vendor::where('active', true)->orderBy('name')->get();
+        $bill->load(['items']);
 
         return Inertia::render('Bills/Edit', [
             'bill' => $bill,
@@ -171,18 +219,33 @@ class BillController extends Controller
      */
     public function update(Request $request, Bill $bill): RedirectResponse
     {
-        $validated = $request->validate([
+        $baseRules = [
             'vendor_id' => 'required|exists:vendors,id',
             'bill_number' => 'nullable|string|max:255',
             'bill_date' => 'required|date',
             'due_date' => 'nullable|date',
-            'amount' => 'required|numeric|min:0.01',
             'bill_type' => 'required|string|max:255',
             'description' => 'nullable|string',
             'recurring_frequency' => 'nullable|string|max:255',
             'next_due_date' => 'nullable|date',
             'bill_image' => 'nullable|image|max:2048',
-        ]);
+        ];
+
+        // For inventory bills, require items; for others, require amount
+        if ($request->input('bill_type') === 'inventory') {
+            $baseRules = array_merge($baseRules, [
+                'items' => 'required|array|min:1',
+                'items.*.id' => 'nullable|exists:bills_items,id',
+                'items.*.description' => 'required|string|max:255',
+                'items.*.unit_price' => 'required|numeric|min:0.01',
+                'items.*.unit_measurement' => 'nullable|string|max:50',
+                'items.*.quantity' => 'required|integer|min:1',
+            ]);
+        } else {
+            $baseRules['amount'] = 'required|numeric|min:0.01';
+        }
+
+        $validated = $request->validate($baseRules);
 
         if ($request->hasFile('bill_image')) {
             // Delete old image if exists
@@ -193,15 +256,61 @@ class BillController extends Controller
             $validated['image_path'] = $imagePath;
         }
 
-        // Remove bill_image from validated data since it's not a database column
-        unset($validated['bill_image']);
+        // Remove bill_image and items from validated data since they're not bill columns
+        $items = $validated['items'] ?? [];
+        unset($validated['bill_image'], $validated['items']);
+
+        // For inventory bills, calculate total amount from items; for others, use provided amount
+        if ($request->input('bill_type') === 'inventory') {
+            $totalAmount = 0;
+            foreach ($items as $item) {
+                $totalAmount += $item['unit_price'] * $item['quantity'];
+            }
+            $validated['amount'] = $totalAmount;
+        }
 
         $bill->update($validated);
+
+        // Update items only for inventory bills
+        if ($request->input('bill_type') === 'inventory' && !empty($items)) {
+            // Delete old items and create new ones
+            $bill->items()->delete();
+            foreach ($items as $item) {
+                $bill->items()->create([
+                    'description' => $item['description'],
+                    'unit_price' => $item['unit_price'],
+                    'unit_measurement' => $item['unit_measurement'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'total' => $item['unit_price'] * $item['quantity'],
+                ]);
+            }
+        } elseif ($request->input('bill_type') !== 'inventory') {
+            // For non-inventory bills, delete any existing items
+            $bill->items()->delete();
+        }
 
         // Update status in case amount changed
         $bill->updateStatus();
 
         return Redirect::route('bills')->with('success', 'Bill updated successfully.');
+    }
+
+    /**
+     * Show the payment form for the bill
+     */
+    public function pay(Bill $bill): Response
+    {
+        $bill->load(['vendor', 'creator', 'payments.bankAccount']);
+
+        // Get bank accounts for payment
+        $bankAccounts = BankAccount::where('active', true)->orderBy('name')->get();
+
+
+
+        return Inertia::render('Bills/Pay', [
+            'bill' => $bill,
+            'bankAccounts' => $bankAccounts,
+        ]);
     }
 
     /**
@@ -212,7 +321,9 @@ class BillController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
+            'reference_number' => 'nullable|string|max:255',
             'payment_method' => 'required|in:cash,bank_transfer,cheque,mobile_money',
+            'bank_account_id' => 'nullable|exists:bank_accounts,id',
             'notes' => 'nullable|string',
         ]);
 

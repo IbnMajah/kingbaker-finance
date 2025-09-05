@@ -17,6 +17,7 @@ class ExpenseItem extends Model
         'category',
         'receipt_image_path',
         'unit_price',
+        'unit_measurement',
         'quantity',
     ];
 

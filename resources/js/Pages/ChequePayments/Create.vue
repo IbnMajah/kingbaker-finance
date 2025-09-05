@@ -110,7 +110,7 @@
             </div>
           </div>
 
-          <div v-if="form.payment_category === 'recurring_bill'" class="border-t border-gray-200 pt-6">
+          <div v-if="form.payment_category === 'bill'" class="border-t border-gray-200 pt-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Bill Information</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -127,16 +127,34 @@
                 <div v-if="form.errors.bill_id" class="mt-1 text-sm text-red-600">{{ form.errors.bill_id }}</div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Recurring Frequency *</label>
-                <select
-                  v-model="form.recurring_frequency"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                  :class="form.errors.recurring_frequency ? 'border-red-500' : ''"
-                >
-                  <option value="">Select Frequency</option>
-                  <option v-for="frequency in recurringFrequencies" :key="frequency.value" :value="frequency.value">{{ frequency.label }}</option>
-                </select>
-                <div v-if="form.errors.recurring_frequency" class="mt-1 text-sm text-red-600">{{ form.errors.recurring_frequency }}</div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Recurring</label>
+                <div class="flex items-center">
+                  <input
+                    v-model="form.is_recurring"
+                    type="checkbox"
+                    class="h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded"
+                  />
+                  <label class="ml-2 text-sm text-gray-700">This is a recurring payment</label>
+                </div>
+                <div v-if="form.errors.is_recurring" class="mt-1 text-sm text-red-600">{{ form.errors.is_recurring }}</div>
+              </div>
+            </div>
+            
+            <!-- Recurring Frequency (only show when recurring is checked) -->
+            <div v-if="form.is_recurring" class="mt-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Recurring Frequency *</label>
+                  <select
+                    v-model="form.recurring_frequency"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                    :class="form.errors.recurring_frequency ? 'border-red-500' : ''"
+                  >
+                    <option value="">Select Frequency</option>
+                    <option v-for="frequency in recurringFrequencies" :key="frequency.value" :value="frequency.value">{{ frequency.label }}</option>
+                  </select>
+                  <div v-if="form.errors.recurring_frequency" class="mt-1 text-sm text-red-600">{{ form.errors.recurring_frequency }}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -327,6 +345,7 @@ export default {
         branch_id: '',
         vendor_id: '',
         bill_id: '',
+        is_recurring: false,
         recurring_frequency: '',
         cheque_number: '',
         reference_number: '',
@@ -343,7 +362,7 @@ export default {
     getCategoryDescription() {
       const descriptions = {
         vendor_payment: 'Payments to vendors for inventory purchases',
-        recurring_bill: 'Regular monthly/quarterly bills (utilities, rent, etc.)',
+        bill: 'Payments for bills (can be one-time or recurring)',
         staff_advance: 'Advances or loans given to staff members',
         loan_payment: 'Loan repayments to financial institutions',
         institutional_payment: 'Payments to government or regulatory bodies',
@@ -354,7 +373,7 @@ export default {
     getDescriptionPlaceholder() {
       const placeholders = {
         vendor_payment: 'Describe the vendor payment (e.g., inventory purchase, supplies)',
-        recurring_bill: 'Describe the recurring bill (e.g., electricity bill for December 2024)',
+        bill: 'Describe the bill payment (e.g., electricity bill for December 2024)',
         staff_advance: 'Describe the staff advance (e.g., salary advance for John Doe)',
         loan_payment: 'Describe the loan payment (e.g., monthly installment for business loan)',
         institutional_payment: 'Describe the institutional payment (e.g., tax payment, license renewal)',

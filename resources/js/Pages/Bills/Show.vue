@@ -124,7 +124,7 @@
         </div>
         <div>
           <div class="text-sm font-medium text-gray-500">Created By</div>
-          <div class="text-gray-900">{{ bill.creator?.name || 'N/A' }}</div>
+          <div class="text-gray-900">{{ bill.creator?.first_name + ' ' + bill.creator?.last_name || 'N/A' }}</div>
         </div>
         <div v-if="bill.recurring_frequency">
           <div class="text-sm font-medium text-gray-500">Recurring</div>
@@ -148,21 +148,54 @@
       </div>
     </div>
 
+    <!-- Bill Items (only for inventory bills) -->
+    <div v-if="bill.bill_type === 'inventory' && bill.items && bill.items.length > 0" class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-lg font-semibold mb-4">Bill Items</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="item in bill.items" :key="item.id" class="hover:bg-gray-50">
+              <td class="px-6 py-4 text-sm text-gray-900">{{ item.description }}</td>
+              <td class="px-6 py-4 text-sm text-right text-gray-900">{{ $formatAmount(item.unit_price) }}</td>
+              <td class="px-6 py-4 text-sm text-center text-gray-900">{{ item.unit_measurement || '—' }}</td>
+              <td class="px-6 py-4 text-sm text-center text-gray-900">{{ item.quantity }}</td>
+              <td class="px-6 py-4 text-sm text-right font-medium text-gray-900">{{ $formatAmount(item.total) }}</td>
+            </tr>
+          </tbody>
+          <tfoot class="bg-gray-50">
+            <tr>
+              <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-500">Total Amount</td>
+              <td class="px-6 py-3 text-right text-sm font-bold text-gray-900">{{ $formatAmount(bill.amount) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
     <!-- Payment History -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold">Payment History</h2>
-          <button
+          <Link
             v-if="balanceDue > 0"
-            @click="showPaymentModal = true"
+            :href="`/bills/${bill.id}/pay`"
             class="btn-kingbaker"
           >
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
             </svg>
             Record Payment
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -183,7 +216,7 @@
                 {{ $formatDate(payment.payment_date) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ payment.transaction?.reference || '-' }}
+                {{ payment.reference_number || '-' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ payment.payment_method || 'Cash' }}
@@ -205,76 +238,6 @@
       </div>
     </div>
 
-    <!-- Payment Modal -->
-    <div v-if="showPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Record Payment</h3>
-          <form @submit.prevent="recordPayment">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Amount</label>
-              <div class="relative">
-                <span class="absolute left-3 top-2 text-gray-500">GMD</span>
-                <input
-                  v-model="paymentForm.amount"
-                  type="number"
-                  step="0.01"
-                  :max="balanceDue"
-                  class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                  required
-                />
-              </div>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-              <input
-                v-model="paymentForm.payment_date"
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-              <select
-                v-model="paymentForm.payment_method"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-              >
-                <option value="cash">Cash</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="cheque">Cheque</option>
-                <option value="mobile_money">Mobile Money</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
-              <textarea
-                v-model="paymentForm.notes"
-                rows="2"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                placeholder="Payment notes..."
-              ></textarea>
-            </div>
-            <div class="flex items-center justify-end space-x-2">
-              <button
-                type="button"
-                @click="showPaymentModal = false"
-                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="paymentForm.processing"
-                class="btn-kingbaker"
-              >
-                {{ paymentForm.processing ? 'Recording...' : 'Record Payment' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -298,13 +261,6 @@ export default {
   },
   data() {
     return {
-      showPaymentModal: false,
-      paymentForm: this.$inertia.form({
-        amount: '',
-        payment_date: new Date().toISOString().split('T')[0],
-        payment_method: 'cash',
-        notes: '',
-      })
     }
   },
   computed: {
@@ -313,14 +269,6 @@ export default {
     }
   },
   methods: {
-    recordPayment() {
-      this.paymentForm.post(`/bills/${this.bill.id}/record-payment`, {
-        onSuccess: () => {
-          this.showPaymentModal = false
-          this.paymentForm.reset()
-        }
-      })
-    }
   }
 }
 </script>

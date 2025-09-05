@@ -235,7 +235,7 @@ export default {
     getCategoryLabel(category) {
       const labels = {
         vendor_payment: 'Vendor Payment',
-        recurring_bill: 'Recurring Bill',
+        bill: 'Bill',
         staff_advance: 'Staff Advance',
         loan_payment: 'Loan Payment',
         institutional_payment: 'Institutional Payment',

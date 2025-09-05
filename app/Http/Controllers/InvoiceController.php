@@ -70,14 +70,14 @@ class InvoiceController extends Controller
             'total_amount' => $summaryQuery->sum('amount'),
             'total_paid' => $summaryQuery->sum('amount_paid'),
             'pending_amount' => $summaryQuery->where('status', '!=', 'paid')
-                                            ->where('status', '!=', 'cancelled')
-                                            ->sum('amount') - $summaryQuery->where('status', '!=', 'paid')
-                                                                          ->where('status', '!=', 'cancelled')
-                                                                          ->sum('amount_paid'),
+                ->where('status', '!=', 'cancelled')
+                ->sum('amount') - $summaryQuery->where('status', '!=', 'paid')
+                ->where('status', '!=', 'cancelled')
+                ->sum('amount_paid'),
         ];
 
         $invoices = $query->paginate(25)
-            ->through(fn ($invoice) => [
+            ->through(fn($invoice) => [
                 'id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,
                 'customer_name' => $invoice->customer_name,
@@ -210,6 +210,7 @@ class InvoiceController extends Controller
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string|max:255',
             'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.unit_measurement' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
@@ -250,6 +251,7 @@ class InvoiceController extends Controller
             $invoice->items()->create([
                 'description' => $item['description'],
                 'unit_price' => $item['unit_price'],
+                'unit_measurement' => $item['unit_measurement'] ?? null,
                 'quantity' => $item['quantity'],
                 'total' => $item['unit_price'] * $item['quantity'],
             ]);
@@ -374,6 +376,7 @@ class InvoiceController extends Controller
             'items.*.id' => 'nullable|exists:invoice_items,id',
             'items.*.description' => 'required|string|max:255',
             'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.unit_measurement' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
@@ -407,6 +410,7 @@ class InvoiceController extends Controller
             $invoice->items()->create([
                 'description' => $item['description'],
                 'unit_price' => $item['unit_price'],
+                'unit_measurement' => $item['unit_measurement'] ?? null,
                 'quantity' => $item['quantity'],
                 'total' => $item['unit_price'] * $item['quantity'],
             ]);
@@ -588,5 +592,4 @@ class InvoiceController extends Controller
 
         return Redirect::route('invoices')->with('success', 'Invoice restored successfully.');
     }
-
 }

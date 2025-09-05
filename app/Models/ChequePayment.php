@@ -22,6 +22,7 @@ class ChequePayment extends Model
         'branch_id',
         'vendor_id',
         'bill_id',
+        'is_recurring',
         'recurring_frequency',
         'cheque_number',
         'reference_number',
@@ -35,6 +36,7 @@ class ChequePayment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'amount' => 'decimal:2',
+        'is_recurring' => 'boolean',
     ];
 
     public function bankAccount(): BelongsTo
@@ -69,7 +71,7 @@ class ChequePayment extends Model
 
     public function getStatusBadgeAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'pending' => 'bg-yellow-100 text-yellow-800',
             'issued' => 'bg-blue-100 text-blue-800',
             'cleared' => 'bg-green-100 text-green-800',
@@ -80,9 +82,9 @@ class ChequePayment extends Model
 
     public function getCategoryLabelAttribute(): string
     {
-        return match($this->payment_category) {
+        return match ($this->payment_category) {
             'vendor_payment' => 'Vendor Payment',
-            'recurring_bill' => 'Recurring Bill',
+            'bill' => 'Bill',
             'staff_advance' => 'Staff Advance',
             'loan_payment' => 'Loan Payment',
             'institutional_payment' => 'Institutional Payment',
@@ -93,7 +95,7 @@ class ChequePayment extends Model
 
     public function getPaymentModeLabelAttribute(): string
     {
-        return match($this->payment_mode) {
+        return match ($this->payment_mode) {
             'cheque' => 'Cheque',
             'bank_transfer' => 'Bank Transfer',
             'cash' => 'Cash',

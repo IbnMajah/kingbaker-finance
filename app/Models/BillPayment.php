@@ -47,18 +47,45 @@ class BillPayment extends Model
         static::created(function ($payment) {
             $bill = $payment->bill;
             $bill->amount_paid = $bill->payments()->sum('amount');
+            // record transaction
+            $transaction = new Transaction();
+            $transaction->bank_account_id = $payment->bank_account_id;
+            $transaction->amount = $payment->amount;
+            $transaction->transaction_date = $payment->payment_date;
+            $transaction->type = 'debit';
+            $transaction->save();
+            // debit the bank account
+            $payment->bankAccount->updateBalance();
             $bill->updateStatus();
         });
 
         static::updated(function ($payment) {
             $bill = $payment->bill;
             $bill->amount_paid = $bill->payments()->sum('amount');
+            // record transaction
+            $transaction = new Transaction();
+            $transaction->bank_account_id = $payment->bank_account_id;
+            $transaction->amount = $payment->amount;
+            $transaction->transaction_date = $payment->payment_date;
+            $transaction->type = 'debit';
+            $transaction->save();
+            // debit the bank account
+            $payment->bankAccount->updateBalance();
             $bill->updateStatus();
         });
 
         static::deleted(function ($payment) {
             $bill = $payment->bill;
             $bill->amount_paid = $bill->payments()->sum('amount');
+            // record transaction
+            $transaction = new Transaction();
+            $transaction->bank_account_id = $payment->bank_account_id;
+            $transaction->amount = $payment->amount;
+            $transaction->transaction_date = $payment->payment_date;
+            $transaction->type = 'debit';
+            $transaction->save();
+            // debit the bank account
+            $payment->bankAccount->updateBalance();
             $bill->updateStatus();
         });
     }

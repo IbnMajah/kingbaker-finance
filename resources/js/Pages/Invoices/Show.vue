@@ -138,6 +138,9 @@
                 Unit Price
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Unit
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Quantity
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -153,6 +156,9 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ $formatAmount(item.unit_price) }}
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ item.unit_measurement || '—' }}
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ item.quantity }}
               </td>
@@ -163,7 +169,7 @@
           </tbody>
           <tfoot class="bg-gray-50">
             <tr>
-              <td colspan="3" class="px-6 py-4 text-right text-sm font-medium text-gray-900">
+              <td colspan="4" class="px-6 py-4 text-right text-sm font-medium text-gray-900">
                 Total Amount:
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">

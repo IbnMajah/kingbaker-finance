@@ -160,20 +160,21 @@
             <div class="border border-gray-300 rounded-md overflow-hidden">
               <!-- Items Header -->
               <div class="bg-gray-50 px-4 py-3 border-b border-gray-300">
-                <div class="grid grid-cols-12 gap-3 text-sm font-medium text-gray-700">
+                <div class="grid grid-cols-14 gap-2 text-sm font-medium text-gray-700">
                   <div class="col-span-3">Description</div>
                   <div class="col-span-2">Category</div>
                   <div class="col-span-2">Receipt</div>
                   <div class="col-span-1">Unit Price</div>
+                  <div class="col-span-1">Unit</div>
                   <div class="col-span-1">Quantity</div>
                   <div class="col-span-2">Total</div>
-                  <div class="col-span-1">Action</div>
+                  <div class="col-span-2">Action</div>
                 </div>
               </div>
               <!-- Items List -->
               <div class="divide-y divide-gray-200">
                 <div v-for="(item, index) in (form.items || [])" :key="index" class="px-4 py-3">
-                  <div class="grid grid-cols-12 gap-3 items-start">
+                  <div class="grid grid-cols-14 gap-2 items-start">
                     <!-- Description -->
                     <div class="col-span-3">
                       <input
@@ -238,6 +239,19 @@
                         {{ form.errors[`items.${index}.unit_price`] }}
                       </div>
                     </div>
+                    <!-- Unit Measurement -->
+                    <div class="col-span-1">
+                      <input
+                        v-model="item.unit_measurement"
+                        type="text"
+                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        :class="form.errors[`items.${index}.unit_measurement`] ? 'border-red-300' : 'border-gray-300'"
+                        placeholder="kg, pcs, etc."
+                      />
+                      <div v-if="form.errors[`items.${index}.unit_measurement`]" class="mt-1 text-sm text-red-600">
+                        {{ form.errors[`items.${index}.unit_measurement`] }}
+                      </div>
+                    </div>
                     <!-- Quantity -->
                     <div class="col-span-1">
                       <input
@@ -260,7 +274,7 @@
                       </div>
                     </div>
                     <!-- Action -->
-                    <div class="col-span-1">
+                    <div class="col-span-2">
                       <button
                         type="button"
                         @click="removeItem(index)"
@@ -433,6 +447,7 @@ export default {
           receipt_image: null,
           receipt_image_path: item.receipt_image_path || null,
           unit_price: item.unit_price || 0,
+          unit_measurement: item.unit_measurement || '',
           quantity: item.quantity || 1,
         })),
       }),
@@ -464,6 +479,7 @@ export default {
         category: '',
         receipt_image: null,
         unit_price: 0,
+        unit_measurement: '',
         quantity: 1,
       });
     },

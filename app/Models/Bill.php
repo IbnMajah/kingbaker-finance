@@ -51,6 +51,19 @@ class Bill extends Model
         return $this->hasMany(BillPayment::class);
     }
 
+    public function items(): HasMany
+    {
+        return $this->hasMany(BillItem::class);
+    }
+
+    public function updateTotalAmount(): void
+    {
+        $this->amount = $this->items->sum(function ($item) {
+            return $item->unit_price * $item->quantity;
+        });
+        $this->save();
+    }
+
     public function updateStatus(): void
     {
         if ($this->amount_paid >= $this->amount) {
