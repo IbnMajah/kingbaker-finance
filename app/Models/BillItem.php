@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class InvoiceItem extends Model
+class BillItem extends Model
 {
     use HasFactory;
 
+    protected $table = 'bills_items';
+
     protected $fillable = [
-        'invoice_id',
+        'bill_id',
         'description',
         'unit_price',
         'unit_measurement',
@@ -25,17 +27,18 @@ class InvoiceItem extends Model
         'total' => 'decimal:2',
     ];
 
-    public function invoice(): BelongsTo
+    public function bill(): BelongsTo
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo(Bill::class);
     }
 
     /**
      * Calculate and set the total amount
      */
-    public function calculateTotal(): void
+    public function calculateTotal(): float
     {
         $this->total = $this->unit_price * $this->quantity;
+        return $this->total;
     }
 
     /**
@@ -45,6 +48,18 @@ class InvoiceItem extends Model
     {
         static::saving(function ($item) {
             $item->calculateTotal();
+        });
+
+        static::created(function ($item) {
+            $item->bill->updateTotalAmount();
+        });
+
+        static::updated(function ($item) {
+            $item->bill->updateTotalAmount();
+        });
+
+        static::deleted(function ($item) {
+            $item->bill->updateTotalAmount();
         });
     }
 }

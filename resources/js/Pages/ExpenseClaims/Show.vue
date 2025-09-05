@@ -142,6 +142,7 @@
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
             </tr>
           </thead>
@@ -175,17 +176,20 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
                 {{ $formatAmount(item.unit_price) }}
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                {{ item.unit_measurement || '—' }}
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
                 {{ $formatAmount((item.unit_price || 0) * (item.quantity || 1)) }}
               </td>
             </tr>
             <tr v-if="!expenseClaim.items?.length">
-              <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                 No expense items found.
               </td>
             </tr>
             <tr class="bg-gray-50">
-              <td colspan="5" class="px-6 py-4 text-right font-semibold text-gray-900">
+              <td colspan="6" class="px-6 py-4 text-right font-semibold text-gray-900">
                 Total:
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900">

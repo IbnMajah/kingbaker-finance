@@ -211,16 +211,16 @@
                     </svg>
                     <span>Edit</span>
                   </Link>
-                  <button
+                  <Link
                     v-if="bill.status !== 'paid'"
-                    @click="openPaymentModal(bill)"
+                    :href="`/bills/${bill.id}/pay`"
                     class="flex items-center space-x-1 text-green-600 hover:text-green-900 text-sm font-medium"
                   >
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
                     </svg>
                     <span>Pay</span>
-                  </button>
+                  </Link>
                 </div>
               </td>
             </tr>
@@ -261,76 +261,6 @@
       </div>
     </div>
 
-    <!-- Payment Modal -->
-    <div v-if="showPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Record Payment for {{ selectedBill?.reference || `Bill #${selectedBill?.id}` }}</h3>
-          <form @submit.prevent="recordPayment">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Amount</label>
-              <div class="relative">
-                <span class="absolute left-3 top-2 text-gray-500">GMD</span>
-                <input
-                  v-model="paymentForm.amount"
-                  type="number"
-                  step="0.01"
-                  :max="selectedBill ? (selectedBill.amount - (selectedBill.amount_paid || 0)) : 0"
-                  class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                  required
-                />
-              </div>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-              <input
-                v-model="paymentForm.payment_date"
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-              <select
-                v-model="paymentForm.payment_method"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-              >
-                <option value="cash">Cash</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="cheque">Cheque</option>
-                <option value="mobile_money">Mobile Money</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
-              <textarea
-                v-model="paymentForm.notes"
-                rows="2"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                placeholder="Payment notes..."
-              ></textarea>
-            </div>
-            <div class="flex items-center justify-end space-x-2">
-              <button
-                type="button"
-                @click="closePaymentModal"
-                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="paymentForm.processing"
-                class="btn-kingbaker"
-              >
-                {{ paymentForm.processing ? 'Recording...' : 'Record Payment' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -372,14 +302,6 @@ export default {
         date_from: this.filters.date_from,
         date_to: this.filters.date_to,
       },
-      showPaymentModal: false,
-      selectedBill: null,
-      paymentForm: this.$inertia.form({
-        amount: '',
-        payment_date: new Date().toISOString().split('T')[0],
-        payment_method: 'cash',
-        notes: '',
-      }),
     }
   },
   computed: {
@@ -411,24 +333,6 @@ export default {
     isOverdue(dueDate) {
       if (!dueDate) return false
       return new Date(dueDate) < new Date()
-    },
-    openPaymentModal(bill) {
-      this.selectedBill = bill
-      this.showPaymentModal = true
-      this.paymentForm.reset()
-      this.paymentForm.amount = bill.amount - (bill.amount_paid || 0)
-    },
-    closePaymentModal() {
-      this.showPaymentModal = false
-      this.selectedBill = null
-      this.paymentForm.reset()
-    },
-    recordPayment() {
-      this.paymentForm.post(`/bills/${this.selectedBill.id}/record-payment`, {
-        onSuccess: () => {
-          this.closePaymentModal()
-        }
-      })
     }
   },
 }

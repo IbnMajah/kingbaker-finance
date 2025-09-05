@@ -303,6 +303,9 @@ Route::middleware('auth')->group(function () {
     Route::get('bills/{bill}', [BillController::class, 'show'])
         ->name('bills.show');
 
+    Route::get('bills/{bill}/pay', [BillController::class, 'pay'])
+        ->name('bills.pay');
+
     Route::post('bills/{bill}/record-payment', [BillController::class, 'recordPayment'])
         ->name('bills.record-payment');
 

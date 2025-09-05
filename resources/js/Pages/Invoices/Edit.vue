@@ -229,8 +229,9 @@
                 <!-- Items Header -->
                 <div class="bg-gray-50 px-4 py-3 border-b border-gray-300">
                   <div class="grid grid-cols-12 gap-3 text-sm font-medium text-gray-700">
-                    <div class="col-span-5">Description</div>
+                    <div class="col-span-4">Description</div>
                     <div class="col-span-2">Unit Price (GMD)</div>
+                    <div class="col-span-1">Unit</div>
                     <div class="col-span-2">Quantity</div>
                     <div class="col-span-2">Total</div>
                     <div class="col-span-1">Action</div>
@@ -241,7 +242,7 @@
                   <div v-for="(item, index) in form.items" :key="index" class="px-4 py-3">
                     <div class="grid grid-cols-12 gap-3 items-start">
                       <!-- Description -->
-                      <div class="col-span-5">
+                      <div class="col-span-4">
                         <input
                           v-model="item.description"
                           type="text"
@@ -269,6 +270,20 @@
                         />
                         <div v-if="form.errors[`items.${index}.unit_price`]" class="mt-1 text-sm text-red-600">
                           {{ form.errors[`items.${index}.unit_price`] }}
+                        </div>
+                      </div>
+                      <!-- Unit Measurement -->
+                      <div class="col-span-1">
+                        <input
+                          v-model="item.unit_measurement"
+                          type="text"
+                          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          :class="form.errors[`items.${index}.unit_measurement`] ? 'border-red-300' : 'border-gray-300'"
+                          :disabled="invoice.status === 'paid'"
+                          placeholder="kg, pcs, etc."
+                        />
+                        <div v-if="form.errors[`items.${index}.unit_measurement`]" class="mt-1 text-sm text-red-600">
+                          {{ form.errors[`items.${index}.unit_measurement`] }}
                         </div>
                       </div>
                       <!-- Quantity -->
@@ -450,10 +465,14 @@ export default {
         customer_address: this.invoice.customer_address || '',
         invoice_date: this.invoice.invoice_date || '',
         due_date: this.invoice.due_date || '',
-        items: this.invoice.items && this.invoice.items.length > 0 ? this.invoice.items : [
+        items: this.invoice.items && this.invoice.items.length > 0 ? this.invoice.items.map(item => ({
+          ...item,
+          unit_measurement: item.unit_measurement || ''
+        })) : [
           {
             description: '',
             unit_price: '',
+            unit_measurement: '',
             quantity: 1,
           }
         ],

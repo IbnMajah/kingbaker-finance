@@ -161,6 +161,7 @@ class ExpenseClaimController extends Controller
             'items.*.category' => 'nullable|string|max:255',
             'items.*.receipt_image' => 'nullable|image|max:2048',
             'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.unit_measurement' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
@@ -195,6 +196,7 @@ class ExpenseClaimController extends Controller
                     'category' => $item['category'] ?? null,
                     'receipt_image_path' => $receiptPath,
                     'unit_price' => $item['unit_price'],
+                    'unit_measurement' => $item['unit_measurement'] ?? null,
                     'quantity' => $item['quantity'] ?? 1,
                 ]);
             }
@@ -268,6 +270,7 @@ class ExpenseClaimController extends Controller
                     'category' => $item->category,
                     'receipt_image_path' => $item->receipt_image_path,
                     'unit_price' => $item->unit_price,
+                    'unit_measurement' => $item->unit_measurement,
                     'quantity' => $item->quantity,
                 ]),
                 'updated_at' => $expenseClaim->updated_at,
@@ -314,6 +317,7 @@ class ExpenseClaimController extends Controller
                     'category' => $item->category,
                     'receipt_image_path' => $item->receipt_image_path,
                     'unit_price' => $item->unit_price,
+                    'unit_measurement' => $item->unit_measurement,
                     'quantity' => $item->quantity,
                 ]),
             ],
@@ -362,6 +366,7 @@ class ExpenseClaimController extends Controller
             'items.*.category' => 'nullable|string|max:255',
             'items.*.receipt_image' => 'nullable|image|max:2048',
             'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.unit_measurement' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
@@ -398,6 +403,7 @@ class ExpenseClaimController extends Controller
                     'category' => $itemData['category'] ?? null,
                     'receipt_image_path' => $receiptPath,
                     'unit_price' => $itemData['unit_price'],
+                    'unit_measurement' => $itemData['unit_measurement'] ?? null,
                     'quantity' => $itemData['quantity'],
                 ]);
             }

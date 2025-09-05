@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BankAccount;
 use App\Models\Bill;
+use App\Models\BillPayment;
 use App\Models\Branch;
 use App\Models\ChequePayment;
 use App\Models\Transaction;
@@ -63,13 +64,13 @@ class ChequePaymentController extends Controller
             'total_payments' => $summaryQuery->count(),
             'total_amount' => $summaryQuery->sum('amount'),
             'this_month' => $summaryQuery->whereMonth('payment_date', now()->month)
-                                      ->whereYear('payment_date', now()->year)
-                                      ->sum('amount'),
+                ->whereYear('payment_date', now()->year)
+                ->sum('amount'),
             'today' => $summaryQuery->whereDate('payment_date', today())->sum('amount'),
         ];
 
         $payments = $query->paginate(25)
-            ->through(fn ($payment) => [
+            ->through(fn($payment) => [
                 'id' => $payment->id,
                 'payment_number' => $payment->payment_number,
                 'payee' => $payment->payee,
@@ -114,7 +115,7 @@ class ChequePaymentController extends Controller
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
             'paymentCategories' => [
                 ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
-                ['value' => 'recurring_bill', 'label' => 'Recurring Bill'],
+                ['value' => 'bill', 'label' => 'Bill'],
                 ['value' => 'staff_advance', 'label' => 'Staff Advance'],
                 ['value' => 'loan_payment', 'label' => 'Loan Payment'],
                 ['value' => 'institutional_payment', 'label' => 'Institutional Payment'],
@@ -165,7 +166,7 @@ class ChequePaymentController extends Controller
             ]),
             'paymentCategories' => [
                 ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
-                ['value' => 'recurring_bill', 'label' => 'Recurring Bill'],
+                ['value' => 'bill', 'label' => 'Bill'],
                 ['value' => 'staff_advance', 'label' => 'Staff Advance'],
                 ['value' => 'loan_payment', 'label' => 'Loan Payment'],
                 ['value' => 'institutional_payment', 'label' => 'Institutional Payment'],
@@ -198,13 +199,14 @@ class ChequePaymentController extends Controller
             'payee' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'payment_category' => 'required|in:vendor_payment,recurring_bill,staff_advance,loan_payment,institutional_payment,other_payment',
+            'payment_category' => 'required|in:vendor_payment,bill,staff_advance,loan_payment,institutional_payment,other_payment',
             'payment_mode' => 'required|in:cheque,bank_transfer,cash,nafa,wave,other',
             'bank_account_id' => 'required|exists:bank_accounts,id',
             'branch_id' => 'nullable|exists:branches,id',
             'vendor_id' => 'nullable|exists:vendors,id|required_if:payment_category,vendor_payment',
-            'bill_id' => 'nullable|exists:bills,id|required_if:payment_category,recurring_bill',
-            'recurring_frequency' => 'nullable|in:daily,weekly,monthly,quarterly,annually|required_if:payment_category,recurring_bill',
+            'bill_id' => 'nullable|exists:bills,id|required_if:payment_category,bill',
+            'is_recurring' => 'nullable|boolean',
+            'recurring_frequency' => 'nullable|in:daily,weekly,monthly,quarterly,annually|required_if:is_recurring,true',
             'cheque_number' => 'nullable|string|max:255',
             'reference_number' => 'nullable|string|max:255',
             'description' => 'required|string',
@@ -234,6 +236,10 @@ class ChequePaymentController extends Controller
                 'payment_mode' => $validated['payment_mode'],
                 'bank_account_id' => $validated['bank_account_id'],
                 'branch_id' => $validated['branch_id'],
+                'vendor_id' => $validated['vendor_id'] ?? null,
+                'bill_id' => $validated['bill_id'] ?? null,
+                'is_recurring' => $validated['is_recurring'] ?? false,
+                'recurring_frequency' => $validated['recurring_frequency'] ?? null,
                 'cheque_number' => $validated['cheque_number'],
                 'reference_number' => $validated['reference_number'],
                 'description' => $validated['description'],
@@ -244,21 +250,38 @@ class ChequePaymentController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            // Create corresponding transaction (DEBIT as per requirements)
-            Transaction::create([
-                'bank_account_id' => $validated['bank_account_id'],
-                'transaction_date' => $validated['payment_date'],
-                'type' => 'debit', // Payments are always debit as per requirements
-                'payment_mode' => $validated['payment_mode'],
-                'reference_number' => $validated['reference_number'] ?: $paymentNumber,
-                'payee' => $validated['payee'],
-                'amount' => $validated['amount'],
-                'description' => $validated['description'],
-                'branch_id' => $validated['branch_id'],
-                'category' => $validated['payment_category'],
-                'image_path' => $imagePath,
-                'created_by' => Auth::id(),
-            ]);
+            // If this is a bill payment, create a corresponding bill payment record
+            // The BillPayment model will handle creating the transaction
+            if ($validated['payment_category'] === 'bill' && $validated['bill_id']) {
+                $bill = Bill::findOrFail($validated['bill_id']);
+
+                BillPayment::create([
+                    'bill_id' => $validated['bill_id'],
+                    'bank_account_id' => $validated['bank_account_id'],
+                    'amount' => $validated['amount'],
+                    'payment_date' => $validated['payment_date'],
+                    'payment_method' => $validated['payment_mode'],
+                    'reference_number' => $validated['reference_number'] ?: $paymentNumber,
+                    'notes' => $validated['notes'],
+                    'created_by' => Auth::id(),
+                ]);
+            } else {
+                // Create corresponding transaction for non-bill payments (DEBIT as per requirements)
+                Transaction::create([
+                    'bank_account_id' => $validated['bank_account_id'],
+                    'transaction_date' => $validated['payment_date'],
+                    'type' => 'debit', // Payments are always debit as per requirements
+                    'payment_mode' => $validated['payment_mode'],
+                    'reference_number' => $validated['reference_number'] ?: $paymentNumber,
+                    'payee' => $validated['payee'],
+                    'amount' => $validated['amount'],
+                    'description' => $validated['description'],
+                    'branch_id' => $validated['branch_id'],
+                    'category' => $validated['payment_category'],
+                    'image_path' => $imagePath,
+                    'created_by' => Auth::id(),
+                ]);
+            }
 
             DB::commit();
         } catch (\Exception $e) {
@@ -312,7 +335,7 @@ class ChequePaymentController extends Controller
             ]),
             'paymentCategories' => [
                 ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
-                ['value' => 'recurring_bill', 'label' => 'Recurring Bill'],
+                ['value' => 'bill', 'label' => 'Bill'],
                 ['value' => 'staff_advance', 'label' => 'Staff Advance'],
                 ['value' => 'loan_payment', 'label' => 'Loan Payment'],
                 ['value' => 'institutional_payment', 'label' => 'Institutional Payment'],
@@ -351,13 +374,13 @@ class ChequePaymentController extends Controller
             'payee' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'payment_category' => 'required|in:vendor_payment,recurring_bill,staff_advance,loan_payment,institutional_payment,other_payment',
+            'payment_category' => 'required|in:vendor_payment,bill,staff_advance,loan_payment,institutional_payment,other_payment',
             'payment_mode' => 'required|in:cheque,bank_transfer,cash,nafa,wave,other',
             'bank_account_id' => 'required|exists:bank_accounts,id',
             'branch_id' => 'nullable|exists:branches,id',
             'vendor_id' => 'nullable|exists:vendors,id|required_if:payment_category,vendor_payment',
-            'bill_id' => 'nullable|exists:bills,id|required_if:payment_category,recurring_bill',
-            'recurring_frequency' => 'nullable|in:daily,weekly,monthly,quarterly,annually|required_if:payment_category,recurring_bill',
+            'bill_id' => 'nullable|exists:bills,id|required_if:payment_category,bill',
+            'recurring_frequency' => 'nullable|in:daily,weekly,monthly,quarterly,annually|required_if:payment_category,bill',
             'cheque_number' => 'nullable|string|max:255',
             'reference_number' => 'nullable|string|max:255',
             'description' => 'required|string',
