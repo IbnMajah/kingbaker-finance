@@ -85,7 +85,7 @@ class BillController extends Controller
             'bill_number' => 'nullable|string|max:255',
             'bill_date' => 'required|date',
             'due_date' => 'nullable|date',
-            'bill_type' => 'required|string|max:255',
+            'bill_type' => 'required|string|max:255', //
             'description' => 'nullable|string',
             'recurring_frequency' => 'nullable|string|max:255',
             'next_due_date' => 'nullable|date',

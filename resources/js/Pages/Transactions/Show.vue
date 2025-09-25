@@ -128,6 +128,17 @@
                 <dt class="text-sm font-medium text-gray-500">Description</dt>
                 <dd class="mt-1 text-sm text-gray-900">{{ transaction.description }}</dd>
               </div>
+              <div v-if="transaction.bill_payment" class="sm:col-span-2">
+                <dt class="text-sm font-medium text-gray-500">Related Bill</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                  <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Bill #{{ transaction.bill_payment.bill?.bill_number }}
+                    </span>
+                    <span class="text-gray-600">{{ transaction.bill_payment.bill?.vendor?.name }}</span>
+                  </div>
+                </dd>
+              </div>
             </dl>
           </div>
         </div>

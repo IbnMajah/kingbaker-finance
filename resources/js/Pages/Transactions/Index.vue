@@ -168,6 +168,9 @@
                 <div class="max-w-xs truncate" :title="transaction.description">
                   {{ transaction.description || '-' }}
                 </div>
+                <div v-if="transaction.bill_payment" class="text-xs text-blue-600 mt-1">
+                  Bill #{{ transaction.bill_payment.bill?.bill_number }} - {{ transaction.bill_payment.bill?.vendor?.name }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ transaction.reference || '-' }}
