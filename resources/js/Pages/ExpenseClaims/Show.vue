@@ -206,7 +206,7 @@
       <h2 class="text-lg font-semibold mb-4">Actions</h2>
       <div class="flex flex-wrap gap-3">
         <Link
-          v-if="expenseClaim.status === 'active'"
+          v-if="expenseClaim.status === 'active' || expenseClaim.status === 'draft'"
           :href="'/expense-claims/' + expenseClaim.id + '/edit'"
           class="btn-kingbaker flex items-center"
         >
