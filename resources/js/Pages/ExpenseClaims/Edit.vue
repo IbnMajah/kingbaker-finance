@@ -156,44 +156,90 @@
 
           <!-- Expense Items -->
           <div class="col-span-full">
-            <label class="block text-sm font-medium text-gray-700 mb-3">Expense Items *</label>
-            <div class="border border-gray-300 rounded-md overflow-hidden">
-              <!-- Items Header -->
-              <div class="bg-gray-50 px-4 py-3 border-b border-gray-300">
-                <div class="grid grid-cols-14 gap-2 text-sm font-medium text-gray-700">
-                  <div class="col-span-3">Description</div>
-                  <div class="col-span-2">Category</div>
-                  <div class="col-span-2">Receipt</div>
-                  <div class="col-span-1">Unit Price</div>
-                  <div class="col-span-1">Unit</div>
-                  <div class="col-span-1">Quantity</div>
-                  <div class="col-span-2">Total</div>
-                  <div class="col-span-2">Action</div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                  <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Expense Items</h3>
+              </div>
+              <div class="text-right">
+                <div class="flex items-center justify-end space-x-4">
+                  <!-- Auto-save Status -->
+                  <div class="flex items-center space-x-2">
+                    <div v-if="autoSaveStatus === 'saving'" class="flex items-center text-blue-600">
+                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span class="text-sm">Saving...</span>
+                    </div>
+                    <div v-else-if="autoSaveStatus === 'saved'" class="flex items-center text-green-600">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span class="text-sm">Saved</span>
+                    </div>
+                    <div v-else-if="autoSaveStatus === 'error'" class="flex items-center text-red-600">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span class="text-sm">Save failed</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Total Amount -->
+                  <div>
+                    <div class="text-sm text-gray-500">Total</div>
+                    <div class="text-2xl font-bold text-brand-600">GMD {{ calculateTotal().toFixed(2) }}</div>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <!-- Items List -->
               <div class="divide-y divide-gray-200">
-                <div v-for="(item, index) in (form.items || [])" :key="index" class="px-4 py-3">
-                  <div class="grid grid-cols-14 gap-2 items-start">
+                <div v-for="(item, index) in (form.items || [])" :key="index" class="p-6">
+                  <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-sm font-medium text-gray-900">Item #{{ index + 1 }}</h4>
+                    <button
+                      type="button"
+                      @click="removeItem(index)"
+                      class="text-red-600 hover:text-red-800 p-1"
+                      :disabled="(form.items || []).length <= 1"
+                    >
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 012 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 012 0v3a1 1 0 11-2 0V9z" clip-rule="evenodd"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Description -->
-                    <div class="col-span-3">
+                    <div class="lg:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                       <input
                         v-model="item.description"
                         type="text"
-                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.description`] ? 'border-red-300' : 'border-gray-300'"
-                        placeholder="Expense item description"
+                        placeholder="e.g., Taxi fare to airport"
                         required
                       />
                       <div v-if="form.errors[`items.${index}.description`]" class="mt-1 text-sm text-red-600">
                         {{ form.errors[`items.${index}.description`] }}
                       </div>
                     </div>
+
                     <!-- Category -->
-                    <div class="col-span-2">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
                       <select
                         v-model="item.category"
-                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.category`] ? 'border-red-300' : 'border-gray-300'"
                       >
                         <option value="">Select Category</option>
@@ -205,13 +251,15 @@
                         {{ form.errors[`items.${index}.category`] }}
                       </div>
                     </div>
+
                     <!-- Receipt -->
-                    <div class="col-span-2">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
                       <input
                         @input="handleReceiptUpload(index, $event)"
                         type="file"
                         accept="image/*"
-                        class="w-full px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-xs"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm"
                         :class="form.errors[`items.${index}.receipt_image`] ? 'border-red-300' : 'border-gray-300'"
                       />
                       <div v-if="item.receipt_image_path" class="mt-1">
@@ -223,14 +271,18 @@
                         {{ form.errors[`items.${index}.receipt_image`] }}
                       </div>
                     </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <!-- Unit Price -->
-                    <div class="col-span-1">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
                       <input
                         v-model.number="item.unit_price"
                         type="number"
                         step="0.01"
                         min="0.01"
-                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.unit_price`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="0.00"
                         required
@@ -239,26 +291,30 @@
                         {{ form.errors[`items.${index}.unit_price`] }}
                       </div>
                     </div>
+
                     <!-- Unit Measurement -->
-                    <div class="col-span-1">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
                       <input
                         v-model="item.unit_measurement"
                         type="text"
-                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.unit_measurement`] ? 'border-red-300' : 'border-gray-300'"
-                        placeholder="kg, pcs, etc."
+                        placeholder="e.g., each, hour, mile"
                       />
                       <div v-if="form.errors[`items.${index}.unit_measurement`]" class="mt-1 text-sm text-red-600">
                         {{ form.errors[`items.${index}.unit_measurement`] }}
                       </div>
                     </div>
+
                     <!-- Quantity -->
-                    <div class="col-span-1">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
                       <input
                         v-model.number="item.quantity"
                         type="number"
                         min="1"
-                        class="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`items.${index}.quantity`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="1"
                         required
@@ -267,47 +323,32 @@
                         {{ form.errors[`items.${index}.quantity`] }}
                       </div>
                     </div>
-                    <!-- Total -->
-                    <div class="col-span-2">
-                      <div class="px-2 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700 text-sm">
+                  </div>
+
+                  <!-- Item Total -->
+                  <div class="mt-4 flex justify-end">
+                    <div class="text-right">
+                      <div class="text-sm text-gray-500">Item Total:</div>
+                      <div class="text-lg font-bold text-blue-600">
                         GMD {{ ((item.unit_price || 0) * (item.quantity || 0)).toFixed(2) }}
                       </div>
-                    </div>
-                    <!-- Action -->
-                    <div class="col-span-2">
-                      <button
-                        type="button"
-                        @click="removeItem(index)"
-                        class="w-full text-red-600 hover:text-red-800 px-2 py-2 text-sm"
-                        :disabled="(form.items || []).length <= 1"
-                      >
-                        <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 012 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 012 0v3a1 1 0 11-2 0V9z" clip-rule="evenodd"></path>
-                        </svg>
-                      </button>
                     </div>
                   </div>
                 </div>
               </div>
+
               <!-- Add Item Button -->
-              <div class="px-4 py-3 bg-gray-50 border-t border-gray-300">
+              <div class="px-6 py-4 border-t border-gray-200 border-dashed">
                 <button
                   type="button"
                   @click="addItem"
-                  class="text-brand-600 hover:text-brand-700 text-sm font-medium flex items-center"
+                  class="w-full flex items-center justify-center px-4 py-3 text-brand-600 hover:text-brand-700 text-sm font-medium border-2 border-dashed border-gray-300 rounded-lg hover:border-brand-400 transition-colors"
                 >
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
                   </svg>
-                  Add Item
+                  + Add Another Item
                 </button>
-              </div>
-              <!-- Total Section -->
-              <div class="px-4 py-3 bg-blue-50 border-t border-gray-300">
-                <div class="flex justify-between items-center">
-                  <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
-                  <span class="text-xl font-bold text-brand-600">GMD {{ calculateTotal().toFixed(2) }}</span>
-                </div>
               </div>
             </div>
             <div v-if="form.errors.items" class="mt-1 text-sm text-red-600">{{ form.errors.items }}</div>
@@ -453,6 +494,8 @@ export default {
       }),
       showImageModal: false,
       selectedImage: null,
+      autoSaveStatus: 'idle', // 'idle', 'saving', 'saved', 'error'
+      autoSaveTimeout: null,
     }
   },
   methods: {
@@ -482,6 +525,9 @@ export default {
         unit_measurement: '',
         quantity: 1,
       });
+      
+      // Auto-save after adding item
+      this.autoSave();
     },
     handleReceiptUpload(index, event) {
       this.form.items[index].receipt_image = event.target.files[0];
@@ -489,6 +535,9 @@ export default {
     removeItem(index) {
       if (this.form.items && this.form.items.length > index) {
         this.form.items.splice(index, 1);
+        
+        // Auto-save after removing item
+        this.autoSave();
       }
     },
     showImage(imagePath) {
@@ -501,6 +550,104 @@ export default {
     },
     calculateTotal() {
       return (this.form.items || []).reduce((sum, item) => sum + (item.unit_price || 0) * (item.quantity || 1), 0);
+    },
+    async autoSave() {
+      // Clear existing timeout
+      if (this.autoSaveTimeout) {
+        clearTimeout(this.autoSaveTimeout);
+      }
+
+      // Check if we should auto-save
+      if (!this.shouldAutoSave()) {
+        return;
+      }
+
+      // Set status to saving
+      this.autoSaveStatus = 'saving';
+
+      // Debounce auto-save
+      this.autoSaveTimeout = setTimeout(async () => {
+        try {
+          // Ensure CSRF token is valid
+          await this.ensureValidToken();
+
+          // Get valid items (exclude empty/incomplete items)
+          const validItems = this.getValidItems();
+
+          // Prepare form data for auto-save
+          const formData = new FormData();
+          formData.append('reference_id', this.form.reference_id);
+          formData.append('claim_date', this.form.claim_date);
+          formData.append('title', this.form.title || 'Draft Expense Claim');
+          formData.append('payee', this.form.payee || 'Draft Payee');
+          formData.append('expense_type', this.form.expense_type || 'other');
+          formData.append('branch_id', this.form.branch_id || '');
+          formData.append('bank_account_id', this.form.bank_account_id || '');
+          formData.append('notes', this.form.notes || '');
+
+          // Add valid items data
+          validItems.forEach((item, index) => {
+            formData.append(`items[${index}][description]`, item.description);
+            formData.append(`items[${index}][category]`, item.category || '');
+            formData.append(`items[${index}][unit_price]`, item.unit_price);
+            formData.append(`items[${index}][unit_measurement]`, item.unit_measurement || '');
+            formData.append(`items[${index}][quantity]`, item.quantity);
+          });
+
+          const response = await fetch('/expense-claims/auto-save', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            this.autoSaveStatus = 'saved';
+            
+            // Reset status after 2 seconds
+            setTimeout(() => {
+              this.autoSaveStatus = 'idle';
+            }, 2000);
+          } else {
+            this.autoSaveStatus = 'error';
+            console.error('Auto-save failed:', result.message);
+          }
+        } catch (error) {
+          this.autoSaveStatus = 'error';
+          console.error('Auto-save error:', error);
+        }
+      }, 1000); // 1 second delay
+    },
+    shouldAutoSave() {
+      // Don't auto-save if basic required fields are missing
+      if (!this.form.claim_date || !this.form.bank_account_id) {
+        return false;
+      }
+
+      // Get valid items (exclude empty/incomplete items)
+      const validItems = this.getValidItems();
+      
+      // Don't auto-save if there are no valid items
+      if (validItems.length === 0) {
+        return false;
+      }
+
+      return true;
+    },
+    getValidItems() {
+      return (this.form.items || []).filter(item => {
+        // Exclude items that are empty or missing required fields
+        return item.description && 
+               item.description.trim() !== '' && 
+               item.unit_price && 
+               item.unit_price > 0 && 
+               item.quantity && 
+               item.quantity > 0;
+      });
     },
     async submit() {
       // Ensure CSRF token is valid before submission

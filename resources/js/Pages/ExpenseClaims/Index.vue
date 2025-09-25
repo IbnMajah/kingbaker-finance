@@ -210,7 +210,7 @@
                     <span>View</span>
                   </Link>
                   <Link
-                    v-if="canEditExpenses && claim.status === 'active'"
+                    v-if="canEditExpenses && (claim.status === 'active' || claim.status === 'draft')"
                     class="flex items-center space-x-1 text-gray-600 hover:text-gray-900 text-sm font-medium"
                     :href="`/expense-claims/${claim.id}/edit`"
                   >

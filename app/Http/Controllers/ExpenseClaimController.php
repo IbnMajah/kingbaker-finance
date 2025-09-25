@@ -143,6 +143,97 @@ class ExpenseClaimController extends Controller
     }
 
     /**
+     * Auto-save expense claim as draft
+     */
+    public function autoSave(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_id' => 'required|string',
+            'claim_date' => 'required|date',
+            'title' => 'required|string|max:255',
+            'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
+            'branch_id' => 'nullable|exists:branches,id',
+            'bank_account_id' => 'required|exists:bank_accounts,id',
+            'payee' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.description' => 'required|string|max:255',
+            'items.*.category' => 'nullable|string|max:255',
+            'items.*.unit_price' => 'required|numeric|min:0.01',
+            'items.*.unit_measurement' => 'nullable|string|max:50',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $total = collect($validated['items'])->sum(function ($item) {
+                return $item['unit_price'] * ($item['quantity'] ?? 1);
+            });
+
+            // Check if draft already exists
+            $expenseClaim = ExpenseClaim::where('reference_id', $validated['reference_id'])->first();
+
+            if ($expenseClaim) {
+                // Update existing draft
+                $expenseClaim->update([
+                    'claim_date' => $validated['claim_date'],
+                    'title' => $validated['title'],
+                    'status' => 'draft',
+                    'expense_type' => $validated['expense_type'],
+                    'branch_id' => $validated['branch_id'],
+                    'bank_account_id' => $validated['bank_account_id'],
+                    'payee' => $validated['payee'],
+                    'notes' => $validated['notes'],
+                    'total' => $total,
+                ]);
+
+                // Delete existing items
+                $expenseClaim->items()->delete();
+            } else {
+                // Create new draft
+                $expenseClaim = ExpenseClaim::create([
+                    'user_id' => auth()->id(),
+                    'reference_id' => $validated['reference_id'],
+                    'claim_date' => $validated['claim_date'],
+                    'title' => $validated['title'],
+                    'status' => 'draft',
+                    'expense_type' => $validated['expense_type'],
+                    'branch_id' => $validated['branch_id'],
+                    'bank_account_id' => $validated['bank_account_id'],
+                    'payee' => $validated['payee'],
+                    'notes' => $validated['notes'],
+                    'total' => $total,
+                ]);
+            }
+
+            // Create items
+            foreach ($validated['items'] as $item) {
+                $expenseClaim->items()->create([
+                    'description' => $item['description'],
+                    'category' => $item['category'] ?? null,
+                    'unit_price' => $item['unit_price'],
+                    'unit_measurement' => $item['unit_measurement'] ?? null,
+                    'quantity' => $item['quantity'] ?? 1,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'expense_claim_id' => $expenseClaim->id,
+                'message' => 'Draft saved successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving draft: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse

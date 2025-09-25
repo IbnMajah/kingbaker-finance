@@ -371,6 +371,9 @@ Route::middleware('auth')->group(function () {
     Route::post('expense-claims', [ExpenseClaimController::class, 'store'])
         ->name('expense-claims.store');
 
+    Route::post('expense-claims/auto-save', [ExpenseClaimController::class, 'autoSave'])
+        ->name('expense-claims.auto-save');
+
     Route::get('expense-claims/{expenseClaim}', [ExpenseClaimController::class, 'show'])
         ->name('expense-claims.show');
 
