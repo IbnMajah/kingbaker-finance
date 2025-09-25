@@ -21,7 +21,7 @@ class TransactionController extends Controller
     public function index(Request $request): Response
     {
         $query = Transaction::query()
-            ->with(['bankAccount', 'branch', 'creator'])
+            ->with(['bankAccount', 'branch', 'creator', 'billPayment.bill.vendor'])
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('description', 'like', "%{$search}%")
@@ -46,7 +46,7 @@ class TransactionController extends Controller
             ->orderBy('created_at', 'desc');
 
         $transactions = $query->paginate(25)
-            ->through(fn ($transaction) => [
+            ->through(fn($transaction) => [
                 'id' => $transaction->id,
                 'date' => $transaction->transaction_date,
                 'description' => $transaction->description,
@@ -70,6 +70,17 @@ class TransactionController extends Controller
                     'id' => $transaction->creator->id,
                     'name' => $transaction->creator->name,
                 ] : null,
+                'bill_payment' => $transaction->billPayment->first() ? [
+                    'id' => $transaction->billPayment->first()->id,
+                    'bill' => $transaction->billPayment->first()->bill ? [
+                        'id' => $transaction->billPayment->first()->bill->id,
+                        'bill_number' => $transaction->billPayment->first()->bill->bill_number,
+                        'vendor' => $transaction->billPayment->first()->bill->vendor ? [
+                            'id' => $transaction->billPayment->first()->bill->vendor->id,
+                            'name' => $transaction->billPayment->first()->bill->vendor->name,
+                        ] : null,
+                    ] : null,
+                ] : null,
             ]);
 
         // Calculate summary statistics for all transactions (not just current page)
@@ -83,19 +94,19 @@ class TransactionController extends Controller
                     ->orWhere('payee', 'like', "%{$search}%");
             });
         })
-        ->when($request->input('type'), function ($query, $type) {
-            $query->where('type', $type);
-        })
-        ->when($request->input('payment_mode'), function ($query, $mode) {
-            $query->where('payment_mode', $mode);
-        })
-        ->when($request->input('status'), function ($query, $status) {
-            if ($status === 'reconciled') {
-                $query->where('is_reconciled', true);
-            } elseif ($status === 'pending') {
-                $query->where('is_reconciled', false);
-            }
-        });
+            ->when($request->input('type'), function ($query, $type) {
+                $query->where('type', $type);
+            })
+            ->when($request->input('payment_mode'), function ($query, $mode) {
+                $query->where('payment_mode', $mode);
+            })
+            ->when($request->input('status'), function ($query, $status) {
+                if ($status === 'reconciled') {
+                    $query->where('is_reconciled', true);
+                } elseif ($status === 'pending') {
+                    $query->where('is_reconciled', false);
+                }
+            });
 
         $summary = [
             'total_transactions' => $baseQuery->count(),
@@ -175,10 +186,49 @@ class TransactionController extends Controller
      */
     public function show(Transaction $transaction): Response
     {
-        $transaction->load(['bankAccount', 'branch', 'creator']);
+        $transaction->load(['bankAccount', 'branch', 'creator', 'billPayment.bill.vendor']);
 
         return Inertia::render('Transactions/Show', [
-            'transaction' => $transaction,
+            'transaction' => [
+                'id' => $transaction->id,
+                'bank_account_id' => $transaction->bank_account_id,
+                'transaction_date' => $transaction->transaction_date,
+                'type' => $transaction->type,
+                'payment_mode' => $transaction->payment_mode,
+                'reference_number' => $transaction->reference_number,
+                'payee' => $transaction->payee,
+                'amount' => $transaction->amount,
+                'description' => $transaction->description,
+                'branch_id' => $transaction->branch_id,
+                'category' => $transaction->category,
+                'image_path' => $transaction->image_path,
+                'is_reconciled' => $transaction->is_reconciled,
+                'created_at' => $transaction->created_at,
+                'updated_at' => $transaction->updated_at,
+                'bank_account' => $transaction->bankAccount ? [
+                    'id' => $transaction->bankAccount->id,
+                    'name' => $transaction->bankAccount->name,
+                ] : null,
+                'branch' => $transaction->branch ? [
+                    'id' => $transaction->branch->id,
+                    'name' => $transaction->branch->name,
+                ] : null,
+                'creator' => $transaction->creator ? [
+                    'id' => $transaction->creator->id,
+                    'name' => $transaction->creator->name,
+                ] : null,
+                'bill_payment' => $transaction->billPayment->first() ? [
+                    'id' => $transaction->billPayment->first()->id,
+                    'bill' => $transaction->billPayment->first()->bill ? [
+                        'id' => $transaction->billPayment->first()->bill->id,
+                        'bill_number' => $transaction->billPayment->first()->bill->bill_number,
+                        'vendor' => $transaction->billPayment->first()->bill->vendor ? [
+                            'id' => $transaction->billPayment->first()->bill->vendor->id,
+                            'name' => $transaction->billPayment->first()->bill->vendor->name,
+                        ] : null,
+                    ] : null,
+                ] : null,
+            ],
         ]);
     }
 

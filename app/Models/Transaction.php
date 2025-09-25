@@ -52,7 +52,7 @@ class Transaction extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function billPayments(): HasMany
+    public function billPayment(): HasMany
     {
         return $this->hasMany(BillPayment::class);
     }
