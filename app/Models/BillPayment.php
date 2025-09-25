@@ -52,7 +52,6 @@ class BillPayment extends Model
     {
         static::created(function ($payment) {
             $bill = $payment->bill;
-            $bill->amount_paid = $bill->payments()->sum('amount');
 
             // Only create transaction if one doesn't already exist
             if (!$payment->transaction_id) {
@@ -73,11 +72,14 @@ class BillPayment extends Model
                 $payment->update(['transaction_id' => $transaction->id]);
             }
 
+            // Update bill amount_paid and status
+            $bill->amount_paid = $bill->payments()->sum('amount');
+            $bill->updateStatus();
+
             // Update bank account balance
             if ($payment->bankAccount) {
                 $payment->bankAccount->updateBalance();
             }
-            $bill->updateStatus();
         });
 
         static::updated(function ($payment) {

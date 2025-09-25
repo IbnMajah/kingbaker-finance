@@ -70,13 +70,18 @@ class BankAccountController extends Controller
             'name' => 'required|string|max:255',
             'account_number' => 'required|string|max:255|unique:bank_accounts,account_number',
             'bank_name' => 'required|string|max:255',
-            'current_balance' => 'required|numeric',
+            'opening_balance' => 'required|numeric',
             'active' => 'required|boolean',
         ]);
 
-        $bankAccount = BankAccount::create($validated);
-        $bankAccount->current_balance = $validated['current_balance'];
-        $bankAccount->save();
+        $bankAccount = BankAccount::create([
+            'name' => $validated['name'],
+            'account_number' => $validated['account_number'],
+            'bank_name' => $validated['bank_name'],
+            'opening_balance' => $validated['opening_balance'],
+            'current_balance' => $validated['opening_balance'], // Set current balance to opening balance initially
+            'active' => $validated['active'],
+        ]);
 
         return Redirect::route('bank-accounts')->with('success', 'Bank account created.');
     }
@@ -86,6 +91,9 @@ class BankAccountController extends Controller
      */
     public function show(Request $request, BankAccount $bankAccount): Response
     {
+        // Ensure the balance is up to date
+        $bankAccount->updateBalance();
+
         $query = $bankAccount->transactions()
             ->with(['branch', 'creator'])
             ->when($request->input('search'), function ($query, $search) {

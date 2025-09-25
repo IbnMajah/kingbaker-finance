@@ -189,7 +189,46 @@ class TransactionController extends Controller
         $transaction->load(['bankAccount', 'branch', 'creator', 'billPayment.bill.vendor']);
 
         return Inertia::render('Transactions/Show', [
-            'transaction' => $transaction,
+            'transaction' => [
+                'id' => $transaction->id,
+                'bank_account_id' => $transaction->bank_account_id,
+                'transaction_date' => $transaction->transaction_date,
+                'type' => $transaction->type,
+                'payment_mode' => $transaction->payment_mode,
+                'reference_number' => $transaction->reference_number,
+                'payee' => $transaction->payee,
+                'amount' => $transaction->amount,
+                'description' => $transaction->description,
+                'branch_id' => $transaction->branch_id,
+                'category' => $transaction->category,
+                'image_path' => $transaction->image_path,
+                'is_reconciled' => $transaction->is_reconciled,
+                'created_at' => $transaction->created_at,
+                'updated_at' => $transaction->updated_at,
+                'bank_account' => $transaction->bankAccount ? [
+                    'id' => $transaction->bankAccount->id,
+                    'name' => $transaction->bankAccount->name,
+                ] : null,
+                'branch' => $transaction->branch ? [
+                    'id' => $transaction->branch->id,
+                    'name' => $transaction->branch->name,
+                ] : null,
+                'creator' => $transaction->creator ? [
+                    'id' => $transaction->creator->id,
+                    'name' => $transaction->creator->name,
+                ] : null,
+                'bill_payment' => $transaction->billPayment->first() ? [
+                    'id' => $transaction->billPayment->first()->id,
+                    'bill' => $transaction->billPayment->first()->bill ? [
+                        'id' => $transaction->billPayment->first()->bill->id,
+                        'bill_number' => $transaction->billPayment->first()->bill->bill_number,
+                        'vendor' => $transaction->billPayment->first()->bill->vendor ? [
+                            'id' => $transaction->billPayment->first()->bill->vendor->id,
+                            'name' => $transaction->billPayment->first()->bill->vendor->name,
+                        ] : null,
+                    ] : null,
+                ] : null,
+            ],
         ]);
     }
 

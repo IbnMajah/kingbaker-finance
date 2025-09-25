@@ -8,11 +8,14 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\Vendor;
 use App\Models\BankAccount;
+use App\Models\ChequePayment;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
 
 class BillController extends Controller
 {
@@ -333,13 +336,72 @@ class BillController extends Controller
             return Redirect::back()->with('error', 'Payment amount cannot exceed remaining balance.');
         }
 
-        // Create payment record
-        $bill->payments()->create([
-            ...$validated,
-            'created_by' => Auth::id(),
-        ]);
+        DB::beginTransaction();
+        try {
+            if ($validated['payment_method'] === 'cheque') {
+                // Generate payment number for cheque payment
+                $paymentNumber = 'CHQ-' . str_pad(ChequePayment::max('id') + 1, 6, '0', STR_PAD_LEFT);
 
-        // The amount_paid and status will be automatically updated via the BillPayment model's observers
+                // Create the transaction first
+                $transaction = Transaction::create([
+                    'bank_account_id' => $validated['bank_account_id'],
+                    'transaction_date' => $validated['payment_date'],
+                    'type' => 'debit',
+                    'payment_mode' => 'cheque',
+                    'reference_number' => $validated['reference_number'] ?: $paymentNumber,
+                    'payee' => $bill->vendor->name,
+                    'amount' => $validated['amount'],
+                    'description' => 'Payment for bill #' . $bill->bill_number . ' - ' . $bill->description,
+                    'category' => 'vendor_payment',
+                    'created_by' => Auth::id(),
+                ]);
+
+                // Create bill payment with transaction link (this will NOT create another transaction)
+                $billPayment = $bill->payments()->create([
+                    'bank_account_id' => $validated['bank_account_id'],
+                    'transaction_id' => $transaction->id,
+                    'amount' => $validated['amount'],
+                    'payment_date' => $validated['payment_date'],
+                    'payment_method' => 'cheque',
+                    'reference_number' => $validated['reference_number'],
+                    'notes' => $validated['notes'],
+                    'created_by' => Auth::id(),
+                ]);
+
+                // Create cheque payment record
+                $chequePayment = ChequePayment::create([
+                    'payment_number' => $paymentNumber,
+                    'payee' => $bill->vendor->name,
+                    'amount' => $validated['amount'],
+                    'payment_date' => $validated['payment_date'],
+                    'payment_category' => 'bill',
+                    'payment_mode' => 'cheque',
+                    'bank_account_id' => $validated['bank_account_id'],
+                    'vendor_id' => $bill->vendor_id,
+                    'bill_id' => $bill->id,
+                    'cheque_number' => $validated['reference_number'],
+                    'reference_number' => $validated['reference_number'],
+                    'description' => 'Payment for bill #' . $bill->bill_number . ' - ' . $bill->description,
+                    'notes' => $validated['notes'],
+                    'status' => 'issued',
+                    'created_by' => Auth::id(),
+                ]);
+            } else {
+                // For non-cheque payments, create bill payment normally
+                // The BillPayment model will handle creating the transaction
+                $bill->payments()->create([
+                    ...$validated,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Redirect::back()->withErrors([
+                'error' => 'An error occurred while processing the payment: ' . $e->getMessage(),
+            ]);
+        }
 
         return Redirect::back()->with('success', 'Payment recorded successfully.');
     }
