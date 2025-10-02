@@ -204,7 +204,7 @@
                 :class="form.errors.attachments ? 'border-red-500' : ''"
               />
               <div v-if="form.errors.attachments" class="mt-1 text-sm text-red-600">{{ form.errors.attachments }}</div>
-              <p class="text-xs text-gray-500 mt-1">Upload additional supporting documents (images or PDFs, max 2MB each)</p>
+              <p class="text-xs text-gray-500 mt-1">Upload additional supporting documents (images or PDFs, max 5MB each, up to 10 files total)</p>
 
               <!-- Show selected new files -->
               <div v-if="newAttachments.length" class="mt-3">
@@ -415,7 +415,7 @@
     <div v-if="showImageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" @click="closeImageModal">
       <div class="relative w-1/2 h-4/5 flex items-center justify-center">
         <img
-          :src="`/storage/${deposit.image_path}`"
+          :src="`/storage/${selectedImage}`"
           :alt="`Receipt for ${deposit.reference_number}`"
           class="w-full h-full object-contain rounded-lg shadow-2xl"
           @click.stop
@@ -470,6 +470,7 @@ export default {
         image: null,
       }),
       showImageModal: false,
+      selectedImage: null,
       salesToAdd: [],
       salesToRemove: [],
       currentAttachments: this.deposit.attachments || [],
@@ -549,10 +550,12 @@ export default {
       }
     },
     showCurrentImage() {
+      this.selectedImage = this.deposit.image_path
       this.showImageModal = true
     },
     closeImageModal() {
       this.showImageModal = false
+      this.selectedImage = null
     },
     removeSale(saleId) {
       this.salesToRemove.push(saleId);
@@ -611,9 +614,9 @@ export default {
         // Open PDF in new tab
         window.open(`/storage/${attachment.path}`, '_blank');
       } else {
-        // Show image in modal (assuming you have an image modal)
+        // Show image in modal
+        this.selectedImage = attachment.path;
         this.showImageModal = true;
-        // You might need to adjust this based on your modal setup
       }
     },
     formatFileSize(bytes) {
