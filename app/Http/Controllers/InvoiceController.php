@@ -211,7 +211,7 @@ class InvoiceController extends Controller
             'items.*.description' => 'required|string|max:255',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.unit_measurement' => 'nullable|string|max:50',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
         // Generate invoice number if not provided
@@ -377,7 +377,7 @@ class InvoiceController extends Controller
             'items.*.description' => 'required|string|max:255',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.unit_measurement' => 'nullable|string|max:50',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
         // Handle file upload separately

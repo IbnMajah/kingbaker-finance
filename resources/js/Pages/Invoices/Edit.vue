@@ -291,11 +291,12 @@
                         <input
                           v-model.number="item.quantity"
                           type="number"
-                          min="1"
+                          min="0.01"
+                          step="0.01"
                           class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                           :class="form.errors[`items.${index}.quantity`] ? 'border-red-300' : 'border-gray-300'"
                           :disabled="invoice.status === 'paid'"
-                          placeholder="1"
+                          placeholder="1.00"
                           @input="calculateItemTotal(index)"
                         />
                         <div v-if="form.errors[`items.${index}.quantity`]" class="mt-1 text-sm text-red-600">

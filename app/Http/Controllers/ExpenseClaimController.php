@@ -161,7 +161,7 @@ class ExpenseClaimController extends Controller
             'items.*.category' => 'nullable|string|max:255',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.unit_measurement' => 'nullable|string|max:50',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
         DB::beginTransaction();
@@ -253,7 +253,7 @@ class ExpenseClaimController extends Controller
             'items.*.receipt_image' => 'nullable|image|max:2048',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.unit_measurement' => 'nullable|string|max:50',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
         DB::beginTransaction();
@@ -458,7 +458,7 @@ class ExpenseClaimController extends Controller
             'items.*.receipt_image' => 'nullable|image|max:2048',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.unit_measurement' => 'nullable|string|max:50',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
         DB::beginTransaction();
