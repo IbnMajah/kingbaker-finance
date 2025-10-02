@@ -15,9 +15,9 @@
 $allowed_ips = ['127.0.0.1', '::1', 'localhost'];
 $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
 
-if (!in_array($client_ip, $allowed_ips) && !in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1'])) {
-    die('Access denied. This script should only be accessed from localhost.');
-}
+// if (!in_array($client_ip, $allowed_ips) && !in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1'])) {
+//     die('Access denied. This script should only be accessed from localhost.');
+// }
 
 ?>
 <!DOCTYPE html>
