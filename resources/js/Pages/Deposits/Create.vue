@@ -254,7 +254,7 @@
               :class="form.errors.attachments ? 'border-red-500' : ''"
             />
             <div v-if="form.errors.attachments" class="mt-1 text-sm text-red-600">{{ form.errors.attachments }}</div>
-            <p class="text-xs text-gray-500 mt-1">Upload up to 10 supporting documents (images or PDFs, max 2MB each)</p>
+            <p class="text-xs text-gray-500 mt-1">Upload up to 10 supporting documents (images or PDFs, max 5MB each)</p>
 
             <!-- Show selected files -->
             <div v-if="form.attachments && form.attachments.length" class="mt-3">
