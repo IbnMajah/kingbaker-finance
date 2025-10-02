@@ -214,7 +214,21 @@
             </div>
             <!-- Invoice Items -->
             <div class="col-span-full">
-              <label class="block text-sm font-medium text-gray-700 mb-3">Invoice Items *</label>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold text-gray-900">Invoice Items</h3>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm text-gray-500">Total</div>
+                  <div class="text-2xl font-bold text-brand-600">GMD {{ totalAmount.toFixed(2) }}</div>
+                </div>
+              </div>
+
               <div v-if="invoice.status === 'paid'" class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
                 <div class="flex items-center">
                   <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -225,124 +239,127 @@
                   </p>
                 </div>
               </div>
-              <div class="border border-gray-300 rounded-md overflow-hidden">
-                <!-- Items Header -->
-                <div class="bg-gray-50 px-4 py-3 border-b border-gray-300">
-                  <div class="grid grid-cols-12 gap-3 text-sm font-medium text-gray-700">
-                    <div class="col-span-4">Description</div>
-                    <div class="col-span-2">Unit Price (GMD)</div>
-                    <div class="col-span-1">Unit</div>
-                    <div class="col-span-2">Quantity</div>
-                    <div class="col-span-2">Total</div>
-                    <div class="col-span-1">Action</div>
-                  </div>
-                </div>
+
+              <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <!-- Items List -->
                 <div class="divide-y divide-gray-200">
-                  <div v-for="(item, index) in form.items" :key="index" class="px-4 py-3">
-                    <div class="grid grid-cols-12 gap-3 items-start">
+                  <div v-for="(item, index) in form.items" :key="index" class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                      <h4 class="text-sm font-medium text-gray-900">Item #{{ index + 1 }}</h4>
+                      <button
+                        v-if="invoice.status !== 'paid'"
+                        type="button"
+                        @click="removeItem(index)"
+                        class="text-red-600 hover:text-red-800 p-1"
+                        :disabled="form.items.length <= 1"
+                      >
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 012 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 012 0v3a1 1 0 11-2 0V9z" clip-rule="evenodd"></path>
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <!-- Description -->
-                      <div class="col-span-4">
+                      <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                         <input
                           v-model="item.description"
                           type="text"
-                          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                           :class="form.errors[`items.${index}.description`] ? 'border-red-300' : 'border-gray-300'"
                           :disabled="invoice.status === 'paid'"
-                          placeholder="Item description"
+                          placeholder="e.g., Product or service"
+                          required
                         />
                         <div v-if="form.errors[`items.${index}.description`]" class="mt-1 text-sm text-red-600">
                           {{ form.errors[`items.${index}.description`] }}
                         </div>
                       </div>
+
                       <!-- Unit Price -->
-                      <div class="col-span-2">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
                         <input
                           v-model.number="item.unit_price"
                           type="number"
                           step="0.01"
                           min="0.01"
-                          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                           :class="form.errors[`items.${index}.unit_price`] ? 'border-red-300' : 'border-gray-300'"
                           :disabled="invoice.status === 'paid'"
                           placeholder="0.00"
+                          required
                           @input="calculateItemTotal(index)"
                         />
                         <div v-if="form.errors[`items.${index}.unit_price`]" class="mt-1 text-sm text-red-600">
                           {{ form.errors[`items.${index}.unit_price`] }}
                         </div>
                       </div>
+
                       <!-- Unit Measurement -->
-                      <div class="col-span-1">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
                         <input
                           v-model="item.unit_measurement"
                           type="text"
-                          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                           :class="form.errors[`items.${index}.unit_measurement`] ? 'border-red-300' : 'border-gray-300'"
                           :disabled="invoice.status === 'paid'"
-                          placeholder="kg, pcs, etc."
+                          placeholder="e.g., each, kg, pcs"
                         />
                         <div v-if="form.errors[`items.${index}.unit_measurement`]" class="mt-1 text-sm text-red-600">
                           {{ form.errors[`items.${index}.unit_measurement`] }}
                         </div>
                       </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <!-- Quantity -->
-                      <div class="col-span-2">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
                         <input
                           v-model.number="item.quantity"
                           type="number"
-                          min="1"
-                          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          min="0.01"
+                          step="0.01"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                           :class="form.errors[`items.${index}.quantity`] ? 'border-red-300' : 'border-gray-300'"
                           :disabled="invoice.status === 'paid'"
-                          placeholder="1"
+                          placeholder="1.00"
+                          required
                           @input="calculateItemTotal(index)"
                         />
                         <div v-if="form.errors[`items.${index}.quantity`]" class="mt-1 text-sm text-red-600">
                           {{ form.errors[`items.${index}.quantity`] }}
                         </div>
                       </div>
-                      <!-- Total -->
-                      <div class="col-span-2">
-                        <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-700">
-                          GMD {{ (item.unit_price * item.quantity || 0).toFixed(2) }}
+                    </div>
+
+                    <!-- Item Total -->
+                    <div class="mt-4 flex justify-end">
+                      <div class="text-right">
+                        <div class="text-sm text-gray-500">Item Total:</div>
+                        <div class="text-lg font-bold text-blue-600">
+                          GMD {{ ((item.unit_price || 0) * (item.quantity || 0)).toFixed(2) }}
                         </div>
-                      </div>
-                      <!-- Action -->
-                      <div class="col-span-1">
-                        <button
-                          type="button"
-                          @click="removeItem(index)"
-                          class="w-full text-red-600 hover:text-red-800 px-2 py-2 text-sm"
-                          :disabled="form.items.length <= 1 || invoice.status === 'paid'"
-                        >
-                          <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 012 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 012 0v3a1 1 0 11-2 0V9z" clip-rule="evenodd"></path>
-                          </svg>
-                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
+
                 <!-- Add Item Button -->
-                <div v-if="invoice.status !== 'paid'" class="px-4 py-3 bg-gray-50 border-t border-gray-300">
+                <div v-if="invoice.status !== 'paid'" class="px-6 py-4 border-t border-gray-200 border-dashed">
                   <button
                     type="button"
                     @click="addItem"
-                    class="text-brand-600 hover:text-brand-700 text-sm font-medium flex items-center"
+                    class="w-full flex items-center justify-center px-4 py-3 text-brand-600 hover:text-brand-700 text-sm font-medium border-2 border-dashed border-gray-300 rounded-lg hover:border-brand-400 transition-colors"
                   >
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
                     </svg>
-                    Add Item
+                    + Add Another Item
                   </button>
-                </div>
-                <!-- Total Section -->
-                <div class="px-4 py-3 bg-blue-50 border-t border-gray-300">
-                  <div class="flex justify-between items-center">
-                    <span class="text-lg font-semibold text-gray-900">Total Amount:</span>
-                    <span class="text-xl font-bold text-brand-600">GMD {{ totalAmount.toFixed(2) }}</span>
-                  </div>
                 </div>
               </div>
               <div v-if="form.errors.items" class="mt-1 text-sm text-red-600">{{ form.errors.items }}</div>
@@ -490,7 +507,7 @@ export default {
   computed: {
     totalAmount() {
       return this.form.items.reduce((total, item) => {
-        const itemTotal = (parseFloat(item.unit_price) || 0) * (parseInt(item.quantity) || 0)
+        const itemTotal = (parseFloat(item.unit_price) || 0) * (parseFloat(item.quantity) || 0)
         return total + itemTotal
       }, 0)
     }
