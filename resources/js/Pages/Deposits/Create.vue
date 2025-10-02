@@ -254,7 +254,7 @@
               :class="form.errors.attachments ? 'border-red-500' : ''"
             />
             <div v-if="form.errors.attachments" class="mt-1 text-sm text-red-600">{{ form.errors.attachments }}</div>
-            <p class="text-xs text-gray-500 mt-1">Upload up to 5 supporting documents (images or PDFs, max 2MB each)</p>
+            <p class="text-xs text-gray-500 mt-1">Upload up to 10 supporting documents (images or PDFs, max 2MB each)</p>
 
             <!-- Show selected files -->
             <div v-if="form.attachments && form.attachments.length" class="mt-3">
@@ -397,16 +397,16 @@ export default {
       const files = Array.from(event.target.files);
 
       // Validate file count
-      if (this.form.attachments.length + files.length > 5) {
-        alert('You can only upload up to 5 files total.');
+      if (this.form.attachments.length + files.length > 10) {
+        alert('You can only upload up to 10 files total.');
         return;
       }
 
       // Validate each file
       for (let file of files) {
-        // Check file size (2MB = 2048KB)
-        if (file.size > 2048 * 1024) {
-          alert(`File "${file.name}" is too large. Maximum size is 2MB.`);
+        // Check file size (5MB = 5120KB)
+        if (file.size > 5120 * 1024) {
+          alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
           return;
         }
 

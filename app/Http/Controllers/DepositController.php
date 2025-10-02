@@ -51,15 +51,15 @@ class DepositController extends Controller
         $summaryStats = [
             'total_deposits' => $summaryQuery->count(),
             'total_amount' => $summaryQuery->sum('amount'),
-                        'this_month' => $summaryQuery->whereMonth('deposit_date', now()->month)
-                                       ->whereYear('deposit_date', now()->year)
-                                       ->sum('amount'),
+            'this_month' => $summaryQuery->whereMonth('deposit_date', now()->month)
+                ->whereYear('deposit_date', now()->year)
+                ->sum('amount'),
             'today' => $summaryQuery->whereDate('deposit_date', now()->toDateString())
-                                   ->sum('amount'),
+                ->sum('amount'),
         ];
 
         $deposits = $query->paginate(25)
-            ->through(fn ($deposit) => [
+            ->through(fn($deposit) => [
                 'id' => $deposit->id,
                 'deposit_date' => $deposit->deposit_date,
                 'description' => $deposit->description,
@@ -150,9 +150,9 @@ class DepositController extends Controller
             'reference_number' => 'required|string|max:255',
             'depositor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
-            'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'file|mimes:jpeg,jpg,png,pdf|max:2048',
+            'image' => 'nullable|image|max:5120',
+            'attachments' => 'nullable|array|max:10',
+            'attachments.*' => 'file|mimes:jpeg,jpg,png,pdf|max:5120',
             'selected_sales' => 'nullable|array',
             'selected_sales.*' => 'exists:sales,id',
         ]);
@@ -288,9 +288,9 @@ class DepositController extends Controller
             'reference_number' => 'required|string|max:255',
             'depositor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
-            'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'file|mimes:jpeg,jpg,png,pdf|max:2048',
+            'image' => 'nullable|image|max:5120',
+            'attachments' => 'nullable|array|max:10',
+            'attachments.*' => 'file|mimes:jpeg,jpg,png,pdf|max:5120',
             'remove_attachments' => 'nullable|array',
             'remove_attachments.*' => 'string',
             'sales_to_add' => 'nullable|array',
@@ -317,7 +317,7 @@ class DepositController extends Controller
                 // Delete file from storage
                 Storage::disk('public')->delete($pathToRemove);
                 // Remove from attachments array
-                $currentAttachments = array_filter($currentAttachments, function($attachment) use ($pathToRemove) {
+                $currentAttachments = array_filter($currentAttachments, function ($attachment) use ($pathToRemove) {
                     return $attachment['path'] !== $pathToRemove;
                 });
             }

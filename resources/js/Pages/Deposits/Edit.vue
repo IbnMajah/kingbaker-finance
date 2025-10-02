@@ -573,16 +573,16 @@ export default {
 
       // Validate file count (current + new + pending new files)
       const totalFiles = this.currentAttachments.length + this.newAttachments.length + files.length - this.removeAttachments.length;
-      if (totalFiles > 5) {
-        alert('You can only have up to 5 files total.');
+      if (totalFiles > 10) {
+        alert('You can only have up to 10 files total.');
         return;
       }
 
       // Validate each file
       for (let file of files) {
-        // Check file size (2MB = 2048KB)
-        if (file.size > 2048 * 1024) {
-          alert(`File "${file.name}" is too large. Maximum size is 2MB.`);
+        // Check file size (5MB = 5120KB)
+        if (file.size > 5120 * 1024) {
+          alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
           return;
         }
 
