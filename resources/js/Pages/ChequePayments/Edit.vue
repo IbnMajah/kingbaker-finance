@@ -43,13 +43,12 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
               <input
                 v-model="form.payment_date"
                 type="date"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
                 :class="form.errors.payment_date ? 'border-red-500' : ''"
-                required
               />
               <div v-if="form.errors.payment_date" class="mt-1 text-sm text-red-600">{{ form.errors.payment_date }}</div>
             </div>
@@ -87,10 +86,83 @@
                 </select>
                 <div v-if="form.errors.payment_category" class="mt-1 text-sm text-red-600">{{ form.errors.payment_category }}</div>
               </div>
+
             </div>
           </div>
 
-          <!-- Payment Details -->
+          <!-- Conditional Fields Based on Payment Category -->
+          <div v-if="form.payment_category === 'vendor_payment'" class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Vendor Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor *</label>
+                <select
+                  v-model="form.vendor_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.vendor_id ? 'border-red-500' : ''"
+                >
+                  <option value="">Select Vendor</option>
+                  <option v-for="vendor in vendors" :key="vendor.value" :value="vendor.value">{{ vendor.label }}</option>
+                </select>
+                <div v-if="form.errors.vendor_id" class="mt-1 text-sm text-red-600">{{ form.errors.vendor_id }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="form.payment_category === 'bill'" class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Bill Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bill *</label>
+                <select
+                  v-model="form.bill_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.bill_id ? 'border-red-500' : ''"
+                  @change="updateFromBill"
+                >
+                  <option value="">Select Bill</option>
+                  <option v-for="bill in bills" :key="bill.value" :value="bill.value">{{ bill.label }}</option>
+                </select>
+                <div v-if="form.errors.bill_id" class="mt-1 text-sm text-red-600">{{ form.errors.bill_id }}</div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Recurring</label>
+                <div class="flex items-center">
+                  <input
+                    v-model="form.is_recurring"
+                    type="checkbox"
+                    class="h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded"
+                  />
+                  <label class="ml-2 text-sm text-gray-700">This is a recurring payment</label>
+                </div>
+                <div v-if="form.errors.is_recurring" class="mt-1 text-sm text-red-600">{{ form.errors.is_recurring }}</div>
+              </div>
+            </div>
+            
+            <!-- Recurring Frequency (only show when recurring is checked) -->
+            <div v-if="form.is_recurring" class="mt-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Recurring Frequency *</label>
+                  <select
+                    v-model="form.recurring_frequency"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                    :class="form.errors.recurring_frequency ? 'border-red-500' : ''"
+                  >
+                    <option value="">Select Frequency</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="annually">Annually</option>
+                  </select>
+                  <div v-if="form.errors.recurring_frequency" class="mt-1 text-sm text-red-600">{{ form.errors.recurring_frequency }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Financial Details -->
           <div class="border-t border-gray-200 pt-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Details</h3>
             <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -136,8 +208,8 @@
                   required
                 >
                   <option value="">Select Bank Account</option>
-                  <option v-for="account in bankAccounts" :key="account.id" :value="account.id">
-                    {{ account.name }}
+                  <option v-for="account in bankAccounts" :key="account.value" :value="account.value">
+                    {{ account.label }}
                   </option>
                 </select>
                 <div v-if="form.errors.bank_account_id" class="mt-1 text-sm text-red-600">{{ form.errors.bank_account_id }}</div>
@@ -191,8 +263,8 @@
                   :class="form.errors.branch_id ? 'border-red-500' : ''"
                 >
                   <option value="">Select Branch</option>
-                  <option v-for="branch in branches" :key="branch.id" :value="branch.id">
-                    {{ branch.name }}
+                  <option v-for="branch in branches" :key="branch.value" :value="branch.value">
+                    {{ branch.label }}
                   </option>
                 </select>
                 <div v-if="form.errors.branch_id" class="mt-1 text-sm text-red-600">{{ form.errors.branch_id }}</div>
@@ -304,6 +376,8 @@ export default {
     payment: Object,
     bankAccounts: Array,
     branches: Array,
+    vendors: Array,
+    bills: Array,
     paymentCategories: Array,
     paymentModes: Array,
     statuses: Array,
@@ -319,6 +393,10 @@ export default {
         payment_mode: this.payment.payment_mode,
         bank_account_id: this.payment.bank_account_id,
         branch_id: this.payment.branch_id,
+        vendor_id: this.payment.vendor_id || '',
+        bill_id: this.payment.bill_id || '',
+        is_recurring: this.payment.is_recurring || false,
+        recurring_frequency: this.payment.recurring_frequency || '',
         cheque_number: this.payment.cheque_number,
         reference_number: this.payment.reference_number,
         description: this.payment.description,
@@ -333,6 +411,16 @@ export default {
       this.form.put(`/cheque-payments/${this.payment.id}`, {
         preserveScroll: true,
       })
+    },
+    updateFromBill() {
+      if (this.form.bill_id) {
+        const selectedBill = this.bills.find(bill => bill.value == this.form.bill_id)
+        if (selectedBill) {
+          this.form.amount = selectedBill.amount
+          this.form.vendor_id = selectedBill.vendor_id
+          this.form.description = selectedBill.description || `Payment for ${selectedBill.label}`
+        }
+      }
     },
   },
 }

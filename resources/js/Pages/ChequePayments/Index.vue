@@ -189,21 +189,33 @@
           </div>
         </div>
 
-        <div class="flex justify-end space-x-3 mt-4">
-          <button
-            @click="reset"
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
-          >
-            Reset
-          </button>
-          <button
-            @click="search"
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-white bg-brand-600 border border-transparent rounded-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
-          >
-            Search
-          </button>
+        <div class="flex justify-between items-center mt-4">
+          <div v-if="selectedPayments.length > 0" class="text-sm text-gray-600">
+            {{ selectedPayments.length }} payment(s) selected
+            <button
+              @click="clearSelection"
+              type="button"
+              class="ml-2 text-brand-600 hover:text-brand-800 underline"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div class="flex space-x-3">
+            <button
+              @click="reset"
+              type="button"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+            >
+              Reset
+            </button>
+            <button
+              @click="search"
+              type="button"
+              class="px-4 py-2 text-sm font-medium text-white bg-brand-600 border border-transparent rounded-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+            >
+              Search
+            </button>
+          </div>
         </div>
     </div>
 
@@ -228,13 +240,23 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="payment in payments.data" :key="payment.id" class="hover:bg-gray-50">
+            <tr 
+              v-for="payment in payments.data" 
+              :key="payment.id" 
+              :class="[
+                'hover:bg-gray-50 cursor-pointer',
+                selectedPayments.includes(payment.id) ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+              ]"
+              @click="toggleSelection(payment.id)"
+            >
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 {{ payment.payment_number }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ payment.payee }}</div>
-                <div class="text-sm text-gray-500">{{ payment.description }}</div>
+                <div class="text-sm text-gray-500" :title="payment.description">
+                  {{ payment.description ? payment.description.substring(0, 50) + (payment.description.length > 50 ? '...' : '') : '' }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ $formatAmount(payment.amount) }}
@@ -399,6 +421,7 @@ export default {
         date_to: this.filters.date_to || '',
         status: this.filters.status || '',
       },
+      selectedPayments: [],
     }
   },
   methods: {
@@ -457,6 +480,17 @@ export default {
     },
     markAsCleared(id) {
       this.$inertia.patch(`/cheque-payments/${id}/mark-cleared`)
+    },
+    toggleSelection(paymentId) {
+      const index = this.selectedPayments.indexOf(paymentId)
+      if (index > -1) {
+        this.selectedPayments.splice(index, 1)
+      } else {
+        this.selectedPayments.push(paymentId)
+      }
+    },
+    clearSelection() {
+      this.selectedPayments = []
     },
   },
 }

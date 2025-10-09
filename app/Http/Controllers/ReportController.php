@@ -44,10 +44,13 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get();
 
-        $expenseCategories = ExpenseClaim::select('category')
-            ->distinct()
-            ->whereNotNull('category')
+        $expenseCategories = ExpenseClaim::with('items')
+            ->get()
+            ->pluck('items')
+            ->flatten()
             ->pluck('category')
+            ->filter()
+            ->unique()
             ->sort()
             ->values();
 
@@ -197,32 +200,44 @@ class ReportController extends Controller
 
     private function getExpensesChartData($category = null, $status = null)
     {
-        $query = ExpenseClaim::query();
-
-        if ($category) {
-            $query->where('category', $category);
-        }
+        $query = ExpenseClaim::with('items');
 
         if ($status) {
             $query->where('status', $status);
         }
 
-        // Get expenses by category for current year
-        $expenses = $query->whereYear('created_at', now()->year)
-            ->select('category', DB::raw('SUM(total) as total'))
-            ->whereNotNull('category')
-            ->groupBy('category')
-            ->orderByDesc('total')
-            ->get();
+        // Get expenses for current year
+        $expenses = $query->whereYear('created_at', now()->year)->get();
 
-        if ($expenses->isEmpty()) {
+        // Filter by category if specified
+        if ($category) {
+            $expenses = $expenses->filter(function ($expense) use ($category) {
+                return $expense->items->contains('category', $category);
+            });
+        }
+
+        // Group by category from expense items
+        $categoryTotals = [];
+        foreach ($expenses as $expense) {
+            foreach ($expense->items as $item) {
+                if ($item->category) {
+                    if (!isset($categoryTotals[$item->category])) {
+                        $categoryTotals[$item->category] = 0;
+                    }
+                    $categoryTotals[$item->category] += $item->unit_price * $item->quantity;
+                }
+            }
+        }
+
+        if (empty($categoryTotals)) {
             return ['labels' => [], 'values' => []];
         }
 
-        $labels = $expenses->pluck('category')->filter()->toArray();
-        $values = $expenses->pluck('total')->toArray();
+        // Sort by total descending
+        arsort($categoryTotals);
 
-
+        $labels = array_keys($categoryTotals);
+        $values = array_values($categoryTotals);
 
         return compact('labels', 'values');
     }
@@ -470,10 +485,12 @@ class ReportController extends Controller
 
     private function generateExpensesReport($format, $filters)
     {
-        $query = ExpenseClaim::with(['user', 'branch']);
+        $query = ExpenseClaim::with(['user', 'branch', 'items']);
 
         if (!empty($filters['category'])) {
-            $query->where('category', $filters['category']);
+            $query->whereHas('items', function ($q) use ($filters) {
+                $q->where('category', $filters['category']);
+            });
         }
 
         if (!empty($filters['status'])) {
