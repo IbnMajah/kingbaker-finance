@@ -85,18 +85,34 @@
           <div class="border-t border-gray-200 pt-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Information</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Customer Name -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
-                <input
-                  v-model="form.customer_name"
-                  type="text"
-                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                  :class="form.errors.customer_name ? 'border-red-300' : 'border-gray-300'"
-                  placeholder="Enter customer name"
-                />
-                <div v-if="form.errors.customer_name" class="mt-1 text-sm text-red-600">{{ form.errors.customer_name }}</div>
+            <!-- Customer Name -->
+            <div class="relative">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+              <input
+                v-model="form.customer_name"
+                type="text"
+                class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                :class="form.errors.customer_name ? 'border-red-300' : 'border-gray-300'"
+                placeholder="Enter customer name"
+                @input="searchCustomers"
+                @focus="showCustomerSuggestions = true"
+                @blur="hideSuggestions"
+              />
+              <div v-if="form.errors.customer_name" class="mt-1 text-sm text-red-600">{{ form.errors.customer_name }}</div>
+              
+              <!-- Customer Suggestions Dropdown -->
+              <div v-if="showCustomerSuggestions && customerSuggestions.length > 0" 
+                   class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div v-for="customer in customerSuggestions" 
+                     :key="customer.id"
+                     class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                     @mousedown="selectCustomer(customer)">
+                  <div class="font-medium text-gray-900">{{ customer.name }}</div>
+                  <div v-if="customer.email" class="text-sm text-gray-600">{{ customer.email }}</div>
+                  <div v-if="customer.phone" class="text-sm text-gray-600">{{ customer.phone }}</div>
+                </div>
               </div>
+            </div>
               <!-- Customer Type -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Customer Type *</label>
@@ -433,6 +449,9 @@ export default {
         next_invoice_date: '',
         attachment: null,
       }),
+      customerSuggestions: [],
+      showCustomerSuggestions: false,
+      searchTimeout: null,
     }
   },
   watch: {
@@ -473,7 +492,9 @@ export default {
     }
   },
   methods: {
-    store() {
+    async store() {
+      // Save customer first if needed
+      await this.saveCustomer()
       this.form.post('/invoices')
     },
     getDescriptionPlaceholder() {
@@ -504,6 +525,82 @@ export default {
       // This method triggers reactivity for computed total
       // The actual calculation is done in the template and computed property
       this.$forceUpdate()
+    },
+    searchCustomers() {
+      // Clear existing timeout
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout)
+      }
+
+      // Set new timeout for debounced search
+      this.searchTimeout = setTimeout(() => {
+        if (this.form.customer_name.length >= 2) {
+          this.performCustomerSearch()
+        } else {
+          this.customerSuggestions = []
+        }
+      }, 300) // 300ms debounce
+    },
+    async performCustomerSearch() {
+      try {
+        const response = await fetch(`/invoices/customers/search?q=${encodeURIComponent(this.form.customer_name)}`)
+        const customers = await response.json()
+        this.customerSuggestions = customers
+        this.showCustomerSuggestions = true
+      } catch (error) {
+        console.error('Error searching customers:', error)
+        this.customerSuggestions = []
+      }
+    },
+    selectCustomer(customer) {
+      this.form.customer_name = customer.name
+      this.form.customer_email = customer.email || ''
+      this.form.customer_phone = customer.phone || ''
+      this.form.customer_address = customer.address || ''
+      
+      this.customerSuggestions = []
+      this.showCustomerSuggestions = false
+    },
+    hideSuggestions() {
+      // Use setTimeout to allow click events to fire before hiding
+      setTimeout(() => {
+        this.showCustomerSuggestions = false
+      }, 200)
+    },
+    async saveCustomer() {
+      if (!this.form.customer_name.trim()) return
+
+      try {
+        const response = await fetch('/invoices/customers/create-or-find', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          body: JSON.stringify({
+            name: this.form.customer_name,
+            email: this.form.customer_email,
+            phone: this.form.customer_phone,
+            address: this.form.customer_address
+          })
+        })
+
+        const customer = await response.json()
+        
+        // Update form with the customer data
+        this.form.customer_name = customer.name
+        this.form.customer_email = customer.email || ''
+        this.form.customer_phone = customer.phone || ''
+        this.form.customer_address = customer.address || ''
+
+        // Show success message if customer was created
+        if (customer.created) {
+          // You could add a toast notification here
+          console.log('New customer created:', customer.name)
+        }
+      } catch (error) {
+        console.error('Error saving customer:', error)
+      }
     },
   },
 }

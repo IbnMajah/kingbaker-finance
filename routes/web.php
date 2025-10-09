@@ -361,6 +361,13 @@ Route::middleware('auth')->group(function () {
     Route::get('invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])
         ->name('invoices.download-pdf');
 
+    // Customer search and creation for invoices
+    Route::get('invoices/customers/search', [InvoiceController::class, 'searchCustomers'])
+        ->name('invoices.customers.search');
+
+    Route::post('invoices/customers/create-or-find', [InvoiceController::class, 'createOrFindCustomer'])
+        ->name('invoices.customers.create-or-find');
+
     // Expense Claims
     Route::get('expense-claims', [ExpenseClaimController::class, 'index'])
         ->name('expense-claims');

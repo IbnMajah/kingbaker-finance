@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\BankAccount;
 use App\Models\Branch;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -591,5 +592,116 @@ class InvoiceController extends Controller
         $invoice->restore();
 
         return Redirect::route('invoices')->with('success', 'Invoice restored successfully.');
+    }
+
+    /**
+     * Search for customers by name, email, or phone
+     */
+    public function searchCustomers(Request $request)
+    {
+        $query = $request->input('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $customers = Contact::where(function ($q) use ($query) {
+            $q->where('first_name', 'like', "%{$query}%")
+                ->orWhere('last_name', 'like', "%{$query}%")
+                ->orWhere('email', 'like', "%{$query}%")
+                ->orWhere('phone', 'like', "%{$query}%")
+                ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$query}%"]);
+        })
+            ->where('account_id', Auth::user()->account_id)
+            ->limit(10)
+            ->get()
+            ->map(function ($contact) {
+                return [
+                    'id' => $contact->id,
+                    'name' => $contact->name,
+                    'email' => $contact->email,
+                    'phone' => $contact->phone,
+                    'address' => $contact->address,
+                    'city' => $contact->city,
+                    'region' => $contact->region,
+                ];
+            });
+
+        return response()->json($customers);
+    }
+
+    /**
+     * Create or find a customer
+     */
+    public function createOrFindCustomer(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        // Split name into first and last name
+        $nameParts = explode(' ', trim($validated['name']), 2);
+        $firstName = $nameParts[0];
+        $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
+
+        // Check if customer already exists by email or phone
+        $existingCustomer = null;
+        if ($validated['email']) {
+            $existingCustomer = Contact::where('email', $validated['email'])
+                ->where('account_id', Auth::user()->account_id)
+                ->first();
+        }
+
+        if (!$existingCustomer && $validated['phone']) {
+            $existingCustomer = Contact::where('phone', $validated['phone'])
+                ->where('account_id', Auth::user()->account_id)
+                ->first();
+        }
+
+        if ($existingCustomer) {
+            // Update existing customer with new information
+            $existingCustomer->update([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $validated['email'] ?: $existingCustomer->email,
+                'phone' => $validated['phone'] ?: $existingCustomer->phone,
+                'address' => $validated['address'] ?: $existingCustomer->address,
+            ]);
+
+            return response()->json([
+                'id' => $existingCustomer->id,
+                'name' => $existingCustomer->name,
+                'email' => $existingCustomer->email,
+                'phone' => $existingCustomer->phone,
+                'address' => $existingCustomer->address,
+                'city' => $existingCustomer->city,
+                'region' => $existingCustomer->region,
+                'created' => false,
+            ]);
+        }
+
+        // Create new customer
+        $customer = Contact::create([
+            'account_id' => Auth::user()->account_id,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+        ]);
+
+        return response()->json([
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'phone' => $customer->phone,
+            'address' => $customer->address,
+            'city' => $customer->city,
+            'region' => $customer->region,
+            'created' => true,
+        ]);
     }
 }
