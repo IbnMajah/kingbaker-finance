@@ -225,18 +225,18 @@
         <h2 class="text-lg font-semibold">Cheque Payments</h2>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full table-fixed">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment #</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payee</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="w-30 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment #</th>
+              <th class="w-30 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payee</th>
+              <th class="w-36 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="w-26 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th class="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
+              <th class="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
+              <th class="w-32 px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -249,57 +249,61 @@
               ]"
               @click="toggleSelection(payment.id)"
             >
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <td class="px-3 py-3 text-sm font-medium text-gray-900 truncate">
                 {{ payment.payment_number }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ payment.payee }}</div>
-                <div class="text-sm text-gray-500" :title="payment.description">
-                  {{ payment.description ? payment.description.substring(0, 50) + (payment.description.length > 50 ? '...' : '') : '' }}
+              <td class="px-3 py-3">
+                <div class="text-sm font-medium text-gray-900 truncate" :title="payment.payee">{{ payment.payee }}</div>
+                <div class="text-xs text-gray-500 truncate" :title="payment.description">
+                  {{ payment.description ? payment.description.substring(0, 30) + (payment.description.length > 30 ? '...' : '') : '' }}
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td class="px-3 py-3 text-sm text-gray-900 truncate">
                   {{ $formatAmount(payment.amount) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td class="px-3 py-3 text-sm text-gray-900 truncate">
                 {{ $formatDate(payment.payment_date) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+              <td class="px-3 py-3">
+                <span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 truncate">
                   {{ getCategoryLabel(payment.payment_category) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+              <td class="px-3 py-3">
+                <span class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 truncate">
                   {{ getPaymentModeLabel(payment.payment_mode) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="getStatusBadge(payment.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+              <td class="px-3 py-3">
+                <span :class="getStatusBadge(payment.status)" class="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full truncate">
                   {{ payment.status.charAt(0).toUpperCase() + payment.status.slice(1) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td class="px-3 py-3 text-sm text-gray-900 truncate" :title="payment.bank_account?.name">
                 {{ payment.bank_account?.name }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end space-x-2">
-                  <Link v-if="canViewChequePayments" :href="`/cheque-payments/${payment.id}`" class="text-brand-600 hover:text-brand-900">View</Link>
-                  <Link v-if="canEditChequePayments" :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900">Edit</Link>
-                  <button
-                    v-if="payment.status === 'pending'"
-                    @click="markAsIssued(payment.id)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    Issue
-                  </button>
-                  <button
-                    v-if="payment.status === 'issued'"
-                    @click="markAsCleared(payment.id)"
-                    class="text-green-600 hover:text-green-900"
-                  >
-                    Clear
-                  </button>
+              <td class="px-3 py-3 text-right text-sm font-medium">
+                <div class="flex flex-col space-y-1">
+                  <div class="flex justify-end space-x-1">
+                    <Link v-if="canViewChequePayments" :href="`/cheque-payments/${payment.id}`" class="text-brand-600 hover:text-brand-900 text-xs">View</Link>
+                    <Link v-if="canEditChequePayments" :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900 text-xs">Edit</Link>
+                  </div>
+                  <div class="flex justify-end">
+                    <button
+                      v-if="payment.status === 'pending'"
+                      @click.stop="markAsIssued(payment.id)"
+                      class="text-blue-600 hover:text-blue-900 text-xs"
+                    >
+                      Issue
+                    </button>
+                    <button
+                      v-if="payment.status === 'issued'"
+                      @click.stop="markAsCleared(payment.id)"
+                      class="text-green-600 hover:text-green-900 text-xs"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>
