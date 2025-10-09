@@ -142,95 +142,98 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full table-fixed">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payee</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="w-28 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
+              <th class="w-48 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+              <th class="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payee</th>
+              <th class="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
+              <th class="w-24 px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="w-24 px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="w-32 px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="transaction in transactions?.data || []" :key="transaction.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td class="px-3 py-3 text-sm text-gray-900 truncate">
                 {{ $formatDate(transaction.date) }}
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
+              <td class="px-3 py-3 text-sm text-gray-900 truncate" :title="transaction.bank_account?.name || 'N/A'">
                 <div class="font-medium">{{ transaction.bank_account?.name || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                <div class="max-w-xs truncate" :title="transaction.description">
+              <td class="px-3 py-3 text-sm text-gray-900">
+                <div class="truncate" :title="transaction.description">
                   {{ transaction.description || '-' }}
                 </div>
-                <div v-if="transaction.bill_payment" class="text-xs text-blue-600 mt-1">
+                <div v-if="transaction.bill_payment" class="text-xs text-blue-600 mt-1 truncate" :title="`Bill #${transaction.bill_payment.bill?.bill_number} - ${transaction.bill_payment.bill?.vendor?.name}`">
                   Bill #{{ transaction.bill_payment.bill?.bill_number }} - {{ transaction.bill_payment.bill?.vendor?.name }}
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td class="px-3 py-3 text-sm text-gray-900 truncate" :title="transaction.reference || '-'">
                 {{ transaction.reference || '-' }}
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
+              <td class="px-3 py-3 text-sm text-gray-900 truncate" :title="transaction.payee || '-'">
                 {{ transaction.payee || '-' }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              <td class="px-3 py-3">
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 truncate">
                   {{ transaction.payment_mode?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+              <td class="px-3 py-3 text-sm text-right truncate">
                 <span :class="transaction.type === 'credit' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
                   {{ transaction.type === 'credit' ? '+' : '-' }}{{ $formatAmount(transaction.amount) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <span v-if="transaction.is_reconciled" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <td class="px-3 py-3 text-center">
+                <span v-if="transaction.is_reconciled" class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 truncate">
                   Reconciled
                 </span>
-                <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                <span v-else class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 truncate">
                   Pending
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div class="flex items-center justify-center space-x-2">
-                  <Link
-                    :href="`/transactions/${transaction.id}`"
-                    v-if="canViewTransactions"
-                    class="flex items-center space-x-1 text-blue-600 hover:text-blue-900 text-sm font-medium"
-                  >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                      <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>View</span>
-                  </Link>
+              <td class="px-3 py-3 text-center">
+                <div class="flex flex-col space-y-1">
+                  <div class="flex justify-center">
+                    <Link
+                      :href="`/transactions/${transaction.id}`"
+                      v-if="canViewTransactions"
+                      class="flex items-center space-x-1 text-blue-600 hover:text-blue-900 text-xs font-medium"
+                    >
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span>View</span>
+                    </Link>
+                  </div>
+                  <div class="flex justify-center">
+                    <button
+                      v-if="!transaction.is_reconciled"
+                      @click="reconcileTransaction(transaction.id)"
+                      class="flex items-center space-x-1 text-green-600 hover:text-green-900 text-xs font-medium"
+                    >
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span>Reconcile</span>
+                    </button>
 
-                  <button
-                    v-if="!transaction.is_reconciled"
-                    @click="reconcileTransaction(transaction.id)"
-                    class="flex items-center space-x-1 text-green-600 hover:text-green-900 text-sm font-medium"
-                  >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>Reconcile</span>
-                  </button>
-
-                  <button
-                    v-else
-                    @click="unreconcileTransaction(transaction.id)"
-                    class="flex items-center space-x-1 text-orange-600 hover:text-orange-900 text-sm font-medium"
-                  >
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>Unreconcile</span>
-                  </button>
+                    <button
+                      v-else
+                      @click="unreconcileTransaction(transaction.id)"
+                      class="flex items-center space-x-1 text-orange-600 hover:text-orange-900 text-xs font-medium"
+                    >
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span>Unreconcile</span>
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>
