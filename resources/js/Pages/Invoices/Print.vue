@@ -31,26 +31,20 @@
       <div class="invoice-header mb-8">
         <div class="flex justify-between items-start">
           <div class="company-info">
-            <h1 class="text-3xl font-bold text-brand-600 mb-2">King Baker</h1>
-            <div class="text-gray-600">
-              <p>Bakery & Confectionery</p>
-              <p>123 Business Street</p>
-              <p>Banjul, The Gambia</p>
-              <p>Tel: +220 123 4567</p>
-              <p>Email: info@kingbaker.gm</p>
+            <!-- King Baker Logo -->
+            <logo class="block mx-auto max-w-24 fill-white" height="12" />
+            <div class="text-gray-600 text-sm">
+              <p>Demba Burnafa Group</p>
+              <p>Brusubi, Turntable</p>
+              <p>Banjul Gambia</p>
             </div>
           </div>
           <div class="invoice-title text-right">
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">INVOICE</h2>
-            <div class="text-gray-600">
-              <p><strong>Invoice #:</strong> {{ invoice.invoice_number }}</p>
-              <p><strong>Date:</strong> {{ $formatDate(invoice.invoice_date) }}</p>
+            <div class="text-gray-500 text-sm mb-2">FOR US, BY US</div>
+            <div class="text-gray-800 text-sm space-y-1">
+              <p><strong>Invoice:</strong> {{ invoice.invoice_number }}</p>
+              <p><strong>Invoice Date:</strong> {{ $formatDate(invoice.invoice_date) }}</p>
               <p v-if="invoice.due_date"><strong>Due Date:</strong> {{ $formatDate(invoice.due_date) }}</p>
-              <p><strong>Status:</strong>
-                <span :class="getStatusClass(invoice.status)" class="px-2 py-1 rounded text-sm">
-                  {{ getStatusLabel(invoice.status) }}
-                </span>
-              </p>
             </div>
           </div>
         </div>
@@ -58,19 +52,20 @@
 
       <!-- Customer Information -->
       <div class="customer-info mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h3 class="text-lg font-semibold mb-3 text-gray-800 border-b-2 border-brand-200 pb-1">Bill To:</h3>
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Bill To:</h3>
             <div class="space-y-1">
-              <p class="font-semibold text-lg">{{ invoice.customer_name }}</p>
-              <p v-if="invoice.customer_address" class="text-gray-600">{{ invoice.customer_address }}</p>
-              <p v-if="invoice.customer_email" class="text-gray-600">{{ invoice.customer_email }}</p>
-              <p v-if="invoice.customer_phone" class="text-gray-600">{{ invoice.customer_phone }}</p>
+              <p class="font-semibold text-lg text-gray-900">{{ invoice.customer_name }}</p>
+              <p v-if="invoice.customer_address" class="text-sm text-gray-600">{{ invoice.customer_address }}</p>
+              <p v-if="invoice.customer_email" class="text-sm text-gray-600">{{ invoice.customer_email }}</p>
+              <p v-if="invoice.customer_phone" class="text-sm text-gray-600">{{ invoice.customer_phone }}</p>
+              <p v-if="invoice.customer_tax_id" class="text-sm text-gray-600">Tax ID: {{ invoice.customer_tax_id }}</p>
             </div>
           </div>
-          <div>
-            <h3 class="text-lg font-semibold mb-3 text-gray-800 border-b-2 border-brand-200 pb-1">Invoice Details:</h3>
-            <div class="space-y-1">
+          <div class="text-right">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Invoice Details:</h3>
+            <div class="space-y-1 text-sm">
               <p><strong>Type:</strong> {{ getInvoiceTypeLabel(invoice.invoice_type) }}</p>
               <p><strong>Customer Type:</strong> {{ getCustomerTypeLabel(invoice.customer_type) }}</p>
               <p v-if="invoice.billing_period"><strong>Billing Period:</strong> {{ invoice.billing_period }}</p>
@@ -81,76 +76,67 @@
         </div>
       </div>
 
-      <!-- Invoice Items/Description -->
+      <!-- Invoice Items Table -->
       <div class="invoice-items mb-8">
-        <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b-2 border-brand-200 pb-1">Description:</h3>
-        <div class="bg-gray-50 p-4 rounded-md">
-          <p class="text-gray-800 leading-relaxed">
-            {{ invoice.description || 'Services/Products as discussed and agreed upon.' }}
-          </p>
+        <div class="overflow-hidden border border-gray-200 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DESCRIPTION</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QUANTITY</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UNIT PRICE</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TAXES</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AMOUNT</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-if="invoice.items && invoice.items.length > 0" v-for="(item, index) in invoice.items" :key="index">
+                <td class="px-4 py-3 text-sm text-gray-900">{{ item.description || 'Service/Product' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">{{ parseFloat(item.quantity).toFixed(2) }} {{ item.unit_measurement || 'Units' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">{{ $formatAmount(item.unit_price) }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">{{ item.tax_rate ? (item.tax_rate + '%') : '-' }}</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $formatAmount(item.total) }}</td>
+              </tr>
+              <tr v-else>
+                <td class="px-4 py-3 text-sm text-gray-900" colspan="5">
+                  {{ invoice.description || 'Services/Products as discussed and agreed upon.' }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot class="bg-white">
+              <tr>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900" colspan="4">Total</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $formatAmount(invoice.amount) }}</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
-      </div>
-
-      <!-- Financial Summary -->
-      <div class="financial-summary mb-8">
-        <div class="max-w-md ml-auto">
-          <div class="bg-gray-50 p-6 rounded-lg">
-            <div class="space-y-3">
-              <div class="flex justify-between items-center text-lg">
-                <span class="font-medium">Invoice Amount:</span>
-                <span class="font-bold">
-                    {{ $formatAmount(invoice.amount) }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center text-lg text-green-600">
-                <span class="font-medium">Amount Paid:</span>
-                <span class="font-bold">
-                    {{ $formatAmount(invoice.amount_paid) }}
-                </span>
-              </div>
-              <div class="border-t border-gray-300 pt-3">
-                <div class="flex justify-between items-center text-xl">
-                  <span class="font-bold">Balance Due:</span>
-                  <span class="font-bold" :class="remaining_amount > 0 ? 'text-red-600' : 'text-green-600'">
-                    {{ $formatAmount(remaining_amount) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+        
+        <!-- Total in words -->
+        <div class="mt-4 text-sm text-gray-500">
+          <p>Total amount in words: <span class="font-medium">{{ amountInWords }}</span></p>
         </div>
       </div>
 
       <!-- Payment Information -->
       <div class="payment-info mb-8">
-        <h3 class="text-lg font-semibold mb-4 text-gray-800 border-b-2 border-brand-200 pb-1">Payment Information:</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div v-if="invoice.bank_account" class="bg-gray-50 p-4 rounded-md">
-            <h4 class="font-semibold mb-2">Bank Transfer Details:</h4>
-            <div class="text-sm space-y-1">
-              <p><strong>Account Name:</strong> {{ invoice.bank_account.name }}</p>
-              <p v-if="invoice.bank_account.bank_name"><strong>Bank:</strong> {{ invoice.bank_account.bank_name }}</p>
-              <p v-if="invoice.bank_account.account_number"><strong>Account Number:</strong> {{ invoice.bank_account.account_number }}</p>
-              <p v-if="!invoice.bank_account.account_number" class="text-gray-500 italic">Account number not specified</p>
-            </div>
+          <div>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Payment terms:</h3>
+            <p class="text-sm text-gray-600">{{ invoice.payment_terms || 'End of Following Month' }}</p>
           </div>
-          <div v-else class="bg-gray-50 p-4 rounded-md">
-            <h4 class="font-semibold mb-2">Bank Transfer Details:</h4>
-            <div class="text-sm space-y-1">
-              <p class="text-gray-500 italic">No bank account specified for this invoice</p>
-              <p class="text-gray-500 text-xs">Please contact us for payment instructions</p>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 p-4 rounded-md">
-            <h4 class="font-semibold mb-2">Mobile Money:</h4>
-            <div class="text-sm space-y-1">
-              <p><strong>MyNafa:</strong> +220 123 4567</p>
-              <p><strong>Wave:</strong> +220 123 4567</p>
-            </div>
+          <div>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Payment Communication:</h3>
+            <p class="text-sm text-gray-600 font-medium">{{ invoice.payment_communication || 'PAYMENT FOR SERVICES RENDERED' }}</p>
           </div>
         </div>
+        
+        <div v-if="invoice.bank_account" class="mt-4">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Bank Account:</h3>
+          <p class="text-sm text-gray-600">{{ invoice.bank_account.account_number || '003202010191761141' }} - {{ invoice.bank_account.bank_name || 'Arab Gambian Islamic Bank' }}</p>
+        </div>
       </div>
+
 
       <!-- Terms & Notes -->
       <!-- <div class="terms-notes mb-8">
@@ -173,11 +159,16 @@
       </div> -->
 
       <!-- Footer -->
-      <div class="invoice-footer text-center border-t-2 border-gray-200 pt-6">
-        <div class="text-sm text-gray-600 space-y-1">
-          <p class="font-semibold">Thank you for your business!</p>
-          <p>For any questions regarding this invoice, please contact us at info@kingbaker.gm or +220 123 4567</p>
-          <p class="text-xs">Generated on {{ $formatDate(new Date()) }} by {{ invoice.creator ? `${invoice.creator.first_name} ${invoice.creator.last_name}` : 'King Baker Staff' }}</p>
+      <div class="invoice-footer border-t border-gray-200 pt-6">
+        <div class="text-sm text-gray-600 space-y-2">
+          <p>Terms & Conditions: https://kingbakers.net/terms</p>
+          <div class="flex justify-between items-center text-xs text-gray-500">
+            <div>
+              <p>3733094 management@gmail.com http://kingbakers.net</p>
+            </div>
+            <div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -224,11 +215,13 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import { formatterMixin } from '@/Utils/formatters'
+import Logo from '@/Shared/Logo.vue'
 
 export default {
   components: {
     Head,
     Link,
+    Logo,
   },
   mixins: [formatterMixin],
   layout: null, // No layout for print page
@@ -239,6 +232,11 @@ export default {
   data() {
     return {
       isPrinting: false,
+    }
+  },
+  computed: {
+    amountInWords() {
+      return this.numberToWords(this.invoice.amount)
     }
   },
   mounted() {
@@ -337,6 +335,51 @@ export default {
       // You can add any post-print logic here
       console.log('Print dialog closed for invoice:', this.invoice.invoice_number)
     },
+    numberToWords(num) {
+      const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+      const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+      
+      if (num === 0) return 'Zero'
+      
+      const convertHundreds = (n) => {
+        let result = ''
+        if (n > 99) {
+          result += ones[Math.floor(n / 100)] + ' Hundred'
+          n %= 100
+          if (n > 0) result += ' '
+        }
+        if (n > 19) {
+          result += tens[Math.floor(n / 10)]
+          n %= 10
+          if (n > 0) result += ' ' + ones[n]
+        } else if (n > 9) {
+          result += teens[n - 10]
+        } else if (n > 0) {
+          result += ones[n]
+        }
+        return result
+      }
+      
+      const convertThousands = (n) => {
+        if (n === 0) return ''
+        if (n < 1000) return convertHundreds(n)
+        return convertHundreds(Math.floor(n / 1000)) + ' Thousand ' + convertHundreds(n % 1000)
+      }
+      
+      const integerPart = Math.floor(num)
+      const decimalPart = Math.round((num - integerPart) * 100)
+      
+      let result = convertThousands(integerPart)
+      if (result) result += ' Dalasi'
+      
+      if (decimalPart > 0) {
+        if (result) result += ' and '
+        result += convertHundreds(decimalPart) + ' Bututs'
+      }
+      
+      return result || 'Zero Dalasi'
+    },
   },
 }
 </script>
@@ -395,13 +438,15 @@ export default {
   h4 { font-size: 14pt; }
 
   /* Ensure colors print correctly */
-  .text-brand-600 { color: #2563eb !important; }
+  .text-brand-brown { color: #9B672A !important; }
   .text-gray-800 { color: #1f2937 !important; }
   .text-gray-600 { color: #4b5563 !important; }
+  .text-gray-500 { color: #6b7280 !important; }
   .text-green-600 { color: #059669 !important; }
   .text-red-600 { color: #dc2626 !important; }
   .text-blue-800 { color: #1e40af !important; }
   .text-yellow-800 { color: #92400e !important; }
+  .bg-brand-brown { background-color: #9B672A !important; }
 
   /* Print optimization */
   .invoice-document {

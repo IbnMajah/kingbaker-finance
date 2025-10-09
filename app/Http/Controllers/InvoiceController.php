@@ -563,7 +563,7 @@ class InvoiceController extends Controller
      */
     public function print(Invoice $invoice): Response
     {
-        $invoice->load(['bankAccount', 'branch', 'creator']);
+        $invoice->load(['bankAccount', 'branch', 'creator', 'items']);
 
         $remainingAmount = $invoice->amount - $invoice->amount_paid;
 
