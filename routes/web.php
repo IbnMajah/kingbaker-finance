@@ -328,6 +328,17 @@ Route::middleware('auth')->group(function () {
     Route::post('invoices', [InvoiceController::class, 'store'])
         ->name('invoices.store');
 
+    // Invoice number validation (must be before parameterized routes)
+    Route::get('invoices/validate-number', [InvoiceController::class, 'validateInvoiceNumber'])
+        ->name('invoices.validate-number');
+
+    // Customer search and creation for invoices (must be before parameterized routes)
+    Route::get('invoices/customers/search', [InvoiceController::class, 'searchCustomers'])
+        ->name('invoices.customers.search');
+
+    Route::post('invoices/customers/create-or-find', [InvoiceController::class, 'createOrFindCustomer'])
+        ->name('invoices.customers.create-or-find');
+
     Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])
         ->name('invoices.show');
 
@@ -360,13 +371,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])
         ->name('invoices.download-pdf');
-
-    // Customer search and creation for invoices
-    Route::get('invoices/customers/search', [InvoiceController::class, 'searchCustomers'])
-        ->name('invoices.customers.search');
-
-    Route::post('invoices/customers/create-or-find', [InvoiceController::class, 'createOrFindCustomer'])
-        ->name('invoices.customers.create-or-find');
 
     // Expense Claims
     Route::get('expense-claims', [ExpenseClaimController::class, 'index'])

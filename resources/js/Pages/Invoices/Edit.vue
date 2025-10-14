@@ -78,14 +78,46 @@
             <!-- Invoice Number -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
-              <input
-                v-model="form.invoice_number"
-                type="text"
-                class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.invoice_number ? 'border-red-300' : 'border-gray-300'"
-                placeholder="Auto-generated if empty"
-              />
+              <div class="relative">
+                <input
+                  v-model="form.invoice_number"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  :class="[
+                    form.errors.invoice_number ? 'border-red-300' : 'border-gray-300',
+                    invoiceNumberValidation.isValid === false ? 'border-red-500' : '',
+                    invoiceNumberValidation.isValid === true ? 'border-green-500' : ''
+                  ]"
+                  placeholder="Auto-generated if empty"
+                  @input="validateInvoiceNumber"
+                  @focus="startInvoiceNumberValidation"
+                  @blur="stopInvoiceNumberValidation"
+                />
+                <!-- Validation Status Icons -->
+                <div v-if="invoiceNumberValidation.isValid === true" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div v-if="invoiceNumberValidation.isValid === false" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div v-if="invoiceNumberValidation.isValidating" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <svg class="animate-spin h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              </div>
               <div v-if="form.errors.invoice_number" class="mt-1 text-sm text-red-600">{{ form.errors.invoice_number }}</div>
+              <div v-if="invoiceNumberValidation.isValid === false" class="mt-1 text-sm text-red-600">
+                This invoice number already exists. Please choose a different one.
+              </div>
+              <div v-if="invoiceNumberValidation.isValid === true" class="mt-1 text-sm text-green-600">
+                Invoice number is available.
+              </div>
             </div>
             <!-- Invoice Date -->
             <div>
@@ -521,6 +553,12 @@ export default {
       customerSuggestions: [],
       showCustomerSuggestions: false,
       searchTimeout: null,
+      invoiceNumberValidation: {
+        isValid: null, // null = not validated, true = valid, false = invalid
+        isValidating: false,
+        isFocused: false,
+      },
+      invoiceNumberValidationTimeout: null,
     }
   },
   computed: {
@@ -533,6 +571,14 @@ export default {
   },
   methods: {
     async update() {
+      // Validate invoice number if provided and different from original
+      if (this.form.invoice_number && 
+          this.form.invoice_number !== this.invoice.invoice_number && 
+          this.invoiceNumberValidation.isValid === false) {
+        alert('Please choose a different invoice number. The current one already exists.')
+        return
+      }
+
       // Save customer first if needed
       await this.saveCustomer()
       this.form.put(`/invoices/${this.invoice.id}`)
@@ -582,7 +628,12 @@ export default {
     },
     async performCustomerSearch() {
       try {
-        const response = await fetch(`/invoices/customers/search?q=${encodeURIComponent(this.form.customer_name)}`)
+        const response = await fetch(`/invoices/customers/search?q=${encodeURIComponent(this.form.customer_name)}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+        })
         const customers = await response.json()
         this.customerSuggestions = customers
         this.showCustomerSuggestions = true
@@ -639,6 +690,73 @@ export default {
         }
       } catch (error) {
         console.error('Error saving customer:', error)
+      }
+    },
+    startInvoiceNumberValidation() {
+      this.invoiceNumberValidation.isFocused = true
+      // Reset validation state when focusing
+      this.invoiceNumberValidation.isValid = null
+    },
+    stopInvoiceNumberValidation() {
+      this.invoiceNumberValidation.isFocused = false
+      // Clear timeout when losing focus
+      if (this.invoiceNumberValidationTimeout) {
+        clearTimeout(this.invoiceNumberValidationTimeout)
+        this.invoiceNumberValidationTimeout = null
+      }
+    },
+    validateInvoiceNumber() {
+      // Clear existing timeout
+      if (this.invoiceNumberValidationTimeout) {
+        clearTimeout(this.invoiceNumberValidationTimeout)
+      }
+
+      // Reset validation state
+      this.invoiceNumberValidation.isValid = null
+      this.invoiceNumberValidation.isValidating = false
+
+      // Only validate if field is focused and has content
+      if (!this.invoiceNumberValidation.isFocused || !this.form.invoice_number.trim()) {
+        return
+      }
+
+      // Don't validate if it's the same as the original invoice number
+      if (this.form.invoice_number === this.invoice.invoice_number) {
+        this.invoiceNumberValidation.isValid = true
+        return
+      }
+
+      // Set new timeout for debounced validation
+      this.invoiceNumberValidationTimeout = setTimeout(() => {
+        this.performInvoiceNumberValidation()
+      }, 500) // 500ms debounce
+    },
+    async performInvoiceNumberValidation() {
+      if (!this.form.invoice_number.trim()) {
+        this.invoiceNumberValidation.isValid = null
+        this.invoiceNumberValidation.isValidating = false
+        return
+      }
+
+      // Don't validate if it's the same as the original invoice number
+      if (this.form.invoice_number === this.invoice.invoice_number) {
+        this.invoiceNumberValidation.isValid = true
+        this.invoiceNumberValidation.isValidating = false
+        return
+      }
+
+      this.invoiceNumberValidation.isValidating = true
+
+      try {
+        const response = await fetch(`/invoices/validate-number?number=${encodeURIComponent(this.form.invoice_number)}`)
+        const result = await response.json()
+        
+        this.invoiceNumberValidation.isValid = result.available
+        this.invoiceNumberValidation.isValidating = false
+      } catch (error) {
+        console.error('Error validating invoice number:', error)
+        this.invoiceNumberValidation.isValid = null
+        this.invoiceNumberValidation.isValidating = false
       }
     },
   },

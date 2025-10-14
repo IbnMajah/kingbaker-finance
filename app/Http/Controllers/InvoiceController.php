@@ -217,9 +217,7 @@ class InvoiceController extends Controller
 
         // Generate invoice number if not provided
         if (empty($validated['invoice_number'])) {
-            $year = date('Y');
-            $count = Invoice::whereYear('created_at', $year)->count() + 1;
-            $validated['invoice_number'] = 'INV-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+            $validated['invoice_number'] = $this->generateUniqueInvoiceNumber();
         }
 
         // Handle file upload separately
@@ -595,6 +593,22 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Validate if an invoice number is available
+     */
+    public function validateInvoiceNumber(Request $request)
+    {
+        $invoiceNumber = $request->input('number');
+
+        if (empty($invoiceNumber)) {
+            return response()->json(['available' => true]);
+        }
+
+        $exists = Invoice::where('invoice_number', $invoiceNumber)->exists();
+
+        return response()->json(['available' => !$exists]);
+    }
+
+    /**
      * Search for customers by name, email, or phone
      */
     public function searchCustomers(Request $request)
@@ -703,5 +717,55 @@ class InvoiceController extends Controller
             'region' => $customer->region,
             'created' => true,
         ]);
+    }
+
+    /**
+     * Generate a unique invoice number
+     */
+    private function generateUniqueInvoiceNumber(): string
+    {
+        $year = date('Y');
+
+        // Use database transaction to ensure atomicity
+        return DB::transaction(function () use ($year) {
+            // Get the highest invoice number for this year
+            $lastInvoice = Invoice::where('invoice_number', 'like', "INV-{$year}-%")
+                ->orderBy('invoice_number', 'desc')
+                ->first();
+
+            $nextSequence = 1; // Default to 1 if no invoices exist
+
+            if ($lastInvoice) {
+                // Extract the sequence number from the last invoice
+                preg_match('/INV-' . $year . '-(\d+)/', $lastInvoice->invoice_number, $matches);
+                if (isset($matches[1])) {
+                    $nextSequence = (int)$matches[1] + 1;
+                }
+            }
+
+            // Generate the next invoice number
+            $invoiceNumber = 'INV-' . $year . '-' . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+
+            // Double-check uniqueness (in case of race conditions)
+            $exists = Invoice::where('invoice_number', $invoiceNumber)->exists();
+
+            if ($exists) {
+                // If it exists, find the next available number
+                $maxAttempts = 100;
+                for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                    $testSequence = $nextSequence + $attempt;
+                    $testInvoiceNumber = 'INV-' . $year . '-' . str_pad($testSequence, 4, '0', STR_PAD_LEFT);
+
+                    if (!Invoice::where('invoice_number', $testInvoiceNumber)->exists()) {
+                        return $testInvoiceNumber;
+                    }
+                }
+
+                // Fallback: use timestamp if we can't find a unique number
+                return 'INV-' . $year . '-' . time();
+            }
+
+            return $invoiceNumber;
+        });
     }
 }
