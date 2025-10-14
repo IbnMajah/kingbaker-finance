@@ -748,9 +748,21 @@ export default {
       this.invoiceNumberValidation.isValidating = true
 
       try {
-        const response = await fetch(`/invoices/validate-number?number=${encodeURIComponent(this.form.invoice_number)}`)
-        const result = await response.json()
+        const response = await fetch(`/invoices/validate-number?number=${encodeURIComponent(this.form.invoice_number)}`, {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          credentials: 'same-origin'
+        })
         
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const result = await response.json()
         this.invoiceNumberValidation.isValid = result.available
         this.invoiceNumberValidation.isValidating = false
       } catch (error) {

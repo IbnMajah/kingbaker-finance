@@ -597,13 +597,14 @@ class InvoiceController extends Controller
      */
     public function validateInvoiceNumber(Request $request)
     {
-        $invoiceNumber = $validated['number'] ?? null;
+        $invoiceNumber = $request->input('number');
 
         if (empty($invoiceNumber)) {
             return response()->json(['available' => true]);
         }
 
-        $exists = Invoice::where('invoice_number', $invoiceNumber)->exists();
+        // This includes ALL invoices, even soft-deleted ones
+        $exists = Invoice::withTrashed()->where('invoice_number', $invoiceNumber)->exists();
 
         return response()->json(['available' => !$exists]);
     }
