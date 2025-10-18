@@ -426,6 +426,11 @@ class InvoiceController extends Controller
      */
     public function destroy(Invoice $invoice): RedirectResponse
     {
+        // Create reverse transactions for any payments made on this invoice
+        if ($invoice->amount_paid > 0) {
+            $this->createReverseTransactions($invoice);
+        }
+
         // Delete attachment if exists
         if ($invoice->attachment_path) {
             Storage::disk('public')->delete($invoice->attachment_path);
@@ -607,6 +612,27 @@ class InvoiceController extends Controller
         $exists = Invoice::withTrashed()->where('invoice_number', $invoiceNumber)->exists();
 
         return response()->json(['available' => !$exists]);
+    }
+
+    /**
+     * Create reverse transactions for invoice payments when invoice is deleted
+     */
+    private function createReverseTransactions(Invoice $invoice): void
+    {
+        // Create a reverse transaction (debit) to offset the original credit transaction
+        $invoice->bankAccount->transactions()->create([
+            'type' => 'debit',
+            'payment_mode' => 'other',
+            'amount' => $invoice->amount_paid,
+            'description' => "Invoice deletion reversal for Invoice #{$invoice->invoice_number}",
+            'transaction_date' => now()->toDateString(),
+            'reference_number' => "INV-REV-{$invoice->invoice_number}",
+            'payee' => $invoice->customer_name,
+            'branch_id' => $invoice->branch_id,
+            'created_by' => Auth::id(),
+        ]);
+
+        // Note: Bank account balance is automatically updated by Transaction model events
     }
 
     /**
