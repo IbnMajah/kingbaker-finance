@@ -350,8 +350,6 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])
         ->name('invoices.destroy');
-    Route::put('invoices/{invoice}/restore', [InvoiceController::class, 'restore'])
-        ->name('invoices.restore');
 
     Route::put('invoices/{invoice}/mark-as-sent', [InvoiceController::class, 'markAsSent'])
         ->name('invoices.mark-as-sent');

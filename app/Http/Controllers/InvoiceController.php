@@ -426,19 +426,26 @@ class InvoiceController extends Controller
      */
     public function destroy(Invoice $invoice): RedirectResponse
     {
-        // Create reverse transactions for any payments made on this invoice
-        if ($invoice->amount_paid > 0) {
-            $this->createReverseTransactions($invoice);
+        try {
+            DB::transaction(function () use ($invoice) {
+                // Create reverse transactions for any payments made on this invoice
+                if ($invoice->amount_paid > 0) {
+                    $this->createReverseTransactions($invoice);
+                }
+
+                // Delete attachment if exists
+                if ($invoice->attachment_path) {
+                    Storage::disk('public')->delete($invoice->attachment_path);
+                }
+
+                // Hard delete the invoice (no soft delete)
+                $invoice->delete();
+            });
+
+            return Redirect::route('invoices')->with('success', 'Invoice deleted successfully.');
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', 'Failed to delete invoice: ' . $e->getMessage());
         }
-
-        // Delete attachment if exists
-        if ($invoice->attachment_path) {
-            Storage::disk('public')->delete($invoice->attachment_path);
-        }
-
-        $invoice->delete();
-
-        return Redirect::route('invoices')->with('success', 'Invoice deleted successfully.');
     }
 
     /**
@@ -587,15 +594,6 @@ class InvoiceController extends Controller
         return $this->print($invoice);
     }
 
-    /**
-     * Restore a soft-deleted invoice
-     */
-    public function restore(Invoice $invoice): RedirectResponse
-    {
-        $invoice->restore();
-
-        return Redirect::route('invoices')->with('success', 'Invoice restored successfully.');
-    }
 
     /**
      * Validate if an invoice number is available
@@ -619,6 +617,9 @@ class InvoiceController extends Controller
      */
     private function createReverseTransactions(Invoice $invoice): void
     {
+        if (!$invoice->bankAccount) {
+            throw new \RuntimeException("Cannot create reverse transaction: Invoice #{$invoice->invoice_number} has no associated bank account.");
+        }
         // Create a reverse transaction (debit) to offset the original credit transaction
         $invoice->bankAccount->transactions()->create([
             'type' => 'debit',

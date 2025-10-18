@@ -254,15 +254,8 @@
                     </svg>
                   </Link>
 
-                  <!-- Restore Button (for deleted invoices) -->
-                  <button v-if="invoice.deleted_at" @click="restore(invoice)" class="text-green-600 hover:text-green-900" title="Restore Invoice">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
-                    </svg>
-                  </button>
-
-                  <!-- Delete Button (for active invoices) -->
-                  <button v-if="!invoice.deleted_at" @click="destroy(invoice)" class="text-red-600 hover:text-red-900" title="Delete Invoice">
+                  <!-- Delete Button -->
+                  <button @click="destroy(invoice)" class="text-red-600 hover:text-red-900" title="Delete Invoice">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -519,19 +512,6 @@ export default {
         })
       }
     },
-    restore(invoice) {
-      if (confirm(`Are you sure you want to restore invoice ${invoice.invoice_number}?`)) {
-        this.$inertia.put(`/invoices/${invoice.id}/restore`, {}, {
-          onSuccess: () => {
-            console.log('Invoice restored successfully')
-          },
-          onError: (errors) => {
-            console.error('Error restoring invoice:', errors)
-            alert('Error restoring invoice. Please try again.')
-          }
-        })
-      }
-    }
   },
 }
 </script>
