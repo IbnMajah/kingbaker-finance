@@ -49,7 +49,7 @@ class ExpensesExport implements FromCollection, WithHeadings, WithMapping
             $expense->expense_type,
             $expense->branch?->name ?? 'N/A',
             $expense->bankAccount?->name ?? 'N/A',
-            $expense->user?->first_name . ' ' . $expense->user?->last_name ?? 'N/A',
+            $expense->user ? ($expense->user->first_name . ' ' . $expense->user->last_name) : 'N/A',
             $expense->notes,
         ];
     }
