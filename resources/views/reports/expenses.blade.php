@@ -53,9 +53,9 @@
 
 <body>
     <div class="header">
-        <h1>Expense Report</h1>
-        @if($category)
-        <h2>Category: {{ $category }}</h2>
+        <h1>Expense Claims Report</h1>
+        @if(!empty($filters['category']))
+        <h2>Category: {{ $filters['category'] }}</h2>
         @else
         <h2>All Categories</h2>
         @endif
@@ -65,53 +65,53 @@
     <div class="summary">
         <h3>Summary</h3>
         <p>
-            <strong>Total Expenses:</strong>
-            GMD {{ number_format($expenses->sum('amount'), 2) }}
+            <strong>Total Amount:</strong>
+            GMD {{ number_format($expenses->sum('total'), 2) }}
         </p>
         <p>
-            <strong>Number of Transactions:</strong>
+            <strong>Number of Claims:</strong>
             {{ $expenses->count() }}
         </p>
-        @if(!$category)
         <p>
-            <strong>Top Categories:</strong><br>
-            @foreach($expenses->groupBy('category')->map->sum('amount')->sortDesc()->take(5) as $cat => $amount)
-            {{ $cat }}: GMD {{ number_format($amount, 2) }}<br>
+            <strong>Status Breakdown:</strong><br>
+            @foreach($expenses->groupBy('status') as $status => $claims)
+            {{ ucfirst($status) }}: {{ $claims->count() }} claims (GMD {{ number_format($claims->sum('total'), 2) }})<br>
             @endforeach
         </p>
-        @endif
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Category</th>
-                <th>Reference</th>
-                <th>Account</th>
+                <th>Claim Date</th>
+                <th>Title</th>
+                <th>Reference ID</th>
+                <th>Payee</th>
+                <th>Status</th>
+                <th>Bank Account</th>
                 <th>Amount</th>
             </tr>
         </thead>
         <tbody>
             @foreach($expenses as $expense)
             <tr>
-                <td>{{ $expense->transaction_date->format('M j, Y') }}</td>
-                <td>{{ $expense->description }}</td>
-                <td>{{ $expense->category }}</td>
-                <td>{{ $expense->reference_number }}</td>
-                <td>{{ $expense->bankAccount->name }}</td>
+                <td>{{ $expense->claim_date?->format('M j, Y') ?? 'N/A' }}</td>
+                <td>{{ $expense->title }}</td>
+                <td>{{ $expense->reference_id }}</td>
+                <td>{{ $expense->payee }}</td>
+                <td>{{ ucfirst($expense->status) }}</td>
+                <td>{{ $expense->bankAccount?->name ?? 'N/A' }}</td>
                 <td class="amount">
-                    GMD {{ number_format($expense->amount, 2) }}
+                    GMD {{ number_format($expense->total, 2) }}
                 </td>
             </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5"><strong>Total</strong></td>
+                <td colspan="6"><strong>Total</strong></td>
                 <td class="amount">
-                    GMD {{ number_format($expenses->sum('amount'), 2) }}
+                    GMD {{ number_format($expenses->sum('total'), 2) }}
                 </td>
             </tr>
         </tfoot>

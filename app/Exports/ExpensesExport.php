@@ -23,24 +23,34 @@ class ExpensesExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'Date',
-            'Description',
-            'Category',
-            'Reference',
-            'Amount',
-            'Account',
+            'Claim Date',
+            'Title',
+            'Reference ID',
+            'Payee',
+            'Total Amount',
+            'Status',
+            'Expense Type',
+            'Branch',
+            'Bank Account',
+            'User',
+            'Notes',
         ];
     }
 
     public function map($expense): array
     {
         return [
-            $expense->transaction_date,
-            $expense->description,
-            $expense->category,
-            $expense->reference_number,
-            $expense->amount,
-            $expense->bankAccount->name,
+            $expense->claim_date?->format('Y-m-d'),
+            $expense->title,
+            $expense->reference_id,
+            $expense->payee,
+            $expense->total,
+            $expense->status,
+            $expense->expense_type,
+            $expense->branch?->name ?? 'N/A',
+            $expense->bankAccount?->name ?? 'N/A',
+            $expense->user?->first_name . ' ' . $expense->user?->last_name ?? 'N/A',
+            $expense->notes,
         ];
     }
 }

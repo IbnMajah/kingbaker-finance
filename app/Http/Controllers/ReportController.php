@@ -485,7 +485,7 @@ class ReportController extends Controller
 
     private function generateExpensesReport($format, $filters)
     {
-        $query = ExpenseClaim::with(['user', 'branch', 'items']);
+        $query = ExpenseClaim::with(['user', 'branch', 'bankAccount', 'items']);
 
         if (!empty($filters['category'])) {
             $query->whereHas('items', function ($q) use ($filters) {
@@ -497,7 +497,19 @@ class ReportController extends Controller
             $query->where('status', $filters['status']);
         }
 
-        $expenses = $query->orderBy('created_at', 'desc')->get();
+        if (!empty($filters['branchId'])) {
+            $query->where('branch_id', $filters['branchId']);
+        }
+
+        if (!empty($filters['fromDate'])) {
+            $query->where('claim_date', '>=', $filters['fromDate']);
+        }
+
+        if (!empty($filters['toDate'])) {
+            $query->where('claim_date', '<=', $filters['toDate']);
+        }
+
+        $expenses = $query->orderBy('claim_date', 'desc')->get();
 
         if ($format === 'pdf') {
             $pdf = PDF::loadView('reports.expenses', [
@@ -505,10 +517,10 @@ class ReportController extends Controller
                 'filters' => $filters,
             ]);
 
-            return $pdf->download('expenses-report.pdf');
+            return $pdf->download('expense-claims-report.pdf');
         }
 
-        return Excel::download(new ExpensesExport($expenses), 'expenses-report.xlsx');
+        return Excel::download(new ExpensesExport($expenses), 'expense-claims-report.xlsx');
     }
 
     private function generateInvoicesBillsReport($format, $filters)
@@ -525,7 +537,7 @@ class ReportController extends Controller
         }
 
         if (empty($filters['type']) || $filters['type'] === 'bills') {
-            $billQuery = Bill::with(['vendor', 'bankAccount']);
+            $billQuery = Bill::with(['vendor', 'creator']);
             if (!empty($filters['status'])) {
                 $billQuery->where('status', $filters['status']);
             }
@@ -576,8 +588,22 @@ class ReportController extends Controller
         $data = $this->getCashFlowChartData($period, $year);
 
         if ($format === 'pdf') {
+            // Transform data for PDF view
+            $transactions = collect();
+            $summaryType = $period;
+
+            for ($i = 0; $i < count($data['labels']); $i++) {
+                $periodLabel = $data['labels'][$i];
+                $periodData = collect([
+                    (object)['type' => 'credit', 'amount' => $data['inflow'][$i]],
+                    (object)['type' => 'debit', 'amount' => $data['outflow'][$i]]
+                ]);
+                $transactions->put($periodLabel, $periodData);
+            }
+
             $pdf = PDF::loadView('reports.cash-flow', [
-                'data' => $data,
+                'transactions' => $transactions,
+                'summaryType' => $summaryType,
                 'filters' => $filters,
             ]);
 
