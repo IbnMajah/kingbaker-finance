@@ -159,6 +159,18 @@ class InvoiceController extends Controller
                 'value' => $b->id,
                 'label' => $b->name
             ]),
+            'customers' => Contact::where('account_id', Auth::user()->account_id)
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get()
+                ->map(fn($contact) => [
+                    'id' => $contact->id,
+                    'name' => $contact->name,
+                    'email' => $contact->email,
+                    'phone' => $contact->phone,
+                    'address' => $contact->address,
+                    'customer_type' => $contact->customer_type,
+                ]),
             'invoiceTypes' => [
                 ['value' => 'bulk_sales', 'label' => 'Bulk Sales'],
                 ['value' => 'credit_customer', 'label' => 'Credit Customer'],
@@ -190,15 +202,11 @@ class InvoiceController extends Controller
     {
         $validated = $request->validate([
             'invoice_number' => 'nullable|string|unique:invoices,invoice_number',
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_phone' => 'nullable|string|max:255',
-            'customer_address' => 'nullable|string',
+            'customer_id' => 'required|exists:contacts,id',
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'amount' => 'nullable|numeric|min:0', // Amount will be calculated from items
             'invoice_type' => 'required|in:bulk_sales,credit_customer,loans,daily_supply,partner_billing,other',
-            'customer_type' => 'required|in:individual,shop,partner,branch,hotel,other',
             'description' => 'nullable|string',
             'notes' => 'nullable|string',
             'bank_account_id' => 'required|exists:bank_accounts,id',
@@ -215,6 +223,9 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
+        // Get customer information from the selected customer
+        $customer = Contact::findOrFail($validated['customer_id']);
+
         // Generate invoice number if not provided
         if (empty($validated['invoice_number'])) {
             $validated['invoice_number'] = $this->generateUniqueInvoiceNumber();
@@ -228,7 +239,7 @@ class InvoiceController extends Controller
 
         // Remove attachment and items from validated data since they're not invoice columns
         $items = $validated['items'];
-        unset($validated['attachment'], $validated['items']);
+        unset($validated['attachment'], $validated['items'], $validated['customer_id']);
 
         // Calculate total amount from items
         $totalAmount = 0;
@@ -238,6 +249,11 @@ class InvoiceController extends Controller
 
         $invoice = Invoice::create([
             ...$validated,
+            'customer_name' => $customer->name,
+            'customer_email' => $customer->email,
+            'customer_phone' => $customer->phone,
+            'customer_address' => $customer->address,
+            'customer_type' => $customer->customer_type ?? 'individual',
             'amount' => $totalAmount,
             'status' => 'draft',
             'amount_paid' => 0,
@@ -323,6 +339,18 @@ class InvoiceController extends Controller
                 'value' => $b->id,
                 'label' => $b->name
             ]),
+            'customers' => Contact::where('account_id', Auth::user()->account_id)
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get()
+                ->map(fn($contact) => [
+                    'id' => $contact->id,
+                    'name' => $contact->name,
+                    'email' => $contact->email,
+                    'phone' => $contact->phone,
+                    'address' => $contact->address,
+                    'customer_type' => $contact->customer_type,
+                ]),
             'invoiceTypes' => [
                 ['value' => 'bulk_sales', 'label' => 'Bulk Sales'],
                 ['value' => 'credit_customer', 'label' => 'Credit Customer'],
@@ -354,14 +382,10 @@ class InvoiceController extends Controller
     {
         $validated = $request->validate([
             'invoice_number' => 'required|string|unique:invoices,invoice_number,' . $invoice->id,
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_phone' => 'nullable|string|max:255',
-            'customer_address' => 'nullable|string',
+            'customer_id' => 'required|exists:contacts,id',
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'invoice_type' => 'required|in:bulk_sales,credit_customer,loans,daily_supply,partner_billing,other',
-            'customer_type' => 'required|in:individual,shop,partner,branch,hotel,other',
             'description' => 'nullable|string',
             'notes' => 'nullable|string',
             'bank_account_id' => 'required|exists:bank_accounts,id',
@@ -379,6 +403,9 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
+        // Get customer information from the selected customer
+        $customer = Contact::findOrFail($validated['customer_id']);
+
         // Handle file upload separately
         if ($request->hasFile('attachment')) {
             // Delete old attachment if exists
@@ -390,7 +417,7 @@ class InvoiceController extends Controller
 
         // Remove attachment and items from validated data since they're not invoice columns
         $items = $validated['items'];
-        unset($validated['attachment'], $validated['items']);
+        unset($validated['attachment'], $validated['items'], $validated['customer_id']);
 
         // Calculate total amount from items
         $totalAmount = 0;
@@ -400,6 +427,11 @@ class InvoiceController extends Controller
 
         $invoice->update([
             ...$validated,
+            'customer_name' => $customer->name,
+            'customer_email' => $customer->email,
+            'customer_phone' => $customer->phone,
+            'customer_address' => $customer->address,
+            'customer_type' => $customer->customer_type ?? 'individual',
             'amount' => $totalAmount,
         ]);
 
@@ -664,8 +696,7 @@ class InvoiceController extends Controller
                     'email' => $contact->email,
                     'phone' => $contact->phone,
                     'address' => $contact->address,
-                    'city' => $contact->city,
-                    'region' => $contact->region,
+                    'customer_type' => $contact->customer_type,
                 ];
             });
 
@@ -682,6 +713,7 @@ class InvoiceController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:255',
             'address' => 'nullable|string',
+            'customer_type' => 'nullable|in:individual,shop,partner,branch,hotel,other',
         ]);
 
         // Split name into first and last name
@@ -711,6 +743,7 @@ class InvoiceController extends Controller
                 'email' => $validated['email'] ?: $existingCustomer->email,
                 'phone' => $validated['phone'] ?: $existingCustomer->phone,
                 'address' => $validated['address'] ?: $existingCustomer->address,
+                'customer_type' => $validated['customer_type'] ?: $existingCustomer->customer_type,
             ]);
 
             return response()->json([
@@ -719,8 +752,7 @@ class InvoiceController extends Controller
                 'email' => $existingCustomer->email,
                 'phone' => $existingCustomer->phone,
                 'address' => $existingCustomer->address,
-                'city' => $existingCustomer->city,
-                'region' => $existingCustomer->region,
+                'customer_type' => $existingCustomer->customer_type,
                 'created' => false,
             ]);
         }
@@ -733,6 +765,7 @@ class InvoiceController extends Controller
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'address' => $validated['address'],
+            'customer_type' => $validated['customer_type'],
         ]);
 
         return response()->json([
@@ -741,8 +774,7 @@ class InvoiceController extends Controller
             'email' => $customer->email,
             'phone' => $customer->phone,
             'address' => $customer->address,
-            'city' => $customer->city,
-            'region' => $customer->region,
+            'customer_type' => $customer->customer_type,
             'created' => true,
         ]);
     }

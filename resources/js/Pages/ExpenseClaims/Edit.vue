@@ -189,7 +189,7 @@
                       <span class="text-sm">Save failed</span>
                     </div>
                   </div>
-                  
+
                   <!-- Total Amount -->
                   <div>
                     <div class="text-sm text-gray-500">Total</div>
@@ -348,7 +348,7 @@
                   <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
                   </svg>
-                  + Add Another Item
+                  Add Another Item
                 </button>
               </div>
             </div>
@@ -443,7 +443,7 @@ export default {
   mixins: [formatterMixin],
   setup() {
     const { ensureValidToken } = useFormTokenRefresh();
-    
+
     return {
       ensureValidToken
     };
@@ -526,7 +526,7 @@ export default {
         unit_measurement: '',
         quantity: 1,
       });
-      
+
       // Auto-save after adding item
       this.autoSave();
     },
@@ -536,7 +536,7 @@ export default {
     removeItem(index) {
       if (this.form.items && this.form.items.length > index) {
         this.form.items.splice(index, 1);
-        
+
         // Auto-save after removing item
         this.autoSave();
       }
@@ -608,7 +608,7 @@ export default {
 
           if (result.success) {
             this.autoSaveStatus = 'saved';
-            
+
             // Reset status after 2 seconds
             setTimeout(() => {
               this.autoSaveStatus = 'idle';
@@ -631,7 +631,7 @@ export default {
 
       // Get valid items (exclude empty/incomplete items)
       const validItems = this.getValidItems();
-      
+
       // Don't auto-save if there are no valid items
       if (validItems.length === 0) {
         return false;
@@ -642,25 +642,25 @@ export default {
     getValidItems() {
       return (this.form.items || []).filter(item => {
         // Exclude items that are empty or missing required fields
-        return item.description && 
-               item.description.trim() !== '' && 
-               item.unit_price && 
-               item.unit_price > 0 && 
-               item.quantity && 
+        return item.description &&
+               item.description.trim() !== '' &&
+               item.unit_price &&
+               item.unit_price > 0 &&
+               item.quantity &&
                item.quantity > 0;
       });
     },
     async submit() {
       // Ensure CSRF token is valid before submission
       await this.ensureValidToken();
-      
+
       this.form.put(`/expense-claims/${this.expenseClaim.id}`);
     },
     async destroy() {
       if (confirm('Are you sure you want to delete this expense claim?')) {
         // Ensure CSRF token is valid before deletion
         await this.ensureValidToken();
-        
+
         this.$inertia.delete(`/expense-claims/${this.expenseClaim.id}`);
       }
     },

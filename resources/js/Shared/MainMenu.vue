@@ -81,6 +81,14 @@
             <div :class="isUrl('invoices') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Invoices</div>
           </Link>
         </div>
+        <div v-if="permissions.hasPermission('view_contacts')" class="mb-4">
+          <Link class="group flex items-center py-3" href="/contacts">
+            <svg class="mr-2 w-4 h-4" :class="isUrl('contacts') ? 'fill-white' : 'fill-brand-400 group-hover:fill-white'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <div :class="isUrl('contacts') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Customers</div>
+          </Link>
+        </div>
       </div>
     </transition>
 

@@ -117,84 +117,22 @@
           <div class="border-t border-gray-200 pt-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Information</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Customer Name -->
-            <div class="relative">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
-              <input
-                v-model="form.customer_name"
-                type="text"
+            <!-- Customer Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Select Customer *</label>
+              <select
+                v-model="form.customer_id"
                 class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.customer_name ? 'border-red-300' : 'border-gray-300'"
-                placeholder="Enter customer name"
-                @input="searchCustomers"
-                @focus="showCustomerSuggestions = true"
-                @blur="hideSuggestions"
-              />
-              <div v-if="form.errors.customer_name" class="mt-1 text-sm text-red-600">{{ form.errors.customer_name }}</div>
-              
-              <!-- Customer Suggestions Dropdown -->
-              <div v-if="showCustomerSuggestions && customerSuggestions.length > 0" 
-                   class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                <div v-for="customer in customerSuggestions" 
-                     :key="customer.id"
-                     class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                     @mousedown="selectCustomer(customer)">
-                  <div class="font-medium text-gray-900">{{ customer.name }}</div>
-                  <div v-if="customer.email" class="text-sm text-gray-600">{{ customer.email }}</div>
-                  <div v-if="customer.phone" class="text-sm text-gray-600">{{ customer.phone }}</div>
-                </div>
+                :class="form.errors.customer_id ? 'border-red-300' : 'border-gray-300'"
+                @change="selectCustomer"
+              >
+                <option value="">Select customer</option>
+                <option v-for="customer in customers" :key="customer.id" :value="customer.id">
+                  {{ customer.name }}
+                </option>
+              </select>
+              <div v-if="form.errors.customer_id" class="mt-1 text-sm text-red-600">{{ form.errors.customer_id }}</div>
               </div>
-            </div>
-              <!-- Customer Type -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Customer Type *</label>
-                <select
-                  v-model="form.customer_type"
-                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                  :class="form.errors.customer_type ? 'border-red-300' : 'border-gray-300'"
-                >
-                  <option value="">Select Customer Type</option>
-                  <option v-for="type in customerTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
-                </select>
-                <div v-if="form.errors.customer_type" class="mt-1 text-sm text-red-600">{{ form.errors.customer_type }}</div>
-              </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <!-- Email -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  v-model="form.customer_email"
-                  type="email"
-                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                  :class="form.errors.customer_email ? 'border-red-300' : 'border-gray-300'"
-                  placeholder="customer@example.com"
-                />
-                <div v-if="form.errors.customer_email" class="mt-1 text-sm text-red-600">{{ form.errors.customer_email }}</div>
-              </div>
-              <!-- Phone -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input
-                  v-model="form.customer_phone"
-                  type="text"
-                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                  :class="form.errors.customer_phone ? 'border-red-300' : 'border-gray-300'"
-                  placeholder="+220 123 4567"
-                />
-                <div v-if="form.errors.customer_phone" class="mt-1 text-sm text-red-600">{{ form.errors.customer_phone }}</div>
-              </div>
-            </div>
-            <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <textarea
-                v-model="form.customer_address"
-                rows="3"
-                class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.customer_address ? 'border-red-300' : 'border-gray-300'"
-                placeholder="Customer address"
-              ></textarea>
-              <div v-if="form.errors.customer_address" class="mt-1 text-sm text-red-600">{{ form.errors.customer_address }}</div>
             </div>
           </div>
 
@@ -446,6 +384,7 @@ export default {
   props: {
     bankAccounts: Array,
     branches: Array,
+    customers: Array,
     invoiceTypes: Array,
     customerTypes: Array,
     recurringFrequencies: Array,
@@ -455,6 +394,7 @@ export default {
     return {
       form: this.$inertia.form({
         invoice_number: '',
+        customer_id: '',
         customer_name: '',
         customer_email: '',
         customer_phone: '',
@@ -481,9 +421,6 @@ export default {
         next_invoice_date: '',
         attachment: null,
       }),
-      customerSuggestions: [],
-      showCustomerSuggestions: false,
-      searchTimeout: null,
       invoiceNumberValidation: {
         isValid: null, // null = not validated, true = valid, false = invalid
         isValidating: false,
@@ -538,7 +475,6 @@ export default {
       }
 
       // Save customer first if needed
-      await this.saveCustomer()
       this.form.post('/invoices')
     },
     getDescriptionPlaceholder() {
@@ -570,87 +506,26 @@ export default {
       // The actual calculation is done in the template and computed property
       this.$forceUpdate()
     },
-    searchCustomers() {
-      // Clear existing timeout
-      if (this.searchTimeout) {
-        clearTimeout(this.searchTimeout)
-      }
-
-      // Set new timeout for debounced search
-      this.searchTimeout = setTimeout(() => {
-        if (this.form.customer_name.length >= 2) {
-          this.performCustomerSearch()
-        } else {
-          this.customerSuggestions = []
+    selectCustomer() {
+      if (this.form.customer_id) {
+        const customer = this.customers.find(c => c.id == this.form.customer_id)
+        if (customer) {
+          this.form.customer_name = customer.name
+          this.form.customer_email = customer.email || ''
+          this.form.customer_phone = customer.phone || ''
+          this.form.customer_address = customer.address || ''
+          this.form.customer_type = customer.customer_type || ''
         }
-      }, 300) // 300ms debounce
-    },
-    async performCustomerSearch() {
-      try {
-        const response = await fetch(`/invoices/customers/search?q=${encodeURIComponent(this.form.customer_name)}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
-        })
-        const customers = await response.json()
-        this.customerSuggestions = customers
-        this.showCustomerSuggestions = true
-      } catch (error) {
-        console.error('Error searching customers:', error)
-        this.customerSuggestions = []
+      } else {
+        // Clear customer data when no customer is selected
+        this.form.customer_name = ''
+        this.form.customer_email = ''
+        this.form.customer_phone = ''
+        this.form.customer_address = ''
+        this.form.customer_type = ''
       }
     },
-    selectCustomer(customer) {
-      this.form.customer_name = customer.name
-      this.form.customer_email = customer.email || ''
-      this.form.customer_phone = customer.phone || ''
-      this.form.customer_address = customer.address || ''
-      
-      this.customerSuggestions = []
-      this.showCustomerSuggestions = false
-    },
-    hideSuggestions() {
-      // Use setTimeout to allow click events to fire before hiding
-      setTimeout(() => {
-        this.showCustomerSuggestions = false
-      }, 200)
-    },
-    async saveCustomer() {
-      if (!this.form.customer_name.trim()) return
 
-      try {
-        const response = await fetch('/invoices/customers/create-or-find', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
-          body: JSON.stringify({
-            name: this.form.customer_name,
-            email: this.form.customer_email,
-            phone: this.form.customer_phone,
-            address: this.form.customer_address
-          })
-        })
-
-        const customer = await response.json()
-        
-        // Update form with the customer data
-        this.form.customer_name = customer.name
-        this.form.customer_email = customer.email || ''
-        this.form.customer_phone = customer.phone || ''
-        this.form.customer_address = customer.address || ''
-
-        // Show success message if customer was created
-        if (customer.created) {
-          // You could add a toast notification here
-          console.log('New customer created:', customer.name)
-        }
-      } catch (error) {
-        console.error('Error saving customer:', error)
-      }
-    },
     startInvoiceNumberValidation() {
       this.invoiceNumberValidation.isFocused = true
       // Reset validation state when focusing

@@ -6,7 +6,7 @@
         <div class="flex items-center space-x-6">
           <!-- Overview Children -->
           <div v-if="selectedMainMenu === 'overview'" class="flex ml-16 items-center space-x-4">
-            <Link 
+            <Link
               href="/"
               :class="[
                 'px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
@@ -19,7 +19,7 @@
 
           <!-- Accounts & Transactions Children -->
           <div v-if="selectedMainMenu === 'accounts'" class="flex ml-16 items-center space-x-4">
-            <Link 
+            <Link
               v-if="hasPermission('view_bank_accounts')"
               href="/bank-accounts"
               :class="[
@@ -29,7 +29,7 @@
             >
               Accounts
             </Link>
-            <Link 
+            <Link
               v-if="hasPermission('view_transactions')"
               href="/transactions"
               :class="[
@@ -39,7 +39,7 @@
             >
               Transactions
             </Link>
-            <Link 
+            <Link
               v-if="hasPermission('view_deposits')"
               href="/deposits"
               :class="[
@@ -53,7 +53,7 @@
 
           <!-- Sales Children -->
           <div v-if="selectedMainMenu === 'sales'" class="flex ml-16 items-center space-x-4">
-            <Link 
+            <Link
               v-if="hasPermission('view_sales')"
               href="/sales"
               :class="[
@@ -63,7 +63,7 @@
             >
               Sales
             </Link>
-            <Link 
+            <Link
               v-if="hasPermission('view_invoices')"
               href="/invoices"
               :class="[
@@ -73,11 +73,21 @@
             >
               Invoices
             </Link>
+            <Link
+              v-if="hasPermission('view_contacts')"
+              href="/contacts"
+              :class="[
+                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isUrl('contacts') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ]"
+            >
+              Customers
+            </Link>
           </div>
 
           <!-- Vendors Children -->
           <div v-if="selectedMainMenu === 'vendors'" class="flex ml-16 items-center space-x-4">
-            <Link 
+            <Link
               v-if="hasPermission('view_bills')"
               href="/bills"
               :class="[
@@ -87,7 +97,7 @@
             >
               Bills
             </Link>
-            <Link 
+            <Link
               v-if="hasPermission('view_vendors')"
               href="/vendors"
               :class="[
@@ -97,7 +107,7 @@
             >
               Vendors
             </Link>
-            <Link 
+            <Link
               v-if="hasPermission('view_cheque_payments')"
               href="/cheque-payments"
               :class="[
@@ -111,7 +121,7 @@
 
           <!-- Expenses Children -->
           <div v-if="selectedMainMenu === 'expenses'" class="flex ml-16 items-center space-x-4">
-            <Link 
+            <Link
               v-if="hasPermission('view_expenses')"
               href="/expense-claims"
               :class="[
@@ -121,7 +131,7 @@
             >
               Expense Claims
             </Link>
-            <Link 
+            <Link
               v-if="hasPermission('view_finance')"
               href="/miscellaneous"
               :class="[
@@ -135,7 +145,7 @@
 
           <!-- Reports Children -->
           <div v-if="selectedMainMenu === 'reports'" class="flex ml-16 items-center space-x-4">
-            <Link 
+            <Link
               v-if="hasPermission('view_reports')"
               href="/reports"
               :class="[
@@ -150,7 +160,7 @@
 
           <!-- Organization Children -->
           <div v-if="selectedMainMenu === 'organization'" class="flex ml-16 items-center space-x-4">
-            <Link 
+            <Link
               v-if="hasPermission('access_settings')"
               href="/branches"
               :class="[
@@ -160,7 +170,7 @@
             >
               Branches
             </Link>
-            <Link 
+            <Link
               v-if="hasPermission('view_users')"
               href="/users"
               :class="[
