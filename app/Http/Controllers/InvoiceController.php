@@ -159,18 +159,7 @@ class InvoiceController extends Controller
                 'value' => $b->id,
                 'label' => $b->name
             ]),
-            'customers' => Contact::where('account_id', Auth::user()->account_id)
-                ->orderBy('first_name')
-                ->orderBy('last_name')
-                ->get()
-                ->map(fn($contact) => [
-                    'id' => $contact->id,
-                    'name' => $contact->name,
-                    'email' => $contact->email,
-                    'phone' => $contact->phone,
-                    'address' => $contact->address,
-                    'customer_type' => $contact->customer_type,
-                ]),
+            'customers' => $this->getCustomersForAccount(),
             'invoiceTypes' => [
                 ['value' => 'bulk_sales', 'label' => 'Bulk Sales'],
                 ['value' => 'credit_customer', 'label' => 'Credit Customer'],
@@ -339,18 +328,7 @@ class InvoiceController extends Controller
                 'value' => $b->id,
                 'label' => $b->name
             ]),
-            'customers' => Contact::where('account_id', Auth::user()->account_id)
-                ->orderBy('first_name')
-                ->orderBy('last_name')
-                ->get()
-                ->map(fn($contact) => [
-                    'id' => $contact->id,
-                    'name' => $contact->name,
-                    'email' => $contact->email,
-                    'phone' => $contact->phone,
-                    'address' => $contact->address,
-                    'customer_type' => $contact->customer_type,
-                ]),
+            'customers' => $this->getCustomersForAccount(),
             'invoiceTypes' => [
                 ['value' => 'bulk_sales', 'label' => 'Bulk Sales'],
                 ['value' => 'credit_customer', 'label' => 'Credit Customer'],
@@ -816,5 +794,24 @@ class InvoiceController extends Controller
         }
 
         throw new \RuntimeException('Failed to generate unique invoice number after maximum retries');
+    }
+
+    /**
+     * Get customers for the current account
+     */
+    private function getCustomersForAccount()
+    {
+        return Contact::where('account_id', Auth::user()->account_id)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get()
+            ->map(fn($contact) => [
+                'id' => $contact->id,
+                'name' => $contact->name,
+                'email' => $contact->email,
+                'phone' => $contact->phone,
+                'address' => $contact->address,
+                'customer_type' => $contact->customer_type,
+            ]);
     }
 }
