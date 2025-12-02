@@ -9,26 +9,26 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
+    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Sales</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ summary?.total_sales || 0 }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Sales</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ summary?.total_sales || 0 }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-[#9B672A] bg-opacity-10 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-[#9B672A]" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
@@ -36,43 +36,43 @@
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
               {{ $formatAmount(summary?.total_amount || 0) }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">This Month</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">This Month</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
               {{ $formatAmount(summary?.this_month || 0) }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Today</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Today</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
               {{ $formatAmount(summary?.today || 0) }}</p>
           </div>
         </div>
@@ -161,50 +161,50 @@
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cashier</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="w-24 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+              <th class="hidden sm:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+              <th class="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cashier</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="w-16 px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="sale in sales?.data || []" :key="sale.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-900">
                 {{ $formatDate(sale.sales_date) }}
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                {{ sale.branch?.name || 'N/A' }}
+              <td class="px-3 py-3 text-xs text-gray-900">
+                <div class="max-w-28 truncate">{{ sale.branch?.name || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                {{ sale.shift?.name || 'N/A' }}
+              <td class="hidden sm:table-cell px-3 py-3 text-xs text-gray-900">
+                <div class="max-w-24 truncate">{{ sale.shift?.name || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                {{ sale.cashier || 'N/A' }}
+              <td class="hidden md:table-cell px-3 py-3 text-xs text-gray-900">
+                <div class="max-w-28 truncate">{{ sale.cashier || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+              <td class="px-3 py-3 whitespace-nowrap text-xs text-right">
                 <span class="font-medium text-green-600">
                   {{ $formatAmount(sale.amount) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <span v-if="!sale.deleted_at" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <td class="px-3 py-3 whitespace-nowrap text-center">
+                <span v-if="!sale.deleted_at" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   Active
                 </span>
-                <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <span v-else class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   Deleted
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div class="flex items-center justify-center space-x-2">
-                  <Link :href="`/sales/${sale.id}/edit`" class="text-brand-600 hover:text-brand-900">
+              <td class="px-3 py-3 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-1">
+                  <Link :href="`/sales/${sale.id}/edit`" class="text-brand-600 hover:text-brand-900" title="Edit">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
                     </svg>
                   </Link>
-                  <button v-if="sale.deleted_at" @click="restore(sale)" class="text-green-600 hover:text-green-900">
+                  <button v-if="sale.deleted_at" @click="restore(sale)" class="text-green-600 hover:text-green-900" title="Restore">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
                     </svg>
@@ -213,7 +213,7 @@
               </td>
             </tr>
             <tr v-if="!sales?.data?.length">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="7" class="px-3 py-12 text-center text-gray-500">
                 No sales found.
               </td>
             </tr>
@@ -227,24 +227,7 @@
           <div class="text-sm text-gray-700">
             Showing {{ sales.from || 0 }} to {{ sales.to || 0 }} of {{ sales.total || 0 }} results
           </div>
-          <div class="flex space-x-2">
-            <Link
-              v-if="sales.prev_page_url"
-              :href="sales.prev_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Previous
-            </Link>
-            <Link
-              v-if="sales.next_page_url"
-              :href="sales.next_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Next
-            </Link>
-          </div>
+          <Pagination v-if="sales.links" :links="sales.links" />
         </div>
       </div>
     </div>
@@ -254,6 +237,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
@@ -265,6 +249,7 @@ export default {
   components: {
     Head,
     Link,
+    Pagination,
   },
   mixins: [formatterMixin],
   layout: Layout,

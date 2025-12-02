@@ -1,5 +1,5 @@
 /**
- * Format date to human readable format: 'Wednesday, 31st May, 2025'
+ * Format date to short format: 'DD/MM/YYYY' (e.g., '31/11/2025')
  * @param {string|Date} date - Date to format
  * @returns {string} Formatted date string
  */
@@ -9,29 +9,11 @@ export function formatDate(date) {
     const dateObj = new Date(date)
     if (isNaN(dateObj.getTime())) return ''
 
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    const months = [
-        'Jan.', 'Feb.', 'March', 'April', 'May', 'June',
-        'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'
-    ]
-
-    const dayName = days[dateObj.getDay()]
-    const day = dateObj.getDate()
-    const month = months[dateObj.getMonth()]
+    const day = dateObj.getDate().toString().padStart(2, '0')
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0')
     const year = dateObj.getFullYear()
 
-    // Add ordinal suffix to day
-    const getOrdinalSuffix = (num) => {
-        if (num > 3 && num < 21) return 'th'
-        switch (num % 10) {
-            case 1: return 'st'
-            case 2: return 'nd'
-            case 3: return 'rd'
-            default: return 'th'
-        }
-    }
-
-    return `${dayName}, ${day}${getOrdinalSuffix(day)} ${month}, ${year}`
+    return `${day}/${month}/${year}`
 }
 
 /**

@@ -74,7 +74,7 @@ class SalesController extends Controller
                 ->sum('amount'),
         ];
 
-        $sales = $query->paginate(25)
+        $sales = $query->paginate(5)->withQueryString()
             ->through(fn($sale) => [
                 'id' => $sale->id,
                 'sales_date' => $sale->sales_date,

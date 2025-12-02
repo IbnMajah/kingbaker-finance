@@ -77,7 +77,7 @@ class InvoiceController extends Controller
                 ->sum('amount_paid'),
         ];
 
-        $invoices = $query->paginate(25)
+        $invoices = $query->paginate(5)->withQueryString()
             ->through(fn($invoice) => [
                 'id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,
@@ -215,11 +215,6 @@ class InvoiceController extends Controller
         // Get customer information from the selected customer
         $customer = Contact::findOrFail($validated['customer_id']);
 
-        // Generate invoice number if not provided
-        if (empty($validated['invoice_number'])) {
-            $validated['invoice_number'] = $this->generateUniqueInvoiceNumber();
-        }
-
         // Handle file upload separately
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
@@ -236,29 +231,73 @@ class InvoiceController extends Controller
             $totalAmount += $item['unit_price'] * $item['quantity'];
         }
 
-        $invoice = Invoice::create([
-            ...$validated,
-            'customer_name' => $customer->name,
-            'customer_email' => $customer->email,
-            'customer_phone' => $customer->phone,
-            'customer_address' => $customer->address,
-            'customer_type' => $customer->customer_type ?? 'individual',
-            'amount' => $totalAmount,
-            'status' => 'draft',
-            'amount_paid' => 0,
-            'attachment_path' => $attachmentPath,
-            'created_by' => Auth::id(),
-        ]);
+        // Retry logic for invoice creation to handle duplicate invoice numbers
+        $maxRetries = 5;
+        $invoice = null;
 
-        // Create invoice items
-        foreach ($items as $item) {
-            $invoice->items()->create([
-                'description' => $item['description'],
-                'unit_price' => $item['unit_price'],
-                'unit_measurement' => $item['unit_measurement'] ?? null,
-                'quantity' => $item['quantity'],
-                'total' => $item['unit_price'] * $item['quantity'],
-            ]);
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            try {
+                $invoice = DB::transaction(function () use ($validated, $customer, $totalAmount, $attachmentPath, $items) {
+                    // Generate invoice number if not provided (inside transaction)
+                    if (empty($validated['invoice_number'])) {
+                        $validated['invoice_number'] = $this->generateUniqueInvoiceNumberInTransaction();
+                    }
+
+                    $invoice = Invoice::create([
+                        ...$validated,
+                        'customer_name' => $customer->name,
+                        'customer_email' => $customer->email,
+                        'customer_phone' => $customer->phone,
+                        'customer_address' => $customer->address,
+                        'customer_type' => $customer->customer_type ?? 'individual',
+                        'amount' => $totalAmount,
+                        'status' => 'draft',
+                        'amount_paid' => 0,
+                        'attachment_path' => $attachmentPath,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    // Create invoice items
+                    foreach ($items as $item) {
+                        $invoice->items()->create([
+                            'description' => $item['description'],
+                            'unit_price' => $item['unit_price'],
+                            'unit_measurement' => $item['unit_measurement'] ?? null,
+                            'quantity' => $item['quantity'],
+                            'total' => $item['unit_price'] * $item['quantity'],
+                        ]);
+                    }
+
+                    return $invoice;
+                });
+
+                // If successful, break out of retry loop
+                break;
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Check if it's a duplicate key error
+                if ($e->getCode() == 23000 && strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                    if ($attempt === $maxRetries - 1) {
+                        // Clean up uploaded file if creation failed
+                        if ($attachmentPath) {
+                            Storage::disk('public')->delete($attachmentPath);
+                        }
+                        throw $e;
+                    }
+                    // Wait before retrying
+                    usleep(100000); // 100ms
+                    continue;
+                }
+                // For other exceptions, throw immediately
+                throw $e;
+            }
+        }
+
+        if (!$invoice) {
+            // Clean up uploaded file if creation failed
+            if ($attachmentPath) {
+                Storage::disk('public')->delete($attachmentPath);
+            }
+            return Redirect::back()->with('error', 'Failed to create invoice after multiple attempts. Please try again.');
         }
 
         return Redirect::route('invoices')->with('success', 'Invoice created successfully.');
@@ -758,7 +797,32 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Generate a unique invoice number
+     * Generate a unique invoice number (must be called within a transaction)
+     */
+    private function generateUniqueInvoiceNumberInTransaction(): string
+    {
+        $year = date('Y');
+
+        // Lock the table for consistent reads (include soft-deleted invoices)
+        $lastInvoice = Invoice::withTrashed()
+            ->where('invoice_number', 'like', "INV-{$year}-%")
+            ->lockForUpdate()
+            ->orderByRaw('CAST(SUBSTRING(invoice_number, -4) AS UNSIGNED) DESC')
+            ->first();
+
+        $nextSequence = 1;
+        if ($lastInvoice) {
+            preg_match('/INV-' . $year . '-(\d+)/', $lastInvoice->invoice_number, $matches);
+            if (isset($matches[1])) {
+                $nextSequence = (int)$matches[1] + 1;
+            }
+        }
+
+        return 'INV-' . $year . '-' . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate a unique invoice number (deprecated - use generateUniqueInvoiceNumberInTransaction within a transaction)
      */
     private function generateUniqueInvoiceNumber(): string
     {
@@ -768,21 +832,7 @@ class InvoiceController extends Controller
         for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
             try {
                 return DB::transaction(function () use ($year) {
-                    // Lock the table for consistent reads
-                    $lastInvoice = Invoice::where('invoice_number', 'like', "INV-{$year}-%")
-                        ->lockForUpdate()
-                        ->orderByRaw('CAST(SUBSTRING(invoice_number, -4) AS UNSIGNED) DESC')
-                        ->first();
-
-                    $nextSequence = 1;
-                    if ($lastInvoice) {
-                        preg_match('/INV-' . $year . '-(\d+)/', $lastInvoice->invoice_number, $matches);
-                        if (isset($matches[1])) {
-                            $nextSequence = (int)$matches[1] + 1;
-                        }
-                    }
-
-                    return 'INV-' . $year . '-' . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+                    return $this->generateUniqueInvoiceNumberInTransaction();
                 });
             } catch (\Illuminate\Database\QueryException $e) {
                 // Retry on deadlock or duplicate key

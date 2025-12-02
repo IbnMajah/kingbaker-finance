@@ -9,10 +9,10 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
+    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
@@ -20,61 +20,61 @@
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Transactions</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ totalTransactions?.toLocaleString() || 0 }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Transactions</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ totalTransactions?.toLocaleString() || 0 }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Debits</p>
-            <p class="text-2xl font-semibold text-red-600">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Debits</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-red-600">
               {{ $formatAmount(totalDebits) }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Credits</p>
-            <p class="text-2xl font-semibold text-green-600">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Credits</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-green-600">
               {{ $formatAmount(totalCredits) }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Net Amount</p>
-            <p class="text-2xl font-semibold" :class="netAmount >= 0 ? 'text-green-600' : 'text-red-600'">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Net Amount</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold" :class="netAmount >= 0 ? 'text-green-600' : 'text-red-600'">
               {{ $formatAmount(netAmount) }}
             </p>
           </div>
@@ -218,7 +218,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="w-28 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
@@ -303,24 +303,7 @@
           <div class="text-sm text-gray-700">
             Showing {{ transactions.from || 0 }} to {{ transactions.to || 0 }} of {{ transactions.total || 0 }} results
           </div>
-          <div class="flex space-x-2">
-            <Link
-              v-if="transactions.prev_page_url"
-              :href="transactions.prev_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Previous
-            </Link>
-            <Link
-              v-if="transactions.next_page_url"
-              :href="transactions.next_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Next
-            </Link>
-          </div>
+          <Pagination v-if="transactions.links" :links="transactions.links" />
         </div>
       </div>
     </div>
@@ -330,6 +313,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import Pagination from '@/Shared/Pagination.vue'
 import { formatterMixin } from '@/Utils/formatters'
 import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
@@ -340,6 +324,7 @@ export default {
   components: {
     Head,
     Link,
+    Pagination,
   },
   mixins: [formatterMixin],
   layout: Layout,

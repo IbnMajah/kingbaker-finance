@@ -204,24 +204,7 @@
           <div class="text-sm text-gray-700">
             Showing {{ vendors.from || 0 }} to {{ vendors.to || 0 }} of {{ vendors.total || 0 }} results
           </div>
-          <div class="flex space-x-2">
-            <Link
-              v-if="vendors.prev_page_url"
-              :href="vendors.prev_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Previous
-            </Link>
-            <Link
-              v-if="vendors.next_page_url"
-              :href="vendors.next_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Next
-            </Link>
-          </div>
+          <Pagination v-if="vendors.links" :links="vendors.links" />
         </div>
       </div>
     </div>
@@ -231,6 +214,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
@@ -240,6 +224,7 @@ export default {
   components: {
     Head,
     Link,
+    Pagination,
   },
   layout: Layout,
   setup() {

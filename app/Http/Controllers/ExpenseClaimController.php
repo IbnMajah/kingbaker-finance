@@ -53,7 +53,7 @@ class ExpenseClaimController extends Controller
             })
             ->latest();
 
-        $claims = $query->paginate(10);
+        $claims = $query->paginate(5)->appends($request->query());
 
         return Inertia::render('ExpenseClaims/Index', [
             'filters' => $request->only(['search', 'status', 'category', 'expense_type']),

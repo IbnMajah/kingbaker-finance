@@ -9,10 +9,10 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
+    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
@@ -20,54 +20,54 @@
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Invoices</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ summary.total_invoices?.toLocaleString() || 0 }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Invoices</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ summary.total_invoices?.toLocaleString() || 0 }}</p>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_amount) }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_amount) }}</p>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Amount Paid</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_paid) }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Amount Paid</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_paid) }}</p>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Pending Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.pending_amount) }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Pending Amount</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.pending_amount) }}</p>
           </div>
         </div>
       </div>
@@ -167,71 +167,71 @@
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+              <th class="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="w-24 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="hidden lg:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
+              <th class="w-20 px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="invoice in invoices.data" :key="invoice.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-3 py-3 whitespace-nowrap">
                 <div>
-                  <div class="text-sm font-medium text-gray-900">{{ invoice.invoice_number }}</div>
-                  <div class="text-sm text-gray-500">{{ $formatDate(invoice.invoice_date) }}</div>
+                  <div class="text-xs font-medium text-gray-900">{{ invoice.invoice_number }}</div>
+                  <div class="text-xs text-gray-500">{{ $formatDate(invoice.invoice_date) }}</div>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div>
-                  <div class="text-sm font-medium text-gray-900">{{ invoice.customer_name }}</div>
-                  <div class="text-sm text-gray-500">{{ invoice.customer_email || invoice.customer_phone || 'No contact' }}</div>
+              <td class="px-3 py-3">
+                <div class="max-w-32">
+                  <div class="text-xs font-medium text-gray-900 truncate">{{ invoice.customer_name }}</div>
+                  <div class="text-xs text-gray-500 truncate">{{ invoice.customer_email || invoice.customer_phone || 'No contact' }}</div>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div>
-                  <div class="text-sm font-medium text-gray-900">{{ getInvoiceTypeLabel(invoice.invoice_type) }}</div>
-                  <div class="text-sm text-gray-500">{{ getCustomerTypeLabel(invoice.customer_type) }}</div>
+              <td class="hidden md:table-cell px-3 py-3">
+                <div class="max-w-28">
+                  <div class="text-xs font-medium text-gray-900 truncate">{{ getInvoiceTypeLabel(invoice.invoice_type) }}</div>
+                  <div class="text-xs text-gray-500 truncate">{{ getCustomerTypeLabel(invoice.customer_type) }}</div>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-3 py-3 whitespace-nowrap">
                 <div>
-                  <div class="text-sm font-medium text-gray-900">
+                  <div class="text-xs font-medium text-gray-900">
                     {{ $formatAmount(invoice.amount) }}
                   </div>
-                  <div v-if="invoice.amount_paid > 0" class="text-sm text-gray-500">
-                    Paid: {{ $formatAmount(invoice.amount_paid) }}
+                  <div v-if="invoice.amount_paid > 0" class="text-xs text-gray-500">
+                    {{ $formatAmount(invoice.amount_paid) }}
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ $formatDate(invoice.due_date) }}</div>
+              <td class="px-3 py-3 whitespace-nowrap">
+                <div class="text-xs text-gray-900">{{ $formatDate(invoice.due_date) }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <span v-if="invoice.status === 'paid'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <td class="px-3 py-3 whitespace-nowrap text-center">
+                <span v-if="invoice.status === 'paid'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   Paid
                 </span>
-                <span v-else-if="invoice.status === 'pending'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                <span v-else-if="invoice.status === 'pending'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                   Pending
                 </span>
-                <span v-else-if="invoice.status === 'overdue'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <span v-else-if="invoice.status === 'overdue'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   Overdue
                 </span>
-                <span v-else-if="invoice.status === 'partially_paid'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Partially Paid
+                <span v-else-if="invoice.status === 'partially_paid'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Part. Paid
                 </span>
-                <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                <span v-else class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                   {{ invoice.status || 'Unknown' }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ invoice.bank_account?.name || '-' }}</div>
+              <td class="hidden lg:table-cell px-3 py-3">
+                <div class="text-xs text-gray-900 max-w-24 truncate">{{ invoice.bank_account?.name || '-' }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div class="flex items-center justify-center space-x-2">
+              <td class="px-3 py-3 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-1">
                   <!-- View Button -->
                   <Link v-if="canViewInvoices" :href="`/invoices/${invoice.id}`" class="text-blue-600 hover:text-blue-900" title="View Invoice">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,14 +248,14 @@
                   </Link>
 
                   <!-- Print Button -->
-                  <Link :href="`/invoices/${invoice.id}/print`" class="text-purple-600 hover:text-purple-900" title="Print Invoice">
+                  <Link :href="`/invoices/${invoice.id}/print`" class="hidden sm:inline-block text-purple-600 hover:text-purple-900" title="Print Invoice">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                     </svg>
                   </Link>
 
                   <!-- Delete Button -->
-                  <button @click="destroy(invoice)" class="text-red-600 hover:text-red-900" title="Delete Invoice">
+                  <button @click="destroy(invoice)" class="hidden sm:inline-block text-red-600 hover:text-red-900" title="Delete Invoice">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -264,7 +264,7 @@
               </td>
             </tr>
             <tr v-if="!invoices?.data?.length">
-              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="8" class="px-3 py-12 text-center text-gray-500">
                 No invoices found.
               </td>
             </tr>
@@ -277,24 +277,7 @@
           <div class="text-sm text-gray-700">
             Showing {{ invoices.from || 0 }} to {{ invoices.to || 0 }} of {{ invoices.total || 0 }} results
           </div>
-          <div class="flex space-x-2">
-            <Link
-              v-if="invoices.prev_page_url"
-              :href="invoices.prev_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Previous
-            </Link>
-            <Link
-              v-if="invoices.next_page_url"
-              :href="invoices.next_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Next
-            </Link>
-          </div>
+          <Pagination v-if="invoices.links" :links="invoices.links" />
         </div>
       </div>
     </div>
@@ -304,6 +287,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
 import throttle from 'lodash/throttle'
@@ -314,6 +298,7 @@ export default {
   components: {
     Head,
     Link,
+    Pagination,
   },
   mixins: [formatterMixin],
   layout: Layout,

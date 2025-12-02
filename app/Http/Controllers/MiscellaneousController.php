@@ -57,11 +57,11 @@ class MiscellaneousController extends Controller
             'total_debits' => $summaryQuery->where('type', 'debit')->sum('amount'),
             'total_credits' => $summaryQuery->where('type', 'credit')->sum('amount'),
             'net_amount' => $summaryQuery->where('type', 'credit')->sum('amount') -
-                          $summaryQuery->where('type', 'debit')->sum('amount'),
+                $summaryQuery->where('type', 'debit')->sum('amount'),
         ];
 
-        $transactions = $query->paginate(25)
-            ->through(fn ($transaction) => [
+        $transactions = $query->paginate(5)->withQueryString()
+            ->through(fn($transaction) => [
                 'id' => $transaction->id,
                 'reference_number' => $transaction->reference_number,
                 'transaction_date' => $transaction->transaction_date,

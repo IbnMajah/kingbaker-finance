@@ -69,7 +69,7 @@ class ChequePaymentController extends Controller
             'today' => $summaryQuery->whereDate('payment_date', today())->sum('amount'),
         ];
 
-        $payments = $query->paginate(25)
+        $payments = $query->paginate(5)->withQueryString()
             ->through(fn($payment) => [
                 'id' => $payment->id,
                 'payment_number' => $payment->payment_number,

@@ -9,58 +9,58 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
+    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Claims</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ totalClaims }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Claims</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ totalClaims }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Active Claims</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ activeClaims }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Active Claims</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ activeClaims }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Draft Claims</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ draftClaims }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Draft Claims</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ draftClaims }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
@@ -68,9 +68,9 @@
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(totalAmount) }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(totalAmount) }}</p>
           </div>
         </div>
       </div>
@@ -150,7 +150,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payee</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="w-28 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -239,24 +239,7 @@
           <div class="text-sm text-gray-700">
             Showing {{ claims.from || 0 }} to {{ claims.to || 0 }} of {{ claims.total || 0 }} results
           </div>
-          <div class="flex space-x-2">
-            <Link
-              v-if="claims.prev_page_url"
-              :href="claims.prev_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Previous
-            </Link>
-            <Link
-              v-if="claims.next_page_url"
-              :href="claims.next_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Next
-            </Link>
-          </div>
+          <Pagination v-if="claims.links" :links="claims.links" />
         </div>
       </div>
     </div>
@@ -268,6 +251,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
@@ -279,6 +263,7 @@ export default {
   components: {
     Head,
     Link,
+    Pagination,
   },
   mixins: [formatterMixin],
   layout: Layout,

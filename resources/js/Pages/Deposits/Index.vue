@@ -9,26 +9,26 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
+    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Deposits</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ summary?.total_deposits || 0 }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Deposits</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ summary?.total_deposits || 0 }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
@@ -36,42 +36,42 @@
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900"> {{ $formatAmount(summary?.total_amount) }}</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900"> {{ $formatAmount(summary?.total_amount) }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">This Month</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">This Month</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                {{ $formatAmount(summary?.this_month || 0) }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Today</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Today</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                {{ $formatAmount(summary?.today || 0) }}</p>
           </div>
         </div>
@@ -151,50 +151,47 @@
 
     <!-- Deposits Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold">Deposit Transactions</h2>
+      <div class="px-4 py-3 border-b border-gray-200">
+        <h2 class="text-base font-semibold">Deposit Transactions</h2>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Account</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deposit Type</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Bank Account</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Branch</th>
+              <th class="w-24 px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="deposit in deposits?.data || []" :key="deposit.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ $formatDate(deposit.deposit_date) }}
+              <td class="px-3 py-2 text-xs">
+                <div class="font-medium text-gray-900 truncate max-w-32">{{ deposit.reference_number }}</div>
+                <div class="text-xs text-gray-500">{{ $formatDate(deposit.deposit_date) }}</div>
+                <div class="text-xs text-gray-500 md:hidden">{{ deposit.bank_account?.name || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                <div class="font-medium">{{ deposit.reference_number }}</div>
-                <div v-if="deposit.description" class="text-xs text-gray-500 truncate max-w-xs">{{ deposit.description }}</div>
+              <td class="px-3 py-2 text-xs text-gray-900 hidden md:table-cell">
+                <div class="truncate max-w-32">{{ deposit.bank_account?.name || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                {{ deposit.bank_account?.name || 'N/A' }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <td class="px-3 py-2 whitespace-nowrap text-xs">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                   {{ deposit.deposit_type?.replace('_', ' ').toUpperCase() }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+              <td class="px-3 py-2 whitespace-nowrap text-xs text-right">
                 <span class="font-medium text-green-600">
                   {{ $formatAmount(deposit.amount) }}
                 </span>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                {{ deposit.branch?.name || 'N/A' }}
+              <td class="px-3 py-2 text-xs text-gray-900 hidden lg:table-cell">
+                <div class="truncate max-w-24">{{ deposit.branch?.name || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div class="flex items-center justify-center space-x-2">
+              <td class="px-3 py-2 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-1">
                   <Link v-if="canViewDeposits" :href="`/deposits/${deposit.id}`" class="text-blue-600 hover:text-blue-900" title="View Details">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
@@ -211,14 +208,14 @@
                       <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
                     </svg>
                   </button>
-                  <span v-if="deposit.attachments && deposit.attachments.length" class="text-blue-600 text-xs font-medium" :title="`${deposit.attachments.length} supporting documents`">
-                    📎 {{ deposit.attachments.length }}
+                  <span v-if="deposit.attachments && deposit.attachments.length" class="text-blue-600 text-xs" :title="`${deposit.attachments.length} supporting documents`">
+                    📎{{ deposit.attachments.length }}
                   </span>
                 </div>
               </td>
             </tr>
             <tr v-if="!deposits?.data?.length">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                 No deposits found.
               </td>
             </tr>
@@ -227,29 +224,12 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="deposits?.data?.length" class="px-6 py-4 border-t border-gray-200">
+      <div v-if="deposits?.data?.length" class="px-4 py-3 border-t border-gray-200">
         <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-700">
+          <div class="text-xs text-gray-700">
             Showing {{ deposits.from || 0 }} to {{ deposits.to || 0 }} of {{ deposits.total || 0 }} results
           </div>
-          <div class="flex space-x-2">
-            <Link
-              v-if="deposits.prev_page_url"
-              :href="deposits.prev_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Previous
-            </Link>
-            <Link
-              v-if="deposits.next_page_url"
-              :href="deposits.next_page_url"
-              class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              preserve-state
-            >
-              Next
-            </Link>
-          </div>
+          <Pagination v-if="deposits.links" :links="deposits.links" />
         </div>
       </div>
     </div>
@@ -279,6 +259,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
@@ -290,6 +271,7 @@ export default {
   components: {
     Head,
     Link,
+    Pagination,
   },
   mixins: [formatterMixin],
   layout: Layout,

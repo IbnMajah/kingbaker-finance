@@ -45,7 +45,7 @@ class TransactionController extends Controller
             ->orderBy('transaction_date', 'desc')
             ->orderBy('created_at', 'desc');
 
-        $transactions = $query->paginate(25)
+        $transactions = $query->paginate(5)->withQueryString()
             ->through(fn($transaction) => [
                 'id' => $transaction->id,
                 'date' => $transaction->transaction_date,

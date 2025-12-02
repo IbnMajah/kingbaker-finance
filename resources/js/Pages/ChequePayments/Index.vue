@@ -9,77 +9,77 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6">
+    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Payments</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ summary.total_payments.toLocaleString() }}</p>
-            <p class="text-xs text-gray-500 mt-1">All payment records</p>
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Payments</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ summary.total_payments.toLocaleString() }}</p>
+            <p class="text-xs text-gray-500 mt-1 hidden lg:block">All payment records</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                 {{ $formatAmount(summary.total_amount) }}
             </p>
-            <p class="text-xs text-gray-500 mt-1">All payments combined</p>
+            <p class="text-xs text-gray-500 mt-1 hidden lg:block">All payments combined</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">This Month</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">This Month</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                 {{ $formatAmount(summary.this_month) }}
             </p>
-            <p class="text-xs text-gray-500 mt-1">Current month payments</p>
+            <p class="text-xs text-gray-500 mt-1 hidden lg:block">Current month payments</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
-          <div class="flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd"></path>
               </svg>
             </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Today</p>
-            <p class="text-2xl font-semibold text-gray-900">
+          <div class="lg:ml-4">
+            <p class="text-xs md:text-sm font-medium text-gray-600">Today</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">
                 {{ $formatAmount(summary.today) }}
             </p>
-            <p class="text-xs text-gray-500 mt-1">Today's payments</p>
+            <p class="text-xs text-gray-500 mt-1 hidden lg:block">Today's payments</p>
           </div>
         </div>
       </div>
@@ -231,7 +231,7 @@
               <th class="w-30 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment #</th>
               <th class="w-30 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payee</th>
               <th class="w-36 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th class="w-26 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th class="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th class="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
               <th class="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -312,74 +312,11 @@
       </div>
       <!-- Pagination -->
       <div class="px-6 py-4 border-t border-gray-200">
-        <div class="flex-1 flex justify-between sm:hidden">
-          <Link
-            v-if="payments.prev_page_url"
-            :href="payments.prev_page_url"
-            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Previous
-          </Link>
-          <Link
-            v-if="payments.next_page_url"
-            :href="payments.next_page_url"
-            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Next
-          </Link>
-        </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm text-gray-700">
-              Showing
-              <span class="font-medium">{{ payments.from }}</span>
-              to
-              <span class="font-medium">{{ payments.to }}</span>
-              of
-              <span class="font-medium">{{ payments.total }}</span>
-              results
-            </p>
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-gray-700">
+            Showing {{ payments.from || 0 }} to {{ payments.to || 0 }} of {{ payments.total || 0 }} results
           </div>
-          <div>
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-              <Link
-                v-if="payments.prev_page_url"
-                :href="payments.prev_page_url"
-                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <span class="sr-only">Previous</span>
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-              </Link>
-
-              <template v-for="(link, index) in payments.links" :key="index">
-                <Link
-                  v-if="!isNaN(link.label)"
-                  :href="link.url"
-                  :class="[
-                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                    link.active
-                      ? 'z-10 bg-brand-50 border-brand-500 text-brand-600'
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                  ]"
-                >
-                  {{ link.label }}
-                </Link>
-              </template>
-
-              <Link
-                v-if="payments.next_page_url"
-                :href="payments.next_page_url"
-                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <span class="sr-only">Next</span>
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </Link>
-            </nav>
-          </div>
+          <Pagination v-if="payments.links" :links="payments.links" />
         </div>
       </div>
     </div>
@@ -389,6 +326,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
 
@@ -396,6 +334,7 @@ export default {
   components: {
     Head,
     Link,
+    Pagination,
   },
   mixins: [formatterMixin],
   layout: Layout,
