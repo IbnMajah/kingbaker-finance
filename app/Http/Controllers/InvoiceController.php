@@ -77,7 +77,7 @@ class InvoiceController extends Controller
                 ->sum('amount_paid'),
         ];
 
-        $invoices = $query->paginate(5)->withQueryString()
+        $invoices = $query->paginate(100)->withQueryString()
             ->through(fn($invoice) => [
                 'id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,

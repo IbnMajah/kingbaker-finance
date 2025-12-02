@@ -32,7 +32,7 @@ class BankAccountController extends Controller
             })
             ->orderBy('name');
 
-        $bankAccounts = $query->paginate(5)->withQueryString()
+        $bankAccounts = $query->paginate(100)->withQueryString()
             ->through(fn($account) => [
                 'id' => $account->id,
                 'name' => $account->name,

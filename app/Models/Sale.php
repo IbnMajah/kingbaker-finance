@@ -15,7 +15,8 @@ class Sale extends Model
         'shift_id',
         'sales_date',
         'amount',
-        'cashier'
+        'cashier',
+        'closing_manager'
     ];
 
     protected $casts = [
@@ -42,9 +43,9 @@ class Sale extends Model
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('amount', 'like', '%'.$search.'%')
+                $query->where('amount', 'like', '%' . $search . '%')
                     ->orWhereHas('branch', function ($query) use ($search) {
-                        $query->where('name', 'like', '%'.$search.'%');
+                        $query->where('name', 'like', '%' . $search . '%');
                     });
             });
         })->when($filters['trashed'] ?? null, function ($query, $trashed) {

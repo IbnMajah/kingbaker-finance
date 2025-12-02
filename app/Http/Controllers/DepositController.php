@@ -58,7 +58,7 @@ class DepositController extends Controller
                 ->sum('amount'),
         ];
 
-        $deposits = $query->paginate(5)->withQueryString()
+        $deposits = $query->paginate(100)->withQueryString()
             ->through(fn($deposit) => [
                 'id' => $deposit->id,
                 'deposit_date' => $deposit->deposit_date,

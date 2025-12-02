@@ -186,6 +186,26 @@
                 {{ form.errors.cashier }}
               </p>
             </div>
+
+            <!-- Closing Manager -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Closing Manager
+              </label>
+              <input
+                v-model="form.closing_manager"
+                type="text"
+                placeholder="Enter closing manager name"
+                :class="[
+                  'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
+                  form.errors.closing_manager ? 'border-red-300' : 'border-gray-300'
+                ]"
+                :disabled="sale.deleted_at"
+              />
+              <p v-if="form.errors.closing_manager" class="mt-1 text-sm text-red-600">
+                {{ form.errors.closing_manager }}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -264,6 +284,7 @@ export default {
         sales_date: this.sale.sales_date,
         amount: this.sale.amount,
         cashier: this.sale.cashier,
+        closing_manager: this.sale.closing_manager || '',
       }),
     }
   },

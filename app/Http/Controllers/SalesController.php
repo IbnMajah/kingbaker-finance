@@ -74,12 +74,13 @@ class SalesController extends Controller
                 ->sum('amount'),
         ];
 
-        $sales = $query->paginate(5)->withQueryString()
+        $sales = $query->paginate(100)->withQueryString()
             ->through(fn($sale) => [
                 'id' => $sale->id,
                 'sales_date' => $sale->sales_date,
                 'amount' => $sale->amount,
                 'cashier' => $sale->cashier,
+                'closing_manager' => $sale->closing_manager,
                 'branch' => $sale->branch ? [
                     'id' => $sale->branch->id,
                     'name' => $sale->branch->name,
@@ -128,6 +129,7 @@ class SalesController extends Controller
             'sales_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'cashier' => ['nullable', 'string', 'max:255'],
+            'closing_manager' => ['nullable', 'string', 'max:255'],
         ]);
 
         Sale::create($validated);
@@ -152,6 +154,7 @@ class SalesController extends Controller
                 'sales_date' => $sale->sales_date->format('Y-m-d'),
                 'amount' => $sale->amount,
                 'cashier' => $sale->cashier,
+                'closing_manager' => $sale->closing_manager,
                 'branch' => $sale->branch,
                 'shift' => $sale->shift,
                 'deleted_at' => $sale->deleted_at,
@@ -187,6 +190,7 @@ class SalesController extends Controller
             'sales_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'cashier' => ['nullable', 'string', 'max:255'],
+            'closing_manager' => ['nullable', 'string', 'max:255'],
         ]);
 
         $sale->update($validated);

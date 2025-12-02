@@ -43,7 +43,7 @@ class BillController extends Controller
             })
             ->orderBy('due_date', 'desc');
 
-        $bills = $query->paginate(5)->withQueryString()
+        $bills = $query->paginate(100)->withQueryString()
             ->through(fn($bill) => [
                 'id' => $bill->id,
                 'reference' => $bill->reference,
