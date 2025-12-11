@@ -115,7 +115,7 @@
                 isUrl('cheque-payments') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               ]"
             >
-              Cheque Payments
+              Payments
             </Link>
           </div>
 

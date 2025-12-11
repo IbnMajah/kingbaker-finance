@@ -14,14 +14,26 @@ class Sale extends Model
         'branch_id',
         'shift_id',
         'sales_date',
-        'amount',
+        'amount', // This represents depositable_amount
+        'total_amount',
+        'cash_amount',
+        'bank_transfer_amount',
+        'mobile_money_my_nafa',
+        'mobile_money_aps',
+        'mobile_money_wave',
         'cashier',
         'closing_manager'
     ];
 
     protected $casts = [
         'sales_date' => 'date',
-        'amount' => 'decimal:2'
+        'amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'cash_amount' => 'decimal:2',
+        'bank_transfer_amount' => 'decimal:2',
+        'mobile_money_my_nafa' => 'decimal:2',
+        'mobile_money_aps' => 'decimal:2',
+        'mobile_money_wave' => 'decimal:2',
     ];
 
     public function branch()
@@ -37,6 +49,11 @@ class Sale extends Model
     public function deposits()
     {
         return $this->belongsToMany(Deposit::class, 'deposit_sales');
+    }
+
+    public function creditItems()
+    {
+        return $this->hasMany(SaleCreditItem::class);
     }
 
     public function scopeFilter($query, array $filters)

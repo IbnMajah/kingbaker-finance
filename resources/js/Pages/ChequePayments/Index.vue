@@ -1,11 +1,11 @@
 <template>
   <div>
-    <Head title="Cheque Payments" />
+    <Head title="Payments" />
 
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold mb-2">Cheque Payments</h1>
-      <p class="text-gray-600">Manage and track all cheque payment transactions</p>
+      <h1 class="text-3xl font-bold mb-2">Payments</h1>
+      <p class="text-gray-600">Manage and track all payment transactions</p>
     </div>
 
     <!-- Admin Summary Cards -->
@@ -88,12 +88,12 @@
     <!-- Filters and Actions -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold">Filter Cheque Payments</h2>
+        <h2 class="text-lg font-semibold">Filter Payments</h2>
         <Link v-if="canCreateChequePayments" class="btn-kingbaker" href="/cheque-payments/create">
           <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
           </svg>
-          <span>Create Cheque Payment</span>
+          <span>Create A Payment</span>
         </Link>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -200,21 +200,16 @@
               Clear selection
             </button>
           </div>
-          <div class="flex space-x-3">
+          <div class="flex items-center space-x-4">
             <button
               @click="reset"
-              type="button"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+              class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
             >
-              Reset
+              Clear Filters
             </button>
-            <button
-              @click="search"
-              type="button"
-              class="px-4 py-2 text-sm font-medium text-white bg-brand-600 border border-transparent rounded-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
-            >
-              Search
-            </button>
+            <div class="text-sm text-gray-500">
+              Showing {{ payments.data?.length || 0 }} of {{ payments.total || 0 }} payments
+            </div>
           </div>
         </div>
     </div>
@@ -222,10 +217,10 @@
     <!-- Cheque Payments Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold">Cheque Payments</h2>
+        <h2 class="text-lg font-semibold">Payments</h2>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full table-fixed">
+        <table class="w-full table-fixed lg:table-auto xl:table-auto">
           <thead class="bg-gray-50">
             <tr>
               <th class="w-30 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment #</th>
@@ -329,6 +324,9 @@ import Layout from '@/Shared/Layout.vue'
 import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
+import throttle from 'lodash/throttle'
+import pickBy from 'lodash/pickBy'
+import mapValues from 'lodash/mapValues'
 
 export default {
   components: {
@@ -345,7 +343,10 @@ export default {
   props: {
     payments: Object,
     summary: Object,
-    filters: Object,
+    filters: {
+      type: Object,
+      default: () => ({})
+    },
     bankAccounts: Array,
     branches: Array,
     paymentCategories: Array,
@@ -367,25 +368,26 @@ export default {
       selectedPayments: [],
     }
   },
+  watch: {
+    form: {
+      deep: true,
+      handler: throttle(function () {
+        this.$inertia.get('/cheque-payments', pickBy(this.form), {
+          preserveState: true,
+          preserveScroll: true,
+        })
+      }, 300),
+    },
+  },
   methods: {
     search() {
-      this.$inertia.get('/cheque-payments', this.form, {
+      this.$inertia.get('/cheque-payments', pickBy(this.form), {
         preserveState: true,
-        replace: true,
+        preserveScroll: true,
       })
     },
     reset() {
-      this.form = {
-        search: '',
-        payment_category: '',
-        payment_mode: '',
-        bank_account_id: '',
-        branch_id: '',
-        date_from: '',
-        date_to: '',
-        status: '',
-      }
-      this.search()
+      this.form = mapValues(this.form, () => '')
     },
     getStatusBadge(status) {
       const badges = {
@@ -398,6 +400,7 @@ export default {
     },
     getCategoryLabel(category) {
       const labels = {
+        bill: 'Bill',
         vendor_payment: 'Vendor Payment',
         recurring_bill: 'Recurring Bill',
         staff_advance: 'Staff Advance',

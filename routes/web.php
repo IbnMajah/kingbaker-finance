@@ -139,6 +139,9 @@ Route::middleware('auth')->group(function () {
     Route::post('contacts', [ContactsController::class, 'store'])
         ->name('contacts.store');
 
+    Route::get('contacts/{contact}', [ContactsController::class, 'show'])
+        ->name('contacts.show');
+
     Route::get('contacts/{contact}/edit', [ContactsController::class, 'edit'])
         ->name('contacts.edit');
 
@@ -227,6 +230,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('sales', [SalesController::class, 'store'])
         ->name('sales.store');
+
+    Route::get('sales/{sale}', [SalesController::class, 'show'])
+        ->name('sales.show');
 
     Route::get('sales/{sale}/edit', [SalesController::class, 'edit'])
         ->name('sales.edit');
@@ -317,6 +323,13 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('bills/{bill}', [BillController::class, 'destroy'])
         ->name('bills.destroy');
+
+    // Bill Payments
+    Route::put('bill-payments/{billPayment}', [BillPaymentController::class, 'update'])
+        ->name('bill-payments.update');
+
+    Route::delete('bill-payments/{billPayment}', [BillPaymentController::class, 'destroy'])
+        ->name('bill-payments.destroy');
 
     // Invoices
     Route::get('invoices', [InvoiceController::class, 'index'])

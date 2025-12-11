@@ -231,6 +231,20 @@ class BankAccountController extends Controller
             $validated['photo_path'] = $request->file('photo')->store('bank-accounts', 'public');
         }
 
+        // If current_balance is being manually adjusted, we need to adjust opening_balance
+        // to maintain the relationship: current_balance = opening_balance + credits - debits
+        // This ensures that when updateBalance() is called later, it will still result in the manually set balance
+        if (isset($validated['current_balance']) && $validated['current_balance'] != $bankAccount->current_balance) {
+            // Calculate current credits and debits
+            $credits = $bankAccount->transactions()->where('type', 'credit')->sum('amount');
+            $debits = $bankAccount->transactions()->where('type', 'debit')->sum('amount');
+
+            // Calculate what opening_balance should be to achieve the desired current_balance
+            // Formula: current_balance = opening_balance + credits - debits
+            // Therefore: opening_balance = current_balance - credits + debits
+            $validated['opening_balance'] = $validated['current_balance'] - $credits + $debits;
+        }
+
         $bankAccount->update($validated);
 
         return Redirect::route('bank-accounts')->with('success', 'Bank account updated.');

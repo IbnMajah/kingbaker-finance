@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold mb-2">
-        <Link class="text-brand-400 hover:text-brand-600" href="/cheque-payments">Cheque Payments</Link>
+        <Link class="text-brand-400 hover:text-brand-600" href="/cheque-payments">Payments</Link>
         <span class="text-brand-400 font-medium">/</span>
         Create
       </h1>

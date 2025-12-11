@@ -112,23 +112,111 @@ class BillPaymentController extends Controller
     }
 
     /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, BillPayment $billPayment): RedirectResponse
+    {
+        $rules = [
+            'payment_method' => 'required|in:cash,bank_transfer,cheque,mobile_money',
+        ];
+
+        // Bank account is required only if payment method is not cash
+        if ($request->input('payment_method') && $request->input('payment_method') !== 'cash') {
+            $rules['bank_account_id'] = 'required|exists:bank_accounts,id';
+        } else {
+            // If changing to cash, bank_account_id can be null for bill payment
+            // but we'll keep the existing one for the transaction
+            $rules['bank_account_id'] = 'nullable|exists:bank_accounts,id';
+        }
+
+        $validated = $request->validate($rules);
+
+        DB::beginTransaction();
+        try {
+            $oldBankAccountId = $billPayment->bank_account_id;
+            $oldPaymentMethod = $billPayment->payment_method;
+
+            // If changing to cash and no bank account provided, keep the old one for transaction
+            // but set bill payment's bank_account_id to null
+            if ($validated['payment_method'] === 'cash' && !isset($validated['bank_account_id'])) {
+                $validated['bank_account_id'] = null;
+            }
+
+            $billPayment->update($validated);
+
+            // Update the linked transaction if it exists
+            if ($billPayment->transaction_id) {
+                $transaction = $billPayment->transaction;
+                if ($transaction) {
+                    $transactionData = [
+                        'payment_mode' => $validated['payment_method'],
+                    ];
+
+                    // Update bank account based on payment method
+                    if ($validated['payment_method'] !== 'cash' && isset($validated['bank_account_id'])) {
+                        // Non-cash: update to the new bank account
+                        $transactionData['bank_account_id'] = $validated['bank_account_id'];
+                    }
+                    // For cash payments, don't change the transaction's bank_account_id
+                    // (transactions require bank_account_id, so we keep the existing one)
+
+                    $transaction->update($transactionData);
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Redirect::back()->withErrors([
+                'error' => 'An error occurred while updating the payment: ' . $e->getMessage(),
+            ]);
+        }
+
+        return Redirect::back()->with('success', 'Payment updated successfully.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(BillPayment $billPayment): RedirectResponse
     {
+        // Load relationships
+        $billPayment->load(['bill.vendor', 'transaction']);
+        $bill = $billPayment->bill;
+        $transaction = $billPayment->transaction;
         $billId = $billPayment->bill_id;
-        $transactionId = $billPayment->transaction_id;
 
         DB::beginTransaction();
         try {
-            // Delete the bill payment
-            $billPayment->delete();
+            // Create a reverse transaction (credit) to offset the original debit
+            // The original transaction remains untouched - both will show on account sheets
+            if ($transaction && $transaction->bank_account_id) {
+                Transaction::create([
+                    'bank_account_id' => $transaction->bank_account_id,
+                    'transaction_date' => now()->toDateString(),
+                    'type' => 'credit', // Reverse transaction is a credit
+                    'payment_mode' => $transaction->payment_mode,
+                    'reference_number' => 'REV-' . ($transaction->reference_number ?? 'PAY-' . $billPayment->id),
+                    'payee' => $bill->vendor->name ?? 'Vendor',
+                    'amount' => $transaction->amount,
+                    'description' => 'Reversal: Payment for bill #' . ($bill->bill_number ?? $bill->id) . ' - ' . ($bill->description ?? ''),
+                    'category' => 'vendor_payment_reversal',
+                    'created_by' => Auth::id(),
+                ]);
 
-            // Delete the associated transaction
-            $transaction = Transaction::find($transactionId);
-            if ($transaction) {
-                $transaction->delete();
+                // The reverse transaction will automatically update the bank account balance
+                // via the Transaction model's created event
+                // The original transaction remains, so the net effect is:
+                // Original debit - Original debit (still there) + Reverse credit = Net zero
+                // But wait, that's not right. Let me think...
+                // Actually: Original debit is -$100, Reverse credit is +$100
+                // Net: -$100 + $100 = $0 (correct!)
             }
+
+            // Delete the bill payment (this will trigger the model's deleted event)
+            // This will update the bill's amount_paid and status
+            // We do NOT delete the original transaction - it stays for audit trail
+            $billPayment->delete();
 
             DB::commit();
         } catch (\Exception $e) {
@@ -138,6 +226,6 @@ class BillPaymentController extends Controller
             ]);
         }
 
-        return Redirect::route('bills.show', $billId)->with('success', 'Payment deleted successfully.');
+        return Redirect::back()->with('success', 'Payment deleted successfully. A reverse transaction has been created to credit the account.');
     }
 }

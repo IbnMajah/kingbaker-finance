@@ -167,15 +167,29 @@
                 <div class="text-sm text-gray-900">{{ contact.address || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <Link :href="`/contacts/${contact.id}/edit`" class="text-brand-600 hover:text-brand-900 mr-3">
-                  Edit
-                </Link>
-                <button v-if="!contact.deleted_at" @click="destroy(contact.id)" class="text-red-600 hover:text-red-900">
-                  Delete
-                </button>
-                <button v-else @click="restore(contact.id)" class="text-green-600 hover:text-green-900">
-                  Restore
-                </button>
+                <div class="flex items-center justify-end space-x-3">
+                  <Link :href="`/contacts/${contact.id}`" class="text-blue-600 hover:text-blue-900" title="View">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                  </Link>
+                  <Link :href="`/contacts/${contact.id}/edit`" class="text-brand-600 hover:text-brand-900" title="Edit">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+                    </svg>
+                  </Link>
+                  <button v-if="!contact.deleted_at" @click="destroy(contact.id)" class="text-red-600 hover:text-red-900" title="Delete">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 012 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 012 0v3a1 1 0 11-2 0V9z" clip-rule="evenodd"></path>
+                    </svg>
+                  </button>
+                  <button v-else @click="restore(contact.id)" class="text-green-600 hover:text-green-900" title="Restore">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                    </svg>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="contacts.data.length === 0">

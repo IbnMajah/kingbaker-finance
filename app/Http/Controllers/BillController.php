@@ -28,8 +28,14 @@ class BillController extends Controller
             ->with('vendor')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('reference', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                    $query->where('bill_number', 'like', "%{$search}%")
+                        ->orWhere('amount', 'like', "%{$search}%")
+                        ->orWhere('amount_paid', 'like', "%{$search}%")
+                        ->orWhere('bill_type', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereHas('vendor', function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($request->input('status'), function ($query, $status) {
@@ -46,7 +52,7 @@ class BillController extends Controller
         $bills = $query->paginate(100)->withQueryString()
             ->through(fn($bill) => [
                 'id' => $bill->id,
-                'reference' => $bill->reference,
+                'reference' => $bill->bill_number,
                 'description' => $bill->description,
                 'amount' => $bill->amount,
                 'bill_date' => $bill->bill_date,
@@ -183,6 +189,7 @@ class BillController extends Controller
                         'payment_method' => $payment->payment_method,
                         'reference_number' => $payment->reference_number,
                         'notes' => $payment->notes,
+                        'bank_account_id' => $payment->bank_account_id,
                         'bank_account' => $payment->bankAccount ? [
                             'id' => $payment->bankAccount->id,
                             'name' => $payment->bankAccount->name,
@@ -197,7 +204,11 @@ class BillController extends Controller
                     'quantity' => $item->quantity,
                     'total' => $item->total,
                 ])
-            ]
+            ],
+            'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
+                'value' => $a->id,
+                'label' => $a->name
+            ]),
         ]);
     }
 

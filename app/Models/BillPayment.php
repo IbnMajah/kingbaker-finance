@@ -86,20 +86,56 @@ class BillPayment extends Model
             $bill = $payment->bill;
             $bill->amount_paid = $bill->payments()->sum('amount');
 
+            // Check if bank_account_id was changed
+            $bankAccountChanged = $payment->isDirty('bank_account_id');
+            $oldBankAccountId = $bankAccountChanged ? $payment->getOriginal('bank_account_id') : null;
+            $newBankAccountId = $payment->bank_account_id;
+
+            // Check if payment_method was changed
+            $paymentMethodChanged = $payment->isDirty('payment_method');
+
             // Update the linked transaction if it exists
             if ($payment->transaction_id) {
                 $transaction = $payment->transaction;
                 if ($transaction) {
-                    $transaction->update([
+                    $updateData = [
                         'amount' => $payment->amount,
                         'transaction_date' => $payment->payment_date,
                         'reference_number' => $payment->reference_number,
-                    ]);
+                    ];
+
+                    // Update payment_mode if payment_method changed
+                    if ($paymentMethodChanged) {
+                        $updateData['payment_mode'] = $payment->payment_method;
+                    }
+
+                    // Update bank_account_id if it changed
+                    if ($bankAccountChanged) {
+                        $updateData['bank_account_id'] = $payment->bank_account_id;
+                    }
+
+                    $transaction->update($updateData);
                 }
             }
 
-            // Update bank account balance
-            if ($payment->bankAccount) {
+            // Update old bank account balance if account changed
+            if ($bankAccountChanged && $oldBankAccountId) {
+                $oldBankAccount = BankAccount::find($oldBankAccountId);
+                if ($oldBankAccount) {
+                    $oldBankAccount->updateBalance();
+                }
+            }
+
+            // Update new bank account balance
+            // If payment method is cash, the transaction still has the old bank account
+            // so we update that account's balance
+            if ($payment->payment_method === 'cash' && $oldBankAccountId) {
+                $oldBankAccount = BankAccount::find($oldBankAccountId);
+                if ($oldBankAccount) {
+                    $oldBankAccount->updateBalance();
+                }
+            } elseif ($payment->payment_method !== 'cash' && $payment->bankAccount) {
+                // For non-cash payments, update the new bank account
                 $payment->bankAccount->updateBalance();
             }
             $bill->updateStatus();
@@ -109,15 +145,11 @@ class BillPayment extends Model
             $bill = $payment->bill;
             $bill->amount_paid = $bill->payments()->sum('amount');
 
-            // Delete the linked transaction if it exists
-            if ($payment->transaction_id) {
-                $transaction = $payment->transaction;
-                if ($transaction) {
-                    $transaction->delete();
-                }
-            }
+            // Do NOT delete the linked transaction - it should remain for audit trail
+            // A reverse transaction will be created separately to offset it
+            // The original transaction stays visible on account sheets
 
-            // Update bank account balance
+            // Update bank account balance (in case amount_paid changed affected other payments)
             if ($payment->bankAccount) {
                 $payment->bankAccount->updateBalance();
             }

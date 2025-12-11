@@ -21,6 +21,94 @@ use Inertia\Response;
 class ChequePaymentController extends Controller
 {
     /**
+     * Create reverse transactions for a cancelled cheque payment
+     */
+    private function createReverseTransactions(ChequePayment $chequePayment): void
+    {
+        // Find related transactions for this cheque payment
+        // Transactions can be linked via reference_number matching payment_number or reference_number
+        $transactions = Transaction::where('bank_account_id', $chequePayment->bank_account_id)
+            ->where('amount', $chequePayment->amount)
+            ->where(function ($query) use ($chequePayment) {
+                $query->where('reference_number', $chequePayment->payment_number)
+                    ->orWhere('reference_number', $chequePayment->reference_number)
+                    ->orWhere('description', 'like', '%' . $chequePayment->payment_number . '%');
+            })
+            ->where('type', 'debit')
+            ->where('deleted_at', null)
+            ->get();
+
+        // Create reverse transactions for each found transaction
+        foreach ($transactions as $transaction) {
+            // Check if a reverse transaction already exists
+            $existingReverse = Transaction::where('bank_account_id', $transaction->bank_account_id)
+                ->where('amount', $transaction->amount)
+                ->where('type', 'credit')
+                ->where('reference_number', 'like', 'REV-%' . ($transaction->reference_number ?? ''))
+                ->where('description', 'like', '%Reversal: ' . $chequePayment->payment_number . '%')
+                ->where('deleted_at', null)
+                ->first();
+
+            if (!$existingReverse) {
+                Transaction::create([
+                    'bank_account_id' => $transaction->bank_account_id,
+                    'transaction_date' => now()->toDateString(),
+                    'type' => 'credit', // Reverse transaction is a credit
+                    'payment_mode' => $transaction->payment_mode,
+                    'reference_number' => 'REV-' . ($transaction->reference_number ?? $chequePayment->payment_number),
+                    'payee' => $chequePayment->payee,
+                    'amount' => $transaction->amount,
+                    'description' => 'Reversal: ' . $chequePayment->payment_number . ' - ' . $chequePayment->description,
+                    'category' => $chequePayment->payment_category . '_reversal',
+                    'branch_id' => $chequePayment->branch_id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+        }
+
+        // Also check if this is a bill payment and handle BillPayment transactions
+        if ($chequePayment->bill_id) {
+            $billPayment = BillPayment::where('bill_id', $chequePayment->bill_id)
+                ->where('bank_account_id', $chequePayment->bank_account_id)
+                ->where('amount', $chequePayment->amount)
+                ->whereHas('transaction', function ($query) {
+                    $query->where('deleted_at', null);
+                })
+                ->with('transaction')
+                ->first();
+
+            if ($billPayment && $billPayment->transaction) {
+                $transaction = $billPayment->transaction;
+
+                // Check if reverse transaction already exists
+                $existingReverse = Transaction::where('bank_account_id', $transaction->bank_account_id)
+                    ->where('amount', $transaction->amount)
+                    ->where('type', 'credit')
+                    ->where('reference_number', 'like', 'REV-%' . ($transaction->reference_number ?? ''))
+                    ->where('description', 'like', '%Reversal: ' . $chequePayment->payment_number . '%')
+                    ->where('deleted_at', null)
+                    ->first();
+
+                if (!$existingReverse) {
+                    Transaction::create([
+                        'bank_account_id' => $transaction->bank_account_id,
+                        'transaction_date' => now()->toDateString(),
+                        'type' => 'credit',
+                        'payment_mode' => $transaction->payment_mode,
+                        'reference_number' => 'REV-' . ($transaction->reference_number ?? $chequePayment->payment_number),
+                        'payee' => $chequePayment->payee,
+                        'amount' => $transaction->amount,
+                        'description' => 'Reversal: ' . $chequePayment->payment_number . ' - ' . $chequePayment->description,
+                        'category' => 'vendor_payment_reversal',
+                        'branch_id' => $chequePayment->branch_id,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
@@ -32,7 +120,15 @@ class ChequePaymentController extends Controller
                     $query->where('payee', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%")
                         ->orWhere('reference_number', 'like', "%{$search}%")
-                        ->orWhere('cheque_number', 'like', "%{$search}%");
+                        ->orWhere('cheque_number', 'like', "%{$search}%")
+                        ->orWhere('payment_number', 'like', "%{$search}%")
+                        ->orWhere('amount', 'like', "%{$search}%")
+                        ->orWhereHas('vendor', function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('bankAccount', function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($request->input('payment_category'), function ($query, $category) {
@@ -402,9 +498,34 @@ class ChequePaymentController extends Controller
         // Remove receipt_image from validated data since it's not a database column
         unset($validated['receipt_image']);
 
-        $chequePayment->update($validated);
+        // Check if status is being changed to cancelled
+        $oldStatus = $chequePayment->status;
+        $newStatus = $validated['status'] ?? $chequePayment->status;
+        $isBeingCancelled = ($oldStatus !== 'cancelled' && $newStatus === 'cancelled');
 
-        return Redirect::route('cheque-payments')->with('success', 'Payment updated successfully.');
+        DB::beginTransaction();
+        try {
+            // If being cancelled, create reverse transactions BEFORE updating
+            // Use the current payment state to find related transactions
+            if ($isBeingCancelled) {
+                $this->createReverseTransactions($chequePayment);
+            }
+
+            $chequePayment->update($validated);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Redirect::back()->withErrors([
+                'error' => 'An error occurred while updating the payment: ' . $e->getMessage(),
+            ]);
+        }
+
+        $message = $isBeingCancelled
+            ? 'Payment updated and cancelled successfully. Reverse transactions have been created to credit the account(s).'
+            : 'Payment updated successfully.';
+
+        return Redirect::route('cheque-payments')->with('success', $message);
     }
 
     /**
@@ -416,14 +537,28 @@ class ChequePaymentController extends Controller
             return Redirect::back()->with('error', 'Cannot delete a cleared payment.');
         }
 
-        // Delete associated image if exists
-        if ($chequePayment->receipt_image_path) {
-            Storage::disk('public')->delete($chequePayment->receipt_image_path);
+        DB::beginTransaction();
+        try {
+            // Create reverse transactions if there are any related transactions
+            // This must be done BEFORE deleting the payment
+            $this->createReverseTransactions($chequePayment);
+
+            // Delete associated image if exists
+            if ($chequePayment->receipt_image_path) {
+                Storage::disk('public')->delete($chequePayment->receipt_image_path);
+            }
+
+            $chequePayment->delete();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Redirect::back()->withErrors([
+                'error' => 'An error occurred while deleting the payment: ' . $e->getMessage(),
+            ]);
         }
 
-        $chequePayment->delete();
-
-        return Redirect::route('cheque-payments')->with('success', 'Payment deleted successfully.');
+        return Redirect::route('cheque-payments')->with('success', 'Payment deleted successfully. Reverse transactions have been created to credit the account(s).');
     }
 
     /**
@@ -455,8 +590,21 @@ class ChequePaymentController extends Controller
             return Redirect::back()->with('error', 'Cannot cancel a cleared payment.');
         }
 
-        $chequePayment->update(['status' => 'cancelled']);
+        DB::beginTransaction();
+        try {
+            // Create reverse transactions if there are any related transactions
+            $this->createReverseTransactions($chequePayment);
 
-        return Redirect::back()->with('success', 'Payment cancelled successfully.');
+            $chequePayment->update(['status' => 'cancelled']);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Redirect::back()->withErrors([
+                'error' => 'An error occurred while cancelling the payment: ' . $e->getMessage(),
+            ]);
+        }
+
+        return Redirect::back()->with('success', 'Payment cancelled successfully. Reverse transactions have been created to credit the account(s).');
     }
 }

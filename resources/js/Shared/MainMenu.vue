@@ -122,7 +122,7 @@
             <svg class="mr-2 w-4 h-4" :class="isUrl('cheque-payments') ? 'fill-white' : 'fill-brand-400 group-hover:fill-white'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
               <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
             </svg>
-            <div :class="isUrl('cheque-payments') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Cheque Payments</div>
+            <div :class="isUrl('cheque-payments') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Payments</div>
           </Link>
         </div>
       </div>
