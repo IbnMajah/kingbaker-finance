@@ -69,19 +69,25 @@ class ContactsController extends Controller
     public function show(Contact $contact): Response
     {
         // Find invoices for this customer by matching name, email, or phone
-        $invoices = Invoice::where(function ($query) use ($contact) {
-            $query->where('customer_name', $contact->name)
-                ->orWhere(function ($q) use ($contact) {
+        $invoices = Invoice::where('customer_name', $contact->name);
+
+        // Only add email/phone conditions if at least one exists
+        if ($contact->email || $contact->phone) {
+            $invoices->where(function ($query) use ($contact) {
+                if ($contact->email) {
+                    $query->where('customer_email', $contact->email);
+                }
+                if ($contact->phone) {
                     if ($contact->email) {
-                        $q->where('customer_email', $contact->email);
+                        $query->orWhere('customer_phone', $contact->phone);
+                    } else {
+                        $query->where('customer_phone', $contact->phone);
                     }
-                })
-                ->orWhere(function ($q) use ($contact) {
-                    if ($contact->phone) {
-                        $q->where('customer_phone', $contact->phone);
-                    }
-                });
-        })
+                }
+            });
+        }
+
+        $invoices = $invoices
             ->with(['bankAccount', 'branch', 'items', 'payments'])
             ->orderBy('invoice_date', 'desc')
             ->get();

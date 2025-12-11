@@ -184,7 +184,8 @@ class SalesController extends Controller
         $creditItems = $validated['credit_items'] ?? [];
         unset($validated['credit_items']);
 
-        DB::transaction(function () use ($validated, $totalAmount, $creditItems) {
+        $controller = $this;
+        DB::transaction(function () use ($validated, $totalAmount, $creditItems, $controller) {
             // Create the sale
             $sale = Sale::create([
                 ...$validated,
@@ -233,7 +234,7 @@ class SalesController extends Controller
 
                 if ($customerTotal > 0) {
                     // Generate unique invoice number (within transaction)
-                    $invoiceNumber = $this->generateUniqueInvoiceNumberInTransaction();
+                    $invoiceNumber = $controller->generateUniqueInvoiceNumberInTransaction();
 
                     // Create invoice
                     $invoice = Invoice::create([
@@ -250,7 +251,7 @@ class SalesController extends Controller
                         'status' => 'draft',
                         'invoice_type' => 'credit_customer',
                         'description' => 'Credit sale from sales transaction',
-                        'bank_account_id' => $this->getDefaultBankAccountId(),
+                        'bank_account_id' => $controller->getDefaultBankAccountId(),
                         'branch_id' => $validated['branch_id'],
                         'created_by' => Auth::id(),
                     ]);
@@ -542,6 +543,9 @@ class SalesController extends Controller
     private function getDefaultBankAccountId(): int
     {
         $bankAccount = BankAccount::where('active', true)->first();
-        return $bankAccount ? $bankAccount->id : 1; // Fallback to 1 if no active account
+        if (!$bankAccount) {
+            throw new \RuntimeException('No active bank account available for invoice creation');
+        }
+        return $bankAccount->id;
     }
 }

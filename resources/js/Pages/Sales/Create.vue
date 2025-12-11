@@ -591,8 +591,7 @@ export default {
       }
     },
     updateTotalAmount() {
-      // Force reactivity update
-      this.$forceUpdate()
+      // No-op: totalAmount is computed and will auto-update
     },
     addCreditItem() {
       this.form.credit_items.push({

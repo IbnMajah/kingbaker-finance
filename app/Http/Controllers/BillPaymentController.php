@@ -204,13 +204,7 @@ class BillPaymentController extends Controller
                     'created_by' => Auth::id(),
                 ]);
 
-                // The reverse transaction will automatically update the bank account balance
-                // via the Transaction model's created event
-                // The original transaction remains, so the net effect is:
-                // Original debit - Original debit (still there) + Reverse credit = Net zero
-                // But wait, that's not right. Let me think...
-                // Actually: Original debit is -$100, Reverse credit is +$100
-                // Net: -$100 + $100 = $0 (correct!)
+                // Reverse transaction credits the account to offset the original debit
             }
 
             // Delete the bill payment (this will trigger the model's deleted event)

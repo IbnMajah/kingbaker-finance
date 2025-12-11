@@ -44,9 +44,8 @@ class ChequePaymentController extends Controller
             $existingReverse = Transaction::where('bank_account_id', $transaction->bank_account_id)
                 ->where('amount', $transaction->amount)
                 ->where('type', 'credit')
-                ->where('reference_number', 'like', 'REV-%' . ($transaction->reference_number ?? ''))
-                ->where('description', 'like', '%Reversal: ' . $chequePayment->payment_number . '%')
-                ->where('deleted_at', null)
+                ->where('reference_number', 'REV-' . ($transaction->reference_number ?? $chequePayment->payment_number))
+                ->whereNull('deleted_at')
                 ->first();
 
             if (!$existingReverse) {
