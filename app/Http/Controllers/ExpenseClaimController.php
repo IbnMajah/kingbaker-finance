@@ -134,10 +134,6 @@ class ExpenseClaimController extends Controller
                 ? Branch::select('id as value', 'name as label')->get()
                 : Branch::where('id', $user->branch_id)->select('id as value', 'name as label')->get()
             ),
-            'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
-                'value' => $a->id,
-                'label' => $a->name
-            ]),
             'referenceId' => 'EXP-' . strtoupper(Str::random(7)),
         ]);
     }
@@ -153,7 +149,6 @@ class ExpenseClaimController extends Controller
             'title' => 'required|string|max:255',
             'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
             'branch_id' => 'nullable|exists:branches,id',
-            'bank_account_id' => 'required|exists:bank_accounts,id',
             'payee' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
@@ -181,7 +176,6 @@ class ExpenseClaimController extends Controller
                     'status' => 'draft',
                     'expense_type' => $validated['expense_type'],
                     'branch_id' => $validated['branch_id'],
-                    'bank_account_id' => $validated['bank_account_id'],
                     'payee' => $validated['payee'],
                     'notes' => $validated['notes'],
                     'total' => $total,
@@ -199,7 +193,6 @@ class ExpenseClaimController extends Controller
                     'status' => 'draft',
                     'expense_type' => $validated['expense_type'],
                     'branch_id' => $validated['branch_id'],
-                    'bank_account_id' => $validated['bank_account_id'],
                     'payee' => $validated['payee'],
                     'notes' => $validated['notes'],
                     'total' => $total,
@@ -244,7 +237,6 @@ class ExpenseClaimController extends Controller
             'title' => 'required|string|max:255',
             'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
             'branch_id' => 'nullable|exists:branches,id',
-            'bank_account_id' => 'required|exists:bank_accounts,id',
             'payee' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
@@ -267,10 +259,9 @@ class ExpenseClaimController extends Controller
                 'reference_id' => $validated['reference_id'],
                 'claim_date' => $validated['claim_date'],
                 'title' => $validated['title'],
-                'status' => 'active',
+                'status' => 'submitted', // Changed to submitted for approval workflow
                 'expense_type' => $validated['expense_type'],
                 'branch_id' => $validated['branch_id'],
-                'bank_account_id' => $validated['bank_account_id'],
                 'payee' => $validated['payee'],
                 'notes' => $validated['notes'],
                 'total' => $total,
@@ -317,7 +308,17 @@ class ExpenseClaimController extends Controller
             abort(403, 'You can only view expense claims from your branch.');
         }
 
-        $expenseClaim->load(['user', 'transaction', 'transaction.bankAccount', 'items', 'branch', 'bankAccount']);
+        $expenseClaim->load(['user', 'items', 'branch', 'bankAccount', 'payment', 'payment.transaction', 'payment.transaction.bankAccount', 'payment.creator']);
+
+        // Check if user can approve (admin or finance_manager)
+        $user = Auth::user();
+        $canApprove = ($user->role === 'admin' || $user->owner || $user->hasRoleName('finance_manager'));
+
+        // Load approved_by user if exists
+        $approvedBy = null;
+        if ($expenseClaim->approved_by) {
+            $approvedBy = User::find($expenseClaim->approved_by);
+        }
 
         return Inertia::render('ExpenseClaims/Show', [
             'expenseClaim' => [
@@ -341,14 +342,36 @@ class ExpenseClaimController extends Controller
                     'first_name' => $expenseClaim->user->first_name,
                     'last_name' => $expenseClaim->user->last_name,
                 ] : null,
-
-                'transaction' => $expenseClaim->transaction ? [
-                    'id' => $expenseClaim->transaction->id,
-                    'reference_number' => $expenseClaim->transaction->reference_number,
-                    'amount' => $expenseClaim->transaction->amount,
-                    'bank_account' => $expenseClaim->transaction->bankAccount ? [
-                        'id' => $expenseClaim->transaction->bankAccount->id,
-                        'name' => $expenseClaim->transaction->bankAccount->name,
+                'approved_by' => $approvedBy ? [
+                    'id' => $approvedBy->id,
+                    'first_name' => $approvedBy->first_name,
+                    'last_name' => $approvedBy->last_name,
+                ] : null,
+                'payment' => $expenseClaim->payment ? [
+                    'id' => $expenseClaim->payment->id,
+                    'amount' => $expenseClaim->payment->amount,
+                    'payment_date' => $expenseClaim->payment->payment_date,
+                    'payment_method' => $expenseClaim->payment->payment_method,
+                    'reference_number' => $expenseClaim->payment->reference_number,
+                    'notes' => $expenseClaim->payment->notes,
+                    'created_by' => $expenseClaim->payment->creator ? [
+                        'id' => $expenseClaim->payment->creator->id,
+                        'first_name' => $expenseClaim->payment->creator->first_name,
+                        'last_name' => $expenseClaim->payment->creator->last_name,
+                    ] : null,
+                    'transaction' => $expenseClaim->payment->transaction ? [
+                        'id' => $expenseClaim->payment->transaction->id,
+                        'reference_number' => $expenseClaim->payment->transaction->reference_number,
+                        'amount' => $expenseClaim->payment->transaction->amount,
+                        'transaction_date' => $expenseClaim->payment->transaction->transaction_date,
+                        'bank_account' => $expenseClaim->payment->transaction->bankAccount ? [
+                            'id' => $expenseClaim->payment->transaction->bankAccount->id,
+                            'name' => $expenseClaim->payment->transaction->bankAccount->name,
+                        ] : null,
+                    ] : null,
+                    'bank_account' => $expenseClaim->payment->bankAccount ? [
+                        'id' => $expenseClaim->payment->bankAccount->id,
+                        'name' => $expenseClaim->payment->bankAccount->name,
                     ] : null,
                 ] : null,
                 'bank_account' => $expenseClaim->bankAccount ? [
@@ -366,6 +389,8 @@ class ExpenseClaimController extends Controller
                 ]),
                 'updated_at' => $expenseClaim->updated_at,
                 'notes' => $expenseClaim->notes,
+                'can_edit' => !$expenseClaim->payment, // Cannot edit if payment exists
+                'can_approve' => $canApprove,
             ],
         ]);
     }
@@ -382,9 +407,15 @@ class ExpenseClaimController extends Controller
             abort(403, 'You can only edit expense claims from your branch.');
         }
 
-        if ($expenseClaim->status !== 'active' && $expenseClaim->status !== 'draft') {
+        // Prevent editing if payment exists
+        if ($expenseClaim->payment) {
             return Redirect::route('expense-claims.show', $expenseClaim->id)
-                ->with('error', 'Only active or draft expense claims can be edited.');
+                ->with('error', 'Expense claim cannot be edited once a payment has been created.');
+        }
+
+        if ($expenseClaim->status !== 'submitted' && $expenseClaim->status !== 'draft') {
+            return Redirect::route('expense-claims.show', $expenseClaim->id)
+                ->with('error', 'Only draft or submitted expense claims can be edited.');
         }
 
         $expenseClaim->load(['user', 'items', 'branch']);
@@ -421,10 +452,6 @@ class ExpenseClaimController extends Controller
                 'value' => $branch->id,
                 'label' => $branch->name,
             ]),
-            'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($account) => [
-                'value' => $account->id,
-                'label' => $account->name,
-            ]),
         ]);
     }
 
@@ -440,8 +467,13 @@ class ExpenseClaimController extends Controller
             abort(403, 'You can only update expense claims from your branch.');
         }
 
-        if ($expenseClaim->status !== 'active' && $expenseClaim->status !== 'draft') {
-            return Redirect::back()->with('error', 'Only active or draft expense claims can be updated.');
+        // Prevent editing if payment exists
+        if ($expenseClaim->payment) {
+            return Redirect::back()->with('error', 'Expense claim cannot be edited once a payment has been created.');
+        }
+
+        if ($expenseClaim->status !== 'submitted' && $expenseClaim->status !== 'draft') {
+            return Redirect::back()->with('error', 'Only draft or submitted expense claims can be updated.');
         }
 
         $validated = $request->validate([
@@ -450,7 +482,6 @@ class ExpenseClaimController extends Controller
             'payee' => 'required|string|max:255',
             'expense_type' => 'required|string|in:petty_cash,cash_on_hand,other',
             'branch_id' => 'nullable|exists:branches,id',
-            'bank_account_id' => 'required|exists:bank_accounts,id',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string|max:255',
@@ -470,7 +501,6 @@ class ExpenseClaimController extends Controller
                 'payee' => $validated['payee'],
                 'expense_type' => $validated['expense_type'],
                 'branch_id' => $validated['branch_id'],
-                'bank_account_id' => $validated['bank_account_id'],
                 'notes' => $validated['notes'],
             ]);
 
@@ -529,8 +559,12 @@ class ExpenseClaimController extends Controller
             abort(403, 'You can only delete expense claims from your branch.');
         }
 
-        if ($expenseClaim->status !== 'active' && $expenseClaim->status !== 'cancelled') {
-            return Redirect::back()->with('error', 'Only active or cancelled expense claims can be deleted.');
+        if ($expenseClaim->payment) {
+            return Redirect::back()->with('error', 'Expense claim cannot be deleted once a payment has been created.');
+        }
+
+        if ($expenseClaim->status === 'paid') {
+            return Redirect::back()->with('error', 'Paid expense claims cannot be deleted.');
         }
 
         // Delete receipt images from items if they exist
@@ -548,5 +582,54 @@ class ExpenseClaimController extends Controller
         $expenseClaim->delete();
 
         return Redirect::route('expense-claims')->with('success', 'Expense claim deleted successfully.');
+    }
+
+    /**
+     * Approve an expense claim
+     */
+    public function approve(ExpenseClaim $expenseClaim): RedirectResponse
+    {
+        $user = Auth::user();
+
+        // Check if user can approve (admin or finance_manager)
+        if (!($user->role === 'admin' || $user->owner || $user->hasRoleName('finance_manager'))) {
+            abort(403, 'You do not have permission to approve expense claims.');
+        }
+
+        if ($expenseClaim->status !== 'submitted') {
+            return Redirect::back()->with('error', 'Only submitted expense claims can be approved.');
+        }
+
+        $expenseClaim->update([
+            'status' => 'approved',
+            'approved_by' => $user->id,
+        ]);
+
+        return Redirect::back()->with('success', 'Expense claim approved successfully.');
+    }
+
+    /**
+     * Reject an expense claim
+     */
+    public function reject(Request $request, ExpenseClaim $expenseClaim): RedirectResponse
+    {
+        $user = Auth::user();
+
+        // Check if user can approve (admin or finance_manager)
+        if (!($user->role === 'admin' || $user->owner || $user->hasRoleName('finance_manager'))) {
+            abort(403, 'You do not have permission to reject expense claims.');
+        }
+
+        if ($expenseClaim->status !== 'submitted') {
+            return Redirect::back()->with('error', 'Only submitted expense claims can be rejected.');
+        }
+
+        $expenseClaim->update([
+            'status' => 'rejected',
+            'approved_by' => $user->id,
+            'notes' => ($expenseClaim->notes ?? '') . "\n\nRejection reason: " . ($request->input('rejection_reason') ?? 'No reason provided'),
+        ]);
+
+        return Redirect::back()->with('success', 'Expense claim rejected successfully.');
     }
 }

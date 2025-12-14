@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ExpenseClaim extends Model
@@ -26,6 +27,7 @@ class ExpenseClaim extends Model
         'transaction_id',
         'branch_id',
         'bank_account_id',
+        'approved_by',
     ];
 
     protected $casts = [
@@ -60,6 +62,16 @@ class ExpenseClaim extends Model
         return $this->hasMany(ExpenseItem::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(ExpenseClaimPayment::class);
+    }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(ExpenseClaimPayment::class)->latestOfMany();
+    }
+
     public function updateTotalAmount(): void
     {
         $this->total = $this->items->sum(function ($item) {
@@ -73,62 +85,7 @@ class ExpenseClaim extends Model
      */
     protected static function booted()
     {
-        // Create transaction when expense claim is created
-        static::created(function ($expenseClaim) {
-            if ($expenseClaim->bankAccount && $expenseClaim->status === 'active') {
-                $expenseClaim->bankAccount->transactions()->create([
-                    'transaction_date' => $expenseClaim->claim_date,
-                    'type' => 'debit',
-                    'payment_mode' => $expenseClaim->mapExpenseTypeToPaymentMode($expenseClaim->expense_type),
-                    'reference_number' => $expenseClaim->reference_id,
-                    'payee' => $expenseClaim->payee,
-                    'amount' => $expenseClaim->total,
-                    'description' => "Expense Claim: {$expenseClaim->title}",
-                    'branch_id' => $expenseClaim->branch_id,
-                    'category' => 'expense_claim',
-                    'created_by' => $expenseClaim->user_id,
-                    'is_reconciled' => false,
-                ]);
-            }
-        });
-
-        // Update transaction when expense claim is updated
-        static::updated(function ($expenseClaim) {
-            if ($expenseClaim->bankAccount) {
-                DB::transaction(function () use ($expenseClaim) {
-                    $transaction = $expenseClaim->bankAccount->transactions()
-                        ->where('category', 'expense_claim')
-                        ->where('reference_number', $expenseClaim->reference_id)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($transaction) {
-                        $transaction->update([
-                            'transaction_date' => $expenseClaim->claim_date,
-                            'payment_mode'     => $expenseClaim->mapExpenseTypeToPaymentMode($expenseClaim->expense_type),
-                            'payee'            => $expenseClaim->payee,
-                            'amount'           => $expenseClaim->total,
-                            'description'      => "Expense Claim: {$expenseClaim->title}",
-                            'branch_id'        => $expenseClaim->branch_id,
-                        ]);
-                    }
-                });
-            }
-        });
-
-        // Delete transaction when expense claim is deleted
-        static::deleted(function ($expenseClaim) {
-            if ($expenseClaim->bankAccount) {
-                $transaction = $expenseClaim->bankAccount->transactions()
-                    ->where('category', 'expense_claim')
-                    ->where('reference_number', $expenseClaim->reference_id)
-                    ->first();
-
-                if ($transaction) {
-                    $transaction->delete();
-                }
-            }
-        });
+        // No longer create transactions automatically - transactions are created when payment is made
     }
 
     /**

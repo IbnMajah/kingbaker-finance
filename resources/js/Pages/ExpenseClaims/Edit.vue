@@ -92,23 +92,6 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account *</label>
-              <select
-                v-model="form.bank_account_id"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.bank_account_id ? 'border-red-500' : ''"
-                required
-              >
-                <option value="">Select Bank Account</option>
-                <option v-for="account in bankAccounts" :key="account.value" :value="account.value">
-                  {{ account.label }}
-                </option>
-              </select>
-              <div v-if="form.errors.bank_account_id" class="mt-1 text-sm text-red-600">{{ form.errors.bank_account_id }}</div>
-              <p class="mt-1 text-sm text-gray-500">Select the bank account to debit for this expense</p>
-            </div>
-
-            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Payee *</label>
               <input
                 v-model="form.payee"
@@ -465,10 +448,6 @@ export default {
       type: Array,
       required: true,
     },
-    bankAccounts: {
-      type: Array,
-      required: true,
-    },
   },
   remember: 'form',
   data() {
@@ -480,7 +459,6 @@ export default {
         payee: this.expenseClaim.payee,
         expense_type: this.expenseClaim.expense_type,
         branch_id: this.expenseClaim.branch_id,
-        bank_account_id: this.expenseClaim.bank_account_id,
         notes: this.expenseClaim.notes,
         items: (this.expenseClaim.items || []).map(item => ({
           id: item.id,
@@ -583,7 +561,6 @@ export default {
           formData.append('payee', this.form.payee || 'Draft Payee');
           formData.append('expense_type', this.form.expense_type || 'other');
           formData.append('branch_id', this.form.branch_id || '');
-          formData.append('bank_account_id', this.form.bank_account_id || '');
           formData.append('notes', this.form.notes || '');
 
           // Add valid items data
@@ -625,7 +602,7 @@ export default {
     },
     shouldAutoSave() {
       // Don't auto-save if basic required fields are missing
-      if (!this.form.claim_date || !this.form.bank_account_id) {
+      if (!this.form.claim_date) {
         return false;
       }
 

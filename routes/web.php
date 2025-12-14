@@ -408,6 +408,28 @@ Route::middleware('auth')->group(function () {
     Route::delete('expense-claims/{expenseClaim}', [ExpenseClaimController::class, 'destroy'])
         ->name('expense-claims.destroy');
 
+    Route::post('expense-claims/{expenseClaim}/approve', [ExpenseClaimController::class, 'approve'])
+        ->name('expense-claims.approve');
+
+    Route::post('expense-claims/{expenseClaim}/reject', [ExpenseClaimController::class, 'reject'])
+        ->name('expense-claims.reject');
+
+    // Expense Claim Payments
+    Route::get('expense-claim-payments/create', [App\Http\Controllers\ExpenseClaimPaymentController::class, 'create'])
+        ->name('expense-claim-payments.create');
+
+    Route::post('expense-claim-payments', [App\Http\Controllers\ExpenseClaimPaymentController::class, 'store'])
+        ->name('expense-claim-payments.store');
+
+    Route::get('expense-claim-payments/{expenseClaimPayment}/edit', [App\Http\Controllers\ExpenseClaimPaymentController::class, 'edit'])
+        ->name('expense-claim-payments.edit');
+
+    Route::put('expense-claim-payments/{expenseClaimPayment}', [App\Http\Controllers\ExpenseClaimPaymentController::class, 'update'])
+        ->name('expense-claim-payments.update');
+
+    Route::delete('expense-claim-payments/{expenseClaimPayment}', [App\Http\Controllers\ExpenseClaimPaymentController::class, 'destroy'])
+        ->name('expense-claim-payments.destroy');
+
 
 
 

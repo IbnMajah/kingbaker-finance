@@ -109,11 +109,65 @@
           <div class="text-sm font-medium text-gray-500">Created By</div>
           <div class="text-gray-900">{{ expenseClaim.creator ? `${expenseClaim.creator.first_name} ${expenseClaim.creator.last_name}` : 'Unknown' }}</div>
         </div>
-        <div v-if="expenseClaim.approver">
+        <div v-if="expenseClaim.approved_by">
           <div class="text-sm font-medium text-gray-500">Approved By</div>
-          <div class="text-gray-900">{{ expenseClaim.approver.name }}</div>
+          <div class="text-gray-900">{{ expenseClaim.approved_by.first_name }} {{ expenseClaim.approved_by.last_name }}</div>
         </div>
+      </div>
+    </div>
 
+    <!-- Payment Details -->
+    <div v-if="expenseClaim.payment" class="bg-white rounded-lg shadow p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Payment Details</h2>
+        <Link
+          v-if="expenseClaim.can_approve"
+          :href="'/expense-claim-payments/' + expenseClaim.payment.id + '/edit'"
+          class="btn-kingbaker flex items-center text-sm"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Edit Payment
+        </Link>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <div class="text-sm font-medium text-gray-500">Payment Amount</div>
+          <div class="text-gray-900 font-semibold">{{ $formatAmount(expenseClaim.payment.amount) }}</div>
+        </div>
+        <div>
+          <div class="text-sm font-medium text-gray-500">Payment Date</div>
+          <div class="text-gray-900">{{ $formatDate(expenseClaim.payment.payment_date) }}</div>
+        </div>
+        <div>
+          <div class="text-sm font-medium text-gray-500">Payment Method</div>
+          <div class="text-gray-900">{{ expenseClaim.payment.payment_method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}</div>
+        </div>
+        <div v-if="expenseClaim.payment.reference_number">
+          <div class="text-sm font-medium text-gray-500">Reference Number</div>
+          <div class="text-gray-900 font-mono">{{ expenseClaim.payment.reference_number }}</div>
+        </div>
+        <div v-if="expenseClaim.payment.bank_account">
+          <div class="text-sm font-medium text-gray-500">Bank Account</div>
+          <div class="text-gray-900">{{ expenseClaim.payment.bank_account.name }}</div>
+        </div>
+        <div v-if="expenseClaim.payment.created_by">
+          <div class="text-sm font-medium text-gray-500">Created By</div>
+          <div class="text-gray-900">{{ expenseClaim.payment.created_by.first_name }} {{ expenseClaim.payment.created_by.last_name }}</div>
+        </div>
+        <div v-if="expenseClaim.payment.transaction">
+          <div class="text-sm font-medium text-gray-500">Transaction</div>
+          <div class="text-gray-900">
+            <Link :href="'/transactions/' + expenseClaim.payment.transaction.id" class="text-brand-600 hover:text-brand-800">
+              {{ expenseClaim.payment.transaction.reference_number || 'View Transaction' }}
+            </Link>
+          </div>
+        </div>
+        <div v-if="expenseClaim.payment.notes" class="md:col-span-3">
+          <div class="text-sm font-medium text-gray-500">Payment Notes</div>
+          <div class="text-gray-900 bg-gray-50 p-3 rounded-md mt-1">{{ expenseClaim.payment.notes }}</div>
+        </div>
       </div>
     </div>
 
@@ -206,7 +260,7 @@
       <h2 class="text-lg font-semibold mb-4">Actions</h2>
       <div class="flex flex-wrap gap-3">
         <Link
-          v-if="expenseClaim.status === 'active' || expenseClaim.status === 'draft'"
+          v-if="expenseClaim.can_edit && (expenseClaim.status === 'submitted' || expenseClaim.status === 'draft')"
           :href="'/expense-claims/' + expenseClaim.id + '/edit'"
           class="btn-kingbaker flex items-center"
         >
@@ -216,10 +270,8 @@
           Edit Claim
         </Link>
 
-
-
         <button
-          v-if="expenseClaim.status === 'submitted' && canApprove"
+          v-if="expenseClaim.status === 'submitted' && expenseClaim.can_approve"
           @click="approveClaim"
           :disabled="processing"
           class="btn-kingbaker flex items-center bg-green-600 hover:bg-green-700"
@@ -235,7 +287,7 @@
         </button>
 
         <button
-          v-if="expenseClaim.status === 'submitted' && canApprove"
+          v-if="expenseClaim.status === 'submitted' && expenseClaim.can_approve"
           @click="rejectClaim"
           :disabled="processing"
           class="btn-kingbaker flex items-center bg-red-600 hover:bg-red-700"
@@ -250,7 +302,16 @@
           {{ processing ? 'Rejecting...' : 'Reject' }}
         </button>
 
-
+        <Link
+          v-if="expenseClaim.status === 'approved' && !expenseClaim.payment && expenseClaim.can_approve"
+          :href="'/expense-claim-payments/create?expense_claim_id=' + expenseClaim.id"
+          class="btn-kingbaker flex items-center bg-blue-600 hover:bg-blue-700"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create Payment
+        </Link>
       </div>
     </div>
 
@@ -302,16 +363,16 @@ export default {
   },
   computed: {
     canApprove() {
-      return this.expenseClaim.status === 'submitted' && this.expenseClaim.approver_id === this.$page.props.user.id;
+      return this.expenseClaim.can_approve;
     },
   },
   methods: {
     getStatusTextClass(status) {
       const classes = {
-        'active': 'text-gray-600',
+        'draft': 'text-gray-500',
         'submitted': 'text-yellow-600',
         'approved': 'text-green-600',
-          'rejected': 'text-red-600',
+        'rejected': 'text-red-600',
         'paid': 'text-blue-600',
       };
       return classes[status] || 'text-gray-600';
