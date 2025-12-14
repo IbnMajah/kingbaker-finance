@@ -320,6 +320,12 @@ class ExpenseClaimController extends Controller
             $approvedBy = User::find($expenseClaim->approved_by);
         }
 
+        // Load rejected_by user if exists
+        $rejectedBy = null;
+        if ($expenseClaim->rejected_by) {
+            $rejectedBy = User::find($expenseClaim->rejected_by);
+        }
+
         return Inertia::render('ExpenseClaims/Show', [
             'expenseClaim' => [
                 'id' => $expenseClaim->id,
@@ -346,6 +352,11 @@ class ExpenseClaimController extends Controller
                     'id' => $approvedBy->id,
                     'first_name' => $approvedBy->first_name,
                     'last_name' => $approvedBy->last_name,
+                ] : null,
+                'rejected_by' => $rejectedBy ? [
+                    'id' => $rejectedBy->id,
+                    'first_name' => $rejectedBy->first_name,
+                    'last_name' => $rejectedBy->last_name,
                 ] : null,
                 'payment' => $expenseClaim->payment ? [
                     'id' => $expenseClaim->payment->id,
@@ -626,7 +637,7 @@ class ExpenseClaimController extends Controller
 
         $expenseClaim->update([
             'status' => 'rejected',
-            'approved_by' => $user->id,
+            'rejected_by' => $user->id,
             'notes' => ($expenseClaim->notes ?? '') . "\n\nRejection reason: " . ($request->input('rejection_reason') ?? 'No reason provided'),
         ]);
 

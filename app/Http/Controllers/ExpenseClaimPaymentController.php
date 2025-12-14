@@ -213,6 +213,7 @@ class ExpenseClaimPaymentController extends Controller
         $expenseClaim = $expenseClaimPayment->expenseClaim;
         $expenseClaimId = $expenseClaim->id;
 
+        $reversalCreated = false;
         DB::beginTransaction();
         try {
             // Create a reverse transaction (credit) to offset the original debit
@@ -229,6 +230,7 @@ class ExpenseClaimPaymentController extends Controller
                     'category' => 'expense_claim_reversal',
                     'created_by' => Auth::id(),
                 ]);
+                $reversalCreated = true;
             }
 
             // Delete the payment (this will trigger model events to update expense claim status)
@@ -241,8 +243,10 @@ class ExpenseClaimPaymentController extends Controller
                 'error' => 'An error occurred while deleting the payment: ' . $e->getMessage(),
             ]);
         }
-
+        $message = $reversalCreated
+            ? 'Payment deleted successfully. A reverse transaction has been created to credit the account.'
+            : 'Payment deleted successfully.';
         return Redirect::route('expense-claims.show', $expenseClaimId)
-            ->with('success', 'Payment deleted successfully. A reverse transaction has been created to credit the account.');
+            ->with('success', $message);
     }
 }

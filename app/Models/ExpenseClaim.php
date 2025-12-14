@@ -28,6 +28,7 @@ class ExpenseClaim extends Model
         'branch_id',
         'bank_account_id',
         'approved_by',
+        'rejected_by',
     ];
 
     protected $casts = [

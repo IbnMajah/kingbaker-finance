@@ -113,6 +113,10 @@
           <div class="text-sm font-medium text-gray-500">Approved By</div>
           <div class="text-gray-900">{{ expenseClaim.approved_by.first_name }} {{ expenseClaim.approved_by.last_name }}</div>
         </div>
+        <div v-if="expenseClaim.rejected_by">
+          <div class="text-sm font-medium text-gray-500">Rejected By</div>
+          <div class="text-gray-900">{{ expenseClaim.rejected_by.first_name }} {{ expenseClaim.rejected_by.last_name }}</div>
+        </div>
       </div>
     </div>
 

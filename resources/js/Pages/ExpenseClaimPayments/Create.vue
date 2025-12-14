@@ -66,7 +66,6 @@
                 :max="expenseClaim.total"
                 class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 :class="form.errors.amount ? 'border-red-300' : 'border-gray-300'"
-                :value="expenseClaim.total"
                 required
                 readonly
               />

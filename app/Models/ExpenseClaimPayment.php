@@ -71,7 +71,9 @@ class ExpenseClaimPayment extends Model
                 ]);
 
                 // Link the transaction to the payment
-                $payment->update(['transaction_id' => $transaction->id]);
+                DB::table('expense_claim_payments')
+                    ->where('id', $payment->id)
+                    ->update(['transaction_id' => $transaction->id]);
             }
 
             // Update expense claim status to paid

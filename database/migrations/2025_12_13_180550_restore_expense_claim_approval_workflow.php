@@ -103,7 +103,7 @@ return new class extends Migration
             } catch (\Exception $e) {
                 // Try alternative method
                 Schema::table('expense_claims', function (Blueprint $table) use ($fk) {
-                    $table->dropForeign([$fk->CONSTRAINT_NAME]);
+                    $table->dropForeign($fk->CONSTRAINT_NAME);
                 });
             }
         }
