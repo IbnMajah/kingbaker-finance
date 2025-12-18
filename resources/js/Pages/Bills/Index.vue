@@ -173,7 +173,7 @@
               <td class="px-6 py-4 text-sm text-gray-900">
                 <div v-if="bill.due_date">
                   {{ $formatDate(bill.due_date) }}
-                  <div v-if="isOverdue(bill.due_date)" class="text-xs text-red-600">
+                  <div v-if="isOverdue(bill.due_date) && bill.status !== 'paid'" class="text-xs text-red-600">
                     Overdue
                   </div>
                 </div>
@@ -188,7 +188,7 @@
                   :class="{
                     'bg-green-100 text-green-800': bill.status === 'paid',
                     'bg-yellow-100 text-yellow-800': bill.status === 'partially_paid',
-                    'bg-red-100 text-red-800': bill.status === 'overdue',
+                    'bg-red-100 text-red-800': bill.status === 'overdue' && bill.status !== 'paid',
                     'bg-gray-100 text-gray-800': bill.status === 'pending',
                     'bg-gray-100 text-gray-600': bill.status === 'cancelled'
                   }"

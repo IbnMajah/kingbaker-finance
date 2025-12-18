@@ -77,7 +77,7 @@
             <p class="text-lg font-semibold" :class="{
               'text-green-600': bill.status === 'paid',
               'text-yellow-600': bill.status === 'partially_paid',
-              'text-red-600': bill.status === 'overdue',
+              'text-red-600': bill.status === 'overdue' && bill.status !== 'paid',
               'text-gray-600': bill.status === 'pending'
             }">
               {{ bill.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}

@@ -217,7 +217,7 @@
                 <span v-else-if="invoice.status === 'pending'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                   Pending
                 </span>
-                <span v-else-if="invoice.status === 'overdue'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <span v-else-if="invoice.status === 'overdue' && invoice.status !== 'paid'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   Overdue
                 </span>
                 <span v-else-if="invoice.status === 'partially_paid'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
