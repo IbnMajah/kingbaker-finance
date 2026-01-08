@@ -103,7 +103,13 @@ class ExpenseClaimController extends Controller
             'draftClaims' => ExpenseClaim::where('status', 'draft')->count(),
             'activeClaims' => ExpenseClaim::where('status', 'active')->count(),
             'cancelledClaims' => ExpenseClaim::where('status', 'cancelled')->count(),
-            'totalAmount' => ExpenseClaim::whereYear('claim_date', now()->year)
+            'totalAmount' => ExpenseClaim::query()
+                ->when(!($user->role === 'admin' || $user->owner), function ($query) use ($user) {
+                    if ($user->branch_id) {
+                        $query->where('branch_id', $user->branch_id);
+                    }
+                })
+                ->whereYear('claim_date', now()->year)
                 ->whereMonth('claim_date', now()->month)
                 ->sum('total'),
             'categories' => [
