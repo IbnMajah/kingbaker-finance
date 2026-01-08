@@ -103,7 +103,9 @@ class ExpenseClaimController extends Controller
             'draftClaims' => ExpenseClaim::where('status', 'draft')->count(),
             'activeClaims' => ExpenseClaim::where('status', 'active')->count(),
             'cancelledClaims' => ExpenseClaim::where('status', 'cancelled')->count(),
-            'totalAmount' => ExpenseClaim::sum('total'),
+            'totalAmount' => ExpenseClaim::whereYear('claim_date', now()->year)
+                ->whereMonth('claim_date', now()->month)
+                ->sum('total'),
             'categories' => [
                 'office_supplies' => 'Office Supplies',
                 'travel' => 'Travel',

@@ -64,9 +64,15 @@ class BillController extends Controller
                 ] : null,
             ]);
 
+        // Calculate total amount for current month
+        $currentMonthTotal = Bill::whereYear('bill_date', now()->year)
+            ->whereMonth('bill_date', now()->month)
+            ->sum('amount');
+
         return Inertia::render('Bills/Index', [
             'filters' => $request->only(['search', 'status', 'date_from', 'date_to']),
             'bills' => $bills,
+            'currentMonthTotal' => $currentMonthTotal,
         ]);
     }
 

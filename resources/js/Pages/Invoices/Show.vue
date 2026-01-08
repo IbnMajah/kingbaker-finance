@@ -144,14 +144,20 @@
                 Quantity
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Discount
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Total
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="item in invoice.items" :key="item.id">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ item.description }}
+              <td class="px-6 py-4 text-sm text-gray-900">
+                <div class="font-medium">{{ item.description }}</div>
+                <div v-if="item.note" class="text-xs text-gray-500 mt-1 italic">
+                  {{ item.note }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ $formatAmount(item.unit_price) }}
@@ -162,6 +168,12 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ item.quantity }}
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <span v-if="item.discount > 0" class="text-red-600">
+                  -{{ $formatAmount(item.discount) }}
+                </span>
+                <span v-else class="text-gray-400">—</span>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 {{ $formatAmount(item.total) }}
               </td>
@@ -169,7 +181,7 @@
           </tbody>
           <tfoot class="bg-gray-50">
             <tr>
-              <td colspan="4" class="px-6 py-4 text-right text-sm font-medium text-gray-900">
+              <td colspan="5" class="px-6 py-4 text-right text-sm font-medium text-gray-900">
                 Total Amount:
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">

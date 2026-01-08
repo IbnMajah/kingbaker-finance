@@ -260,14 +260,54 @@
                           {{ form.errors[`items.${index}.quantity`] }}
                         </div>
                       </div>
+
+                      <!-- Discount -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Discount</label>
+                        <input
+                          v-model.number="item.discount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          :class="form.errors[`items.${index}.discount`] ? 'border-red-300' : 'border-gray-300'"
+                          placeholder="0.00"
+                          @input="calculateItemTotal(index)"
+                        />
+                        <div v-if="form.errors[`items.${index}.discount`]" class="mt-1 text-sm text-red-600">
+                          {{ form.errors[`items.${index}.discount`] }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Note -->
+                    <div class="mt-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                      <textarea
+                        v-model="item.note"
+                        rows="2"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        :class="form.errors[`items.${index}.note`] ? 'border-red-300' : 'border-gray-300'"
+                        placeholder="Additional notes for this item (optional)"
+                      ></textarea>
+                      <div v-if="form.errors[`items.${index}.note`]" class="mt-1 text-sm text-red-600">
+                        {{ form.errors[`items.${index}.note`] }}
+                      </div>
                     </div>
 
                     <!-- Item Total -->
                     <div class="mt-4 flex justify-end">
                       <div class="text-right">
-                        <div class="text-sm text-gray-500">Item Total:</div>
-                        <div class="text-lg font-bold text-blue-600">
+                        <div class="text-sm text-gray-500">Subtotal:</div>
+                        <div class="text-sm text-gray-600">
                           GMD {{ ((item.unit_price || 0) * (item.quantity || 0)).toFixed(2) }}
+                        </div>
+                        <div v-if="(parseFloat(item.discount) || 0) > 0" class="text-sm text-red-600 mt-1">
+                          Discount: -GMD {{ (parseFloat(item.discount) || 0).toFixed(2) }}
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">Item Total:</div>
+                        <div class="text-lg font-bold text-blue-600">
+                          GMD {{ itemTotal(index).toFixed(2) }}
                         </div>
                       </div>
                     </div>
@@ -404,9 +444,11 @@ export default {
         items: [
           {
             description: '',
+            note: '',
             unit_price: '',
             unit_measurement: '',
             quantity: 1,
+            discount: 0,
           }
         ],
         invoice_type: '',
@@ -461,8 +503,9 @@ export default {
   computed: {
     totalAmount() {
       return this.form.items.reduce((total, item) => {
-        const itemTotal = (parseFloat(item.unit_price) || 0) * (parseFloat(item.quantity) || 0)
-        return total + itemTotal
+        const subtotal = (parseFloat(item.unit_price) || 0) * (parseFloat(item.quantity) || 0)
+        const discount = parseFloat(item.discount) || 0
+        return total + Math.max(0, subtotal - discount)
       }, 0)
     }
   },
@@ -491,9 +534,11 @@ export default {
     addItem() {
       this.form.items.push({
         description: '',
+        note: '',
         unit_price: '',
         unit_measurement: '',
         quantity: 1,
+        discount: 0,
       })
     },
     removeItem(index) {
@@ -505,6 +550,12 @@ export default {
       // This method triggers reactivity for computed total
       // The actual calculation is done in the template and computed property
       this.$forceUpdate()
+    },
+    itemTotal(index) {
+      const item = this.form.items[index]
+      const subtotal = (parseFloat(item.unit_price) || 0) * (parseFloat(item.quantity) || 0)
+      const discount = parseFloat(item.discount) || 0
+      return Math.max(0, subtotal - discount)
     },
     selectCustomer() {
       if (this.form.customer_id) {

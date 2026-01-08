@@ -70,7 +70,8 @@
           </div>
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(totalAmount) }}</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(currentMonthTotal) }}</p>
+            <p class="text-xs text-gray-500 mt-1 hidden lg:block">Current month bills</p>
           </div>
         </div>
       </div>
@@ -278,6 +279,10 @@ export default {
       type: Object,
       default: () => ({ data: [] })
     },
+    currentMonthTotal: {
+      type: Number,
+      default: 0
+    },
   },
   data() {
     return {
@@ -295,9 +300,6 @@ export default {
     },
     pendingCount() {
       return this.bills?.data?.filter(bill => ['pending', 'partially_paid'].includes(bill.status)).length || 0
-    },
-    totalAmount() {
-      return this.bills?.data?.reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0) || 0
     }
   },
   watch: {

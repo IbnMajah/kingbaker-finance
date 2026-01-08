@@ -13,15 +13,18 @@ class InvoiceItem extends Model
     protected $fillable = [
         'invoice_id',
         'description',
+        'note',
         'unit_price',
         'unit_measurement',
         'quantity',
+        'discount',
         'total',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
         'quantity' => 'decimal:2',
+        'discount' => 'decimal:2',
         'total' => 'decimal:2',
     ];
 
@@ -35,7 +38,8 @@ class InvoiceItem extends Model
      */
     public function calculateTotal(): void
     {
-        $this->total = $this->unit_price * $this->quantity;
+        $subtotal = $this->unit_price * $this->quantity;
+        $this->total = max(0, $subtotal - ($this->discount ?? 0));
     }
 
     /**

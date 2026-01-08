@@ -207,9 +207,11 @@ class InvoiceController extends Controller
             'attachment' => 'nullable|file|max:2048',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string|max:255',
+            'items.*.note' => 'nullable|string',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.unit_measurement' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.discount' => 'nullable|numeric|min:0',
         ]);
 
         // Get customer information from the selected customer
@@ -228,7 +230,9 @@ class InvoiceController extends Controller
         // Calculate total amount from items
         $totalAmount = 0;
         foreach ($items as $item) {
-            $totalAmount += $item['unit_price'] * $item['quantity'];
+            $subtotal = $item['unit_price'] * $item['quantity'];
+            $discount = $item['discount'] ?? 0;
+            $totalAmount += max(0, $subtotal - $discount);
         }
 
         // Retry logic for invoice creation to handle duplicate invoice numbers
@@ -259,12 +263,16 @@ class InvoiceController extends Controller
 
                     // Create invoice items
                     foreach ($items as $item) {
+                        $subtotal = $item['unit_price'] * $item['quantity'];
+                        $discount = $item['discount'] ?? 0;
                         $invoice->items()->create([
                             'description' => $item['description'],
+                            'note' => $item['note'] ?? null,
                             'unit_price' => $item['unit_price'],
                             'unit_measurement' => $item['unit_measurement'] ?? null,
                             'quantity' => $item['quantity'],
-                            'total' => $item['unit_price'] * $item['quantity'],
+                            'discount' => $discount,
+                            'total' => max(0, $subtotal - $discount),
                         ]);
                     }
 
@@ -351,8 +359,11 @@ class InvoiceController extends Controller
                 'items' => $invoice->items->map(fn($item) => [
                     'id' => $item->id,
                     'description' => $item->description,
+                    'note' => $item->note,
                     'unit_price' => $item->unit_price,
+                    'unit_measurement' => $item->unit_measurement,
                     'quantity' => $item->quantity,
+                    'discount' => $item->discount,
                     'total' => $item->total,
                 ]),
                 'created_at' => $invoice->created_at,
@@ -415,9 +426,11 @@ class InvoiceController extends Controller
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:invoice_items,id',
             'items.*.description' => 'required|string|max:255',
+            'items.*.note' => 'nullable|string',
             'items.*.unit_price' => 'required|numeric|min:0.01',
             'items.*.unit_measurement' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.discount' => 'nullable|numeric|min:0',
         ]);
 
         // Get customer information from the selected customer
@@ -439,7 +452,9 @@ class InvoiceController extends Controller
         // Calculate total amount from items
         $totalAmount = 0;
         foreach ($items as $item) {
-            $totalAmount += $item['unit_price'] * $item['quantity'];
+            $subtotal = $item['unit_price'] * $item['quantity'];
+            $discount = $item['discount'] ?? 0;
+            $totalAmount += max(0, $subtotal - $discount);
         }
 
         $invoice->update([
@@ -455,12 +470,16 @@ class InvoiceController extends Controller
         // Update items - delete old ones and create new ones
         $invoice->items()->delete();
         foreach ($items as $item) {
+            $subtotal = $item['unit_price'] * $item['quantity'];
+            $discount = $item['discount'] ?? 0;
             $invoice->items()->create([
                 'description' => $item['description'],
+                'note' => $item['note'] ?? null,
                 'unit_price' => $item['unit_price'],
                 'unit_measurement' => $item['unit_measurement'] ?? null,
                 'quantity' => $item['quantity'],
-                'total' => $item['unit_price'] * $item['quantity'],
+                'discount' => $discount,
+                'total' => max(0, $subtotal - $discount),
             ]);
         }
 
