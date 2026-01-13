@@ -662,7 +662,7 @@ export default {
       }
     },
     async submitClaim() {
-      if (confirm('Are you sure you want to submit this expense claim for approval? You will not be able to edit it after submission.')) {
+      if (confirm('Are you sure you want to submit this expense claim for approval?')) {
         // Ensure CSRF token is valid before submission
         await this.ensureValidToken();
 
