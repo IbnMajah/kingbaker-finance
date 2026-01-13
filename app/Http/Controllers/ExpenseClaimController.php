@@ -628,6 +628,39 @@ class ExpenseClaimController extends Controller
     }
 
     /**
+     * Submit a draft expense claim for approval
+     */
+    public function submit(ExpenseClaim $expenseClaim): RedirectResponse
+    {
+        $user = Auth::user();
+
+        // Ensure non-admin users can only submit expense claims from their branch
+        if (!($user->role === 'admin' || $user->owner) && $expenseClaim->branch_id !== $user->branch_id) {
+            abort(403, 'You can only submit expense claims from your branch.');
+        }
+
+        // Prevent submitting if payment exists
+        if ($expenseClaim->payment) {
+            return Redirect::back()->with('error', 'Expense claim cannot be submitted once a payment has been created.');
+        }
+
+        if ($expenseClaim->status !== 'draft') {
+            return Redirect::back()->with('error', 'Only draft expense claims can be submitted.');
+        }
+
+        // Validate that the expense claim has required data
+        if (!$expenseClaim->items || $expenseClaim->items->count() === 0) {
+            return Redirect::back()->with('error', 'Expense claim must have at least one item before submission.');
+        }
+
+        $expenseClaim->update([
+            'status' => 'submitted',
+        ]);
+
+        return Redirect::back()->with('success', 'Expense claim submitted successfully for approval.');
+    }
+
+    /**
      * Reject an expense claim
      */
     public function reject(Request $request, ExpenseClaim $expenseClaim): RedirectResponse

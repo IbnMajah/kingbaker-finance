@@ -408,6 +408,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('expense-claims/{expenseClaim}', [ExpenseClaimController::class, 'destroy'])
         ->name('expense-claims.destroy');
 
+    Route::post('expense-claims/{expenseClaim}/submit', [ExpenseClaimController::class, 'submit'])
+        ->name('expense-claims.submit');
+
     Route::post('expense-claims/{expenseClaim}/approve', [ExpenseClaimController::class, 'approve'])
         ->name('expense-claims.approve');
 
