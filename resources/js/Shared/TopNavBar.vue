@@ -180,6 +180,16 @@
             >
               Users
             </Link>
+            <Link
+              v-if="hasPermission('assign_roles')"
+              href="/roles"
+              :class="[
+                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isUrl('roles') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ]"
+            >
+              Roles
+            </Link>
           </div>
         </div>
 
@@ -199,7 +209,7 @@
             <template #dropdown>
               <div class="mt-2 py-2 text-sm bg-white rounded shadow-xl">
                 <Link class="block px-6 py-2 hover:text-white hover:bg-brand-500" :href="`/users/${auth.user.id}/edit`">My Profile</Link>
-                <Link v-if="isAdmin" class="block px-6 py-2 hover:text-white hover:bg-brand-500" href="/users">Manage Users</Link>
+                <Link v-if="hasPermission('view_users')" class="block px-6 py-2 hover:text-white hover:bg-brand-500" href="/users">Manage Users</Link>
                 <Link class="block px-6 py-2 w-full text-left hover:text-white hover:bg-brand-500" href="/logout" method="delete" as="button">Logout</Link>
               </div>
             </template>
@@ -227,8 +237,8 @@ export default {
     selectedMainMenu: String,
   },
   setup() {
-    const { isAdmin, hasPermission } = usePermissions()
-    return { isAdmin, hasPermission }
+    const { hasPermission } = usePermissions()
+    return { hasPermission }
   },
   methods: {
     isUrl(...urls) {

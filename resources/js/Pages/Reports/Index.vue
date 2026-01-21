@@ -9,7 +9,7 @@
     </div>
 
     <!-- Quick Stats Overview -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div v-if="hasPermission('view_reports')" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div class="bg-white p-6 rounded-lg shadow">
         <div class="flex items-center">
           <div class="p-3 rounded-full bg-green-100 text-green-600">
@@ -328,7 +328,7 @@
       </div>
 
       <!-- Comprehensive Cash Flow Report -->
-      <div v-if="isAdmin" class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div v-if="hasPermission('view_reports')" class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="p-6 border-b border-gray-200">
           <div class="flex items-center justify-between">
             <div>
@@ -380,8 +380,9 @@
 <script>
 import { Head } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
-import Chart from 'chart.js/auto'
 import { usePermissions } from '@/composables/usePermissions.js'
+import Chart from 'chart.js/auto'
+// import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -390,7 +391,7 @@ export default {
   layout: Layout,
   setup() {
     const {
-      isAdmin,
+      hasPermission,
       canViewTransactions,
       canViewSales,
       canViewExpenses,
@@ -400,7 +401,7 @@ export default {
     } = usePermissions()
 
     return {
-      isAdmin,
+      hasPermission,
       canViewTransactions,
       canViewSales,
       canViewExpenses,
@@ -561,7 +562,7 @@ export default {
         if (this.canViewBankAccounts && this.$refs.bankAccountsChart) {
           this.updateBankAccountsChart()
         }
-        if (this.isAdmin && this.$refs.cashFlowChart) {
+        if (this.hasPermission('view_reports') && this.$refs.cashFlowChart) {
           this.updateCashFlowChart()
         }
       })

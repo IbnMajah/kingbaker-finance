@@ -49,7 +49,7 @@
         </div>
         <div class="text-center">
           <div class="text-sm font-medium text-gray-500">Current Balance</div>
-          <div v-if="isAdmin" class="text-2xl font-bold mt-1" :class="bankAccount.current_balance >= 0 ? 'text-green-600' : 'text-red-600'">
+          <div v-if="hasPermission('view_reports')" class="text-2xl font-bold mt-1" :class="bankAccount.current_balance >= 0 ? 'text-green-600' : 'text-red-600'">
             {{ $formatAmount(bankAccount.current_balance) }}
           </div>
           <div v-else class="text-2xl font-bold mt-1 text-gray-500">
@@ -218,9 +218,10 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import TrashedMessage from '@/Shared/TrashedMessage.vue'
 import { formatterMixin } from '@/Utils/formatters'
-import { usePermissions } from '@/composables/usePermissions.js'
+// import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -231,8 +232,8 @@ export default {
   mixins: [formatterMixin],
   layout: Layout,
   setup() {
-    const { isAdmin } = usePermissions()
-    return { isAdmin }
+    const { hasPermission } = usePermissions()
+    return { hasPermission }
   },
   props: {
     bankAccount: Object,

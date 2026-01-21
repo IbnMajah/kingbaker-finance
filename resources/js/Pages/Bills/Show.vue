@@ -91,7 +91,7 @@
     <div class="bg-white rounded-lg shadow p-6 mb-8">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Bill Details</h2>
-        <Link :href="`/bills/${bill.id}/edit`" class="btn-kingbaker">
+        <Link v-if="canEditBills" :href="`/bills/${bill.id}/edit`" class="btn-kingbaker">
           <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
           </svg>
@@ -187,7 +187,7 @@
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold">Payment History</h2>
           <Link
-            v-if="balanceDue > 0"
+            v-if="balanceDue > 0 && canEditBills"
             :href="`/bills/${bill.id}/pay`"
             class="btn-kingbaker"
           >
@@ -235,6 +235,7 @@
               <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                 <div class="flex items-center justify-center space-x-2">
                   <button
+                    v-if="canEditBills"
                     @click="openEditModal(payment)"
                     class="text-brand-600 hover:text-brand-900"
                     title="Edit Payment"
@@ -244,6 +245,7 @@
                     </svg>
                   </button>
                   <button
+                    v-if="canEditBills"
                     @click="openDeleteModal(payment)"
                     class="text-red-600 hover:text-red-900"
                     title="Delete Payment"
@@ -418,6 +420,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { formatterMixin } from '@/Utils/formatters'
+import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -426,6 +429,10 @@ export default {
   },
   mixins: [formatterMixin],
   layout: Layout,
+  setup() {
+    const { canEditBills } = usePermissions()
+    return { canEditBills }
+  },
   props: {
     bill: {
       type: Object,

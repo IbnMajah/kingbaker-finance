@@ -85,6 +85,7 @@
     <div class="mb-6 flex items-center justify-between">
       <div class="flex items-center space-x-4">
         <Link
+          v-if="canEditSales"
           :href="`/sales/${sale.id}/edit`"
           class="btn-kingbaker"
         >
@@ -96,7 +97,7 @@
       </div>
 
       <button
-        v-if="!sale.deleted_at"
+        v-if="!sale.deleted_at && canEditSales"
         @click="confirmDelete"
         class="text-red-600 hover:text-red-800"
       >
@@ -225,6 +226,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { formatterMixin } from '@/Utils/formatters'
+import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -233,6 +235,10 @@ export default {
   },
   mixins: [formatterMixin],
   layout: Layout,
+  setup() {
+    const { canEditSales } = usePermissions()
+    return { canEditSales }
+  },
   props: {
     sale: {
       type: Object,

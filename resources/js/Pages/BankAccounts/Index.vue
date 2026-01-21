@@ -9,7 +9,7 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+    <div v-if="hasPermission('view_reports')" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
           <div class="hidden lg:flex flex-shrink-0">
@@ -70,7 +70,7 @@
           </div>
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Balance</p>
-            <p v-if="isAdmin" class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(totalBalance) }}</p>
+            <p v-if="hasPermission('view_reports')" class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(totalBalance) }}</p>
             <p v-else class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-500">••••••</p>
           </div>
         </div>
@@ -146,7 +146,7 @@
                 <div class="text-gray-500 text-xs">{{ account.account_number || 'N/A' }}</div>
               </td>
               <td class="px-3 py-2 whitespace-nowrap text-xs text-right">
-                <span v-if="isAdmin" :class="account.current_balance >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
+                <span v-if="hasPermission('view_reports')" :class="account.current_balance >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'">
                   {{ $formatAmount(account.current_balance) }}
                 </span>
                 <span v-else class="text-gray-500 font-medium">
@@ -218,8 +218,8 @@ export default {
   mixins: [formatterMixin],
   layout: Layout,
   setup() {
-    const { canCreateBankAccounts, canViewBankAccounts, canEditBankAccounts, isAdmin } = usePermissions()
-    return { canCreateBankAccounts, canViewBankAccounts, canEditBankAccounts, isAdmin }
+    const { canCreateBankAccounts, canViewBankAccounts, canEditBankAccounts, hasPermission } = usePermissions()
+    return { canCreateBankAccounts, canViewBankAccounts, canEditBankAccounts, hasPermission }
   },
   props: {
     filters: {

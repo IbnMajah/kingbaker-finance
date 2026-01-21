@@ -109,7 +109,7 @@
           </div>
 
           <!-- Reports -->
-          <div v-if="canViewSales" class="mb-6">
+          <div v-if="hasPermission('view_reports')" class="mb-6">
             <Link 
               href="/reports"
               @click="selectMainMenu('reports')"
@@ -123,9 +123,9 @@
           </div>
 
           <!-- Organization -->
-          <div v-if="canViewBranches || canViewUsers" class="mb-6">
+          <div v-if="canViewBranches || canViewUsers || canAssignRoles" class="mb-6">
             <Link 
-              href="/branches"
+              :href="settingsHref"
               @click="selectMainMenu('organization')"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
@@ -135,6 +135,8 @@
               Settings
             </Link>
           </div>
+
+
         </div>
       </div>
     </div>
@@ -156,7 +158,9 @@ export default {
       canViewBills, 
       canViewExpenses, 
       canViewUsers, 
-      canViewBranches 
+      canViewBranches,
+      canAssignRoles,
+      hasPermission,
     } = usePermissions()
     return { 
       canAccessFinance, 
@@ -164,7 +168,9 @@ export default {
       canViewBills, 
       canViewExpenses, 
       canViewUsers, 
-      canViewBranches 
+      canViewBranches,
+      canAssignRoles,
+      hasPermission,
     }
   },
   data() {
@@ -172,6 +178,13 @@ export default {
       isMenuOpen: false,
       selectedMainMenu: null,
     }
+  },
+  computed: {
+    settingsHref() {
+      // If the user can't view branches/users but can manage roles, take them straight to Roles.
+      if (!this.canViewBranches && !this.canViewUsers && this.canAssignRoles) return '/roles'
+      return '/branches'
+    },
   },
   methods: {
     toggleMenu() {
@@ -201,7 +214,7 @@ export default {
       this.selectedMainMenu = 'expenses'
     } else if (currentUrl.startsWith('reports')) {
       this.selectedMainMenu = 'reports'
-    } else if (currentUrl.startsWith('branches') || currentUrl.startsWith('users')) {
+    } else if (currentUrl.startsWith('branches') || currentUrl.startsWith('users') || currentUrl.startsWith('roles')) {
       this.selectedMainMenu = 'organization'
     }
   }

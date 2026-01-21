@@ -21,6 +21,7 @@ use App\Http\Controllers\ExpenseItemController;
 use App\Http\Controllers\ChequePaymentController;
 use App\Http\Controllers\MiscellaneousController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RolesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -51,6 +52,11 @@ Route::delete('logout', [AuthenticatedSessionController::class, 'destroy'])
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Roles & Permissions (System Administration)
+    // Uses custom middleware alias registered in bootstrap/app.php
+    Route::resource('roles', RolesController::class)
+        ->middleware('permission:assign_roles');
 
     // Miscellaneous Transactions
     Route::resource('miscellaneous', MiscellaneousController::class);

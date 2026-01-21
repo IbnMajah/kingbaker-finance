@@ -157,7 +157,11 @@
     </transition>
 
     <!-- Organization -->
-    <div v-if="permissions.hasPermission('access_settings') || permissions.hasPermission('view_users')" @click="toggle('organization')" class="flex items-center justify-between cursor-pointer mb-2 font-semibold text-xs text-[#9B672A] uppercase tracking-wider select-none">
+    <div
+      v-if="permissions.hasPermission('access_settings') || permissions.hasPermission('view_users') || permissions.hasPermission('assign_roles')"
+      @click="toggle('organization')"
+      class="flex items-center justify-between cursor-pointer mb-2 font-semibold text-xs text-[#9B672A] uppercase tracking-wider select-none"
+    >
       Organization
       <svg :class="open.organization ? 'rotate-90' : ''" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -179,6 +183,14 @@
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
             <div :class="isUrl('users') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Users</div>
+          </Link>
+        </div>
+        <div v-if="permissions.hasPermission('assign_roles')" class="mb-4">
+          <Link class="group flex items-center py-3" href="/roles">
+            <svg class="mr-2 w-4 h-4" :class="isUrl('roles') ? 'fill-white' : 'fill-brand-400 group-hover:fill-white'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-3.33 0-10 1.67-10 5v1h20v-1c0-3.33-6.67-5-10-5z"/>
+            </svg>
+            <div :class="isUrl('roles') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Roles</div>
           </Link>
         </div>
       </div>

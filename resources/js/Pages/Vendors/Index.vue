@@ -9,7 +9,7 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div v-if="hasPermission('view_reports')" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -228,8 +228,8 @@ export default {
   },
   layout: Layout,
   setup() {
-    const { canCreateVendors, canViewVendors, canEditVendors, isAdmin } = usePermissions()
-    return { canCreateVendors, canViewVendors, canEditVendors, isAdmin }
+    const { canCreateVendors, canViewVendors, canEditVendors, hasPermission } = usePermissions()
+    return { canCreateVendors, canViewVendors, canEditVendors, hasPermission }
   },
   props: {
     filters: {

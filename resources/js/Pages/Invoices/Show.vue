@@ -206,6 +206,7 @@
       <h2 class="text-lg font-semibold mb-4">Actions</h2>
       <div class="flex flex-wrap gap-3">
         <Link
+          v-if="canPrintReceipts"
           :href="`/invoices/${invoice.id}/print`"
           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,6 +216,7 @@
         </Link>
 
         <Link
+          v-if="canEditInvoices"
           :href="`/invoices/${invoice.id}/edit`"
           class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +226,7 @@
         </Link>
 
         <button
-          v-if="balanceDue > 0"
+          v-if="balanceDue > 0 && canEditInvoices"
           @click="showPaymentModal = true"
           class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,6 +247,7 @@
         </button> -->
 
         <button
+          v-if="canEditInvoices"
           @click="confirmDelete"
           class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,6 +404,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { router } from '@inertiajs/vue3'
+import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -408,6 +412,10 @@ export default {
     Link,
   },
   layout: Layout,
+  setup() {
+    const { canEditInvoices, canPrintReceipts } = usePermissions()
+    return { canEditInvoices, canPrintReceipts }
+  },
   props: {
     invoice: Object,
     remaining_amount: Number,

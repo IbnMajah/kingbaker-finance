@@ -86,11 +86,24 @@ class UsersController extends Controller
             'last_name' => ['required', 'max:25'],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')],
             'password' => ['required', 'min:8'],
-            'role_name' => ['required', Rule::in($roleNames)],
+            // New: allow assigning multiple roles
+            'role_names' => ['nullable', 'array', 'min:1'],
+            'role_names.*' => ['required', Rule::in($roleNames)],
+            // Legacy: single role support
+            'role_name' => ['nullable', Rule::in($roleNames)],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'phone' => ['nullable', 'max:20'],
             'active' => ['boolean'],
         ]);
+
+        $selectedRoleNames = $validated['role_names'] ?? null;
+        if (!$selectedRoleNames && !empty($validated['role_name'])) {
+            $selectedRoleNames = [$validated['role_name']];
+        }
+        $selectedRoleNames = collect($selectedRoleNames)->filter()->unique()->values()->all();
+        if (count($selectedRoleNames) === 0) {
+            return Redirect::back()->with('error', 'Please select at least one role.');
+        }
 
         if (Request::file('photo')) {
             $validated['photo_path'] = Request::file('photo')->store('users');
@@ -98,17 +111,15 @@ class UsersController extends Controller
 
         $validated['password'] = Hash::make($validated['password']);
 
-        // Keep legacy role field for backward compatibility
-        $validated['role'] = $validated['role_name'];
-        unset($validated['role_name']);
+        // Keep legacy role field for backward compatibility (primary role)
+        $validated['role'] = $selectedRoleNames[0];
+        unset($validated['role_name'], $validated['role_names']);
 
         $user = User::create($validated);
 
-        // Assign the role using the new role system
-        $role = Role::where('name', $validated['role'])->first();
-        if ($role) {
-            $user->roles()->sync([$role->id]);
-        }
+        // Assign roles using the role system (multi-role capable)
+        $roleIds = Role::whereIn('name', $selectedRoleNames)->pluck('id')->toArray();
+        $user->roles()->sync($roleIds);
 
         return Redirect::route('users')->with('success', 'User created successfully.');
     }
@@ -186,11 +197,24 @@ class UsersController extends Controller
             'last_name' => ['required', 'max:25'],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable', 'min:8'],
-            'role_name' => ['required', Rule::in($roleNames)],
+            // New: allow assigning multiple roles
+            'role_names' => ['nullable', 'array', 'min:1'],
+            'role_names.*' => ['required', Rule::in($roleNames)],
+            // Legacy: single role support
+            'role_name' => ['nullable', Rule::in($roleNames)],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'phone' => ['nullable', 'max:20'],
             'active' => ['boolean'],
         ]);
+
+        $selectedRoleNames = $validated['role_names'] ?? null;
+        if (!$selectedRoleNames && !empty($validated['role_name'])) {
+            $selectedRoleNames = [$validated['role_name']];
+        }
+        $selectedRoleNames = collect($selectedRoleNames)->filter()->unique()->values()->all();
+        if (count($selectedRoleNames) === 0) {
+            return Redirect::back()->with('error', 'Please select at least one role.');
+        }
 
         if (Request::file('photo')) {
             $validated['photo_path'] = Request::file('photo')->store('users');
@@ -202,17 +226,15 @@ class UsersController extends Controller
             unset($validated['password']);
         }
 
-        // Keep legacy role field for backward compatibility
-        $validated['role'] = $validated['role_name'];
-        unset($validated['role_name']);
+        // Keep legacy role field for backward compatibility (primary role)
+        $validated['role'] = $selectedRoleNames[0];
+        unset($validated['role_name'], $validated['role_names']);
 
         $user->update($validated);
 
-        // Update the role using the new role system
-        $role = Role::where('name', $validated['role'])->first();
-        if ($role) {
-            $user->roles()->sync([$role->id]);
-        }
+        // Update roles using the role system (multi-role capable)
+        $roleIds = Role::whereIn('name', $selectedRoleNames)->pluck('id')->toArray();
+        $user->roles()->sync($roleIds);
 
         return Redirect::route('users')->with('success', 'User updated successfully.');
     }

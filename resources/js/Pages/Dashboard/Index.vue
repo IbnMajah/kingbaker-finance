@@ -4,7 +4,7 @@
     <h1 class="mb-8 text-3xl font-bold">Dashboard</h1>
 
     <!-- Admin Financial Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <div v-if="hasPermission('view_reports')" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <Card
         title="Total Balance"
         :icon="BanknotesIcon"
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Admin Reports Section -->
-    <div v-if="isAdmin" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div v-if="hasPermission('view_reports')" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold">Invoices & Bills Status</h2>
@@ -84,7 +84,7 @@
     </div>
 
     <!-- Admin Transaction History Chart -->
-    <div v-if="isAdmin" class="bg-white rounded-lg shadow mb-8">
+    <div v-if="hasPermission('view_reports')" class="bg-white rounded-lg shadow mb-8">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold">Transaction History</h2>
       </div>
@@ -94,7 +94,7 @@
     </div>
 
     <!-- Admin Recent Transactions & Expense Categories -->
-    <div v-if="isAdmin" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div v-if="hasPermission('view_reports')" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold">Recent Transactions</h2>
@@ -128,7 +128,7 @@
     </div>
 
     <!-- Non-Admin User Dashboard -->
-    <div v-if="!isAdmin" class="bg-white rounded-lg shadow p-8 text-center">
+    <div v-if="!hasPermission('view_reports')" class="bg-white rounded-lg shadow p-8 text-center">
       <div class="max-w-md mx-auto">
         <svg class="mx-auto h-12 w-12 text-brand-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -148,10 +148,11 @@
 <script>
 import { Head } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import { usePermissions } from '@/composables/usePermissions.js'
 import Chart from 'chart.js/auto'
 import Card from '@/Shared/Card.vue'
 import { formatterMixin } from '@/Utils/formatters'
-import { usePermissions } from '@/composables/usePermissions.js'
+// import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -161,8 +162,8 @@ export default {
   layout: Layout,
   mixins: [formatterMixin],
   setup() {
-    const permissions = usePermissions()
-    return { permissions }
+    const { hasPermission } = usePermissions()
+    return { hasPermission }
   },
   props: {
     summary: {
@@ -197,17 +198,12 @@ export default {
     }
   },
   computed: {
-    isAdmin() {
-      const hasAdminRole = this.permissions.hasRole('admin')
-      const isOwner = this.$page.props.auth.user?.owner
-      return hasAdminRole || isOwner
-    },
     userRole() {
       return this.$page.props.auth.user?.role || ''
     }
   },
   mounted() {
-    if (this.isAdmin) {
+    if (this.hasPermission('view_reports')) {
       this.initTransactionChart()
       this.initExpenseChart()
     }

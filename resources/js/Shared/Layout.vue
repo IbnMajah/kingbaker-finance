@@ -62,7 +62,7 @@ export default {
       this.selectedMainMenu = 'expenses'
     } else if (currentUrl.startsWith('reports')) {
       this.selectedMainMenu = 'reports'
-    } else if (currentUrl.startsWith('branches') || currentUrl.startsWith('users')) {
+    } else if (currentUrl.startsWith('branches') || currentUrl.startsWith('users') || currentUrl.startsWith('roles')) {
       this.selectedMainMenu = 'organization'
     }
   }

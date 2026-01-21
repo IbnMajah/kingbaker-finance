@@ -9,7 +9,7 @@
     </div>
 
     <!-- Admin Summary Cards -->
-    <div v-if="isAdmin" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+    <div v-if="hasPermission('view_reports')" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-3 md:p-6">
         <div class="flex items-center">
           <div class="hidden lg:flex flex-shrink-0">
@@ -267,8 +267,8 @@ export default {
   mixins: [formatterMixin],
   layout: Layout,
   setup() {
-    const { canCreateBills, canViewBills, canEditBills, isAdmin } = usePermissions()
-    return { canCreateBills, canViewBills, canEditBills, isAdmin }
+    const { canCreateBills, canViewBills, canEditBills, hasPermission } = usePermissions()
+    return { canCreateBills, canViewBills, canEditBills, hasPermission }
   },
   props: {
     filters: {

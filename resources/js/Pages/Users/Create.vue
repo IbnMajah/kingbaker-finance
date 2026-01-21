@@ -102,24 +102,22 @@
             </div>
           </div>
 
-          <!-- Role and Status -->
+          <!-- Roles and Status -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Roles *</label>
               <select
-                v-model="form.role_name"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                :class="form.errors.role_name ? 'border-red-500' : ''"
+                v-model="form.role_names"
+                multiple
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 h-40"
+                :class="form.errors.role_names ? 'border-red-500' : ''"
               >
-                <option value="">Select Role</option>
                 <option v-for="role in roles" :key="role.id" :value="role.name">
                   {{ role.name.charAt(0).toUpperCase() + role.name.slice(1).replace('_', ' ') }}
                 </option>
               </select>
-              <div v-if="form.errors.role_name" class="mt-1 text-sm text-red-600">{{ form.errors.role_name }}</div>
-              <div v-if="getSelectedRoleDescription()" class="mt-1 text-sm text-gray-500">
-                {{ getSelectedRoleDescription() }}
-              </div>
+              <div class="mt-1 text-xs text-gray-500">Hold ⌘/Ctrl to select multiple roles.</div>
+              <div v-if="form.errors.role_names" class="mt-1 text-sm text-red-600">{{ form.errors.role_names }}</div>
             </div>
 
             <div>
@@ -137,13 +135,11 @@
           </div>
 
           <!-- Role Information -->
-          <div v-if="form.role_name" class="border rounded-md p-4 bg-gray-50">
+          <div v-if="form.role_names.length" class="border rounded-md p-4 bg-gray-50">
             <h3 class="text-lg font-medium text-gray-900 mb-2">Role Information</h3>
             <p class="text-sm text-gray-600 mb-3">
-              This user will be assigned the <strong>{{ formatRoleName(form.role_name) }}</strong> role.
-            </p>
-            <p class="text-sm text-gray-500">
-              {{ getSelectedRoleDescription() }}
+              This user will be assigned:
+              <strong>{{ form.role_names.map(formatRoleName).join(', ') }}</strong>
             </p>
             <p class="text-sm text-gray-500 mt-2">
               <em>Permissions are automatically assigned based on the selected role.</em>
@@ -207,7 +203,7 @@ export default {
         email: '',
         password: '',
         phone: '',
-        role_name: '',
+        role_names: [],
         branch_id: '',
         active: true,
         photo: null,
@@ -222,11 +218,6 @@ export default {
       if (!roleName) return ''
       return roleName.charAt(0).toUpperCase() + roleName.slice(1).replace('_', ' ')
     },
-    getSelectedRoleDescription() {
-      if (!this.form.role_name) return ''
-      const selectedRole = this.roles.find(role => role.name === this.form.role_name)
-      return selectedRole ? selectedRole.description : ''
-    }
   }
 }
 </script>
