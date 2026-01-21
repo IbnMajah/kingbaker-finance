@@ -364,11 +364,7 @@ export default {
       },
     }
   },
-  computed: {
-    isAdmin() {
-      return this.permissions.hasRole('admin') || this.$page.props.auth.user?.owner
-    },
-  },
+
   watch: {
     form: {
       deep: true,

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -96,13 +97,11 @@ class UsersController extends Controller
             'active' => ['boolean'],
         ]);
 
-        $selectedRoleNames = $validated['role_names'] ?? null;
-        if (!$selectedRoleNames && !empty($validated['role_name'])) {
-            $selectedRoleNames = [$validated['role_name']];
-        }
-        $selectedRoleNames = collect($selectedRoleNames)->filter()->unique()->values()->all();
+        $selectedRoleNames = $this->resolveSelectedRoleNames($validated);
         if (count($selectedRoleNames) === 0) {
-            return Redirect::back()->with('error', 'Please select at least one role.');
+            throw ValidationException::withMessages([
+                'role_names' => 'Please select at least one role.',
+            ]);
         }
 
         if (Request::file('photo')) {
@@ -207,13 +206,11 @@ class UsersController extends Controller
             'active' => ['boolean'],
         ]);
 
-        $selectedRoleNames = $validated['role_names'] ?? null;
-        if (!$selectedRoleNames && !empty($validated['role_name'])) {
-            $selectedRoleNames = [$validated['role_name']];
-        }
-        $selectedRoleNames = collect($selectedRoleNames)->filter()->unique()->values()->all();
+        $selectedRoleNames = $this->resolveSelectedRoleNames($validated);
         if (count($selectedRoleNames) === 0) {
-            return Redirect::back()->with('error', 'Please select at least one role.');
+            throw ValidationException::withMessages([
+                'role_names' => 'Please select at least one role.',
+            ]);
         }
 
         if (Request::file('photo')) {
@@ -237,6 +234,17 @@ class UsersController extends Controller
         $user->roles()->sync($roleIds);
 
         return Redirect::route('users')->with('success', 'User updated successfully.');
+    }
+
+    private function resolveSelectedRoleNames(array $validated): array
+    {
+        $selectedRoleNames = $validated['role_names'] ?? null;
+
+        if (!$selectedRoleNames && !empty($validated['role_name'])) {
+            $selectedRoleNames = [$validated['role_name']];
+        }
+
+        return collect($selectedRoleNames)->filter()->unique()->values()->all();
     }
 
     public function destroy(User $user): RedirectResponse

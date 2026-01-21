@@ -260,13 +260,18 @@ export default {
     },
   },
   data() {
+    const rolesSource =
+      this.user.roles && this.user.roles.length
+        ? this.user.roles
+        : [this.user.current_role || this.user.role].filter(Boolean)
+
     return {
       form: this.$inertia.form({
         first_name: this.user.first_name,
         last_name: this.user.last_name,
         email: this.user.email,
         phone: this.user.phone,
-        role_names: (this.user.roles && this.user.roles.length ? this.user.roles : [this.user.current_role || this.user.role].filter(Boolean)),
+        role_names: rolesSource,
         branch_id: this.user.branch_id,
         password: '',
         photo: null,

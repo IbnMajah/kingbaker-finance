@@ -176,8 +176,20 @@ export default {
         },
       })
     },
+    isPermissionDisabled(permission) {
+      // Check if permission is protected/immutable (e.g., assign_roles for admin role)
+      if (this.isAdminRole && permission.name === 'assign_roles') {
+        return true
+      }
+      // Add other protected permission checks here if needed
+      // e.g., if (permission.protected || permission.immutable) return true
+      return false
+    },
     modulePermissionIds(module) {
-      return (this.permissionsByModule[module] || []).map((p) => p.id)
+      // Filter out disabled/protected permissions so they cannot be toggled
+      return (this.permissionsByModule[module] || [])
+        .filter((p) => !this.isPermissionDisabled(p))
+        .map((p) => p.id)
     },
     isModuleFullySelected(module) {
       const ids = this.modulePermissionIds(module)

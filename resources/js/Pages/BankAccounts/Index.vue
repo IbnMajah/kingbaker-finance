@@ -70,8 +70,7 @@
           </div>
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Balance</p>
-            <p v-if="hasPermission('view_reports')" class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(totalBalance) }}</p>
-            <p v-else class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-500">••••••</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(totalBalance) }}</p>
           </div>
         </div>
       </div>
