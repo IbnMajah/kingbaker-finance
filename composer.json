@@ -11,6 +11,7 @@
         "php": "^8.2",
         "ext-exif": "*",
         "ext-gd": "*",
+        "bacon/bacon-qr-code": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "fakerphp/faker": "^1.23",
         "guzzlehttp/guzzle": "^7.2",
@@ -20,6 +21,7 @@
         "laravel/tinker": "^2.9",
         "league/glide-symfony": "^2.0",
         "maatwebsite/excel": "^3.1",
+        "pragmarx/google2fa-laravel": "^2.3",
         "sentry/sentry-laravel": "^4.21"
     },
     "require-dev": {

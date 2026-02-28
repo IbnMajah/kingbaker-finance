@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(AppServiceProvider::HOME);
 
         $middleware->web(\App\Http\Middleware\HandleInertiaRequests::class);
+        $middleware->web(\App\Http\Middleware\EnsureTwoFactorAuthenticated::class);
 
         $middleware->throttleApi();
 

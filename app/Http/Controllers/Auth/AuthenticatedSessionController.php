@@ -30,7 +30,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(AppServiceProvider::HOME);
+        $user = $request->user();
+
+        if ($user->hasTwoFactorEnabled()) {
+            return redirect()->route('two-factor.challenge');
+        }
+
+        return redirect()->route('two-factor.setup');
     }
 
     /**

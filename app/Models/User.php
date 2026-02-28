@@ -33,6 +33,8 @@ class User extends Authenticatable
         'photo_path',
         'active',
         'owner',
+        'two_factor_secret',
+        'two_factor_confirmed_at',
     ];
 
     /**
@@ -43,6 +45,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     /**
@@ -55,7 +58,14 @@ class User extends Authenticatable
         'permissions' => 'array',
         'active' => 'boolean',
         'owner' => 'boolean',
+        'two_factor_secret' => 'encrypted',
+        'two_factor_confirmed_at' => 'datetime',
     ];
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return !is_null($this->two_factor_confirmed_at);
+    }
 
     public function resolveRouteBinding($value, $field = null)
     {
