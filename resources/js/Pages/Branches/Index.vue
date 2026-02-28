@@ -129,7 +129,7 @@
                   Edit
                 </Link>
                 <button
-                  v-if="!branch.deleted_at"
+                  v-if="canEditBranches && !branch.deleted_at"
                   @click="confirmDelete(branch)"
                   class="text-red-600 hover:text-red-900"
                 >
@@ -309,13 +309,15 @@ export default {
 
       this.processing = true
       this.$inertia.delete(`/branches/${this.branchToDelete.id}`, {
-        preserveState: true,
+        onSuccess: () => {
+          this.processing = false
+          this.closeDeleteModal()
+        },
         onError: () => {
           this.processing = false
         },
         onFinish: () => {
           this.processing = false
-          this.closeDeleteModal()
         },
       })
     },
