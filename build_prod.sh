@@ -4,8 +4,6 @@ git pull origin main &&
 echo "Pulled latest changes from main" &&
 composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -o &&
 echo "Composer install completed" &&
-php artisan migrate &&
-echo "Migrated successfully!" &&
 npm install &&
 echo "NPM install completed" &&
 sudo chown -R root:staff /var/www/html/finance/ &&
