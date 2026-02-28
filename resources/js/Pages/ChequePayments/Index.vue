@@ -292,7 +292,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
                     </Link>
-                    <Link v-if="canEditChequePayments && !['cleared', 'issued'].includes(payment.status)" :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900" title="Edit Payment">
+                    <Link v-if="canEditChequePayments && !['cleared'].includes(payment.status)" :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900" title="Edit Payment">
                       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
                       </svg>
@@ -420,16 +420,8 @@ export default {
       return badges[status] || 'bg-gray-100 text-gray-800'
     },
     getCategoryLabel(category) {
-      const labels = {
-        bill: 'Bill',
-        vendor_payment: 'Vendor Payment',
-        recurring_bill: 'Recurring Bill',
-        staff_advance: 'Staff Advance',
-        loan_payment: 'Loan Payment',
-        institutional_payment: 'Institutional Payment',
-        other_payment: 'Other Payment',
-      }
-      return labels[category] || 'Unknown'
+      const match = this.paymentCategories?.find(c => c.value === category)
+      return match?.label || category || 'Unknown'
     },
     getPaymentModeLabel(mode) {
       const labels = {

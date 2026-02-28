@@ -115,7 +115,7 @@
       <h2 class="text-lg font-semibold mb-4">Actions</h2>
       <div class="flex flex-wrap gap-3">
         <Link
-          v-if="!['cleared', 'issued'].includes(payment.status)"
+          v-if="!['cleared'].includes(payment.status)"
           :href="`/cheque-payments/${payment.id}/edit`"
           class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,15 +234,8 @@ export default {
       return badges[status] || 'bg-gray-100 text-gray-800'
     },
     getCategoryLabel(category) {
-      const labels = {
-        vendor_payment: 'Vendor Payment',
-        bill: 'Bill',
-        staff_advance: 'Staff Advance',
-        loan_payment: 'Loan Payment',
-        institutional_payment: 'Institutional Payment',
-        other_payment: 'Other Payment',
-      }
-      return labels[category] || 'Unknown'
+      const match = this.paymentCategories?.find(c => c.value === category)
+      return match?.label || category || 'Unknown'
     },
     getPaymentModeLabel(mode) {
       const labels = {

@@ -210,7 +210,7 @@ class ChequePaymentController extends Controller
             'summary' => $summaryStats,
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get(['id', 'name']),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
-            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn ($cat) => ['value' => $cat->value, 'label' => $cat->label]),
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -254,7 +254,7 @@ class ChequePaymentController extends Controller
                 'due_date' => $b->due_date?->format('Y-m-d'),
                 'description' => $b->description,
             ]),
-            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn ($cat) => ['value' => $cat->value, 'label' => $cat->label]),
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -394,7 +394,7 @@ class ChequePaymentController extends Controller
      */
     public function edit(ChequePayment $chequePayment): Response|RedirectResponse
     {
-        if (in_array($chequePayment->status, ['cleared', 'issued'])) {
+        if (in_array($chequePayment->status, ['cleared'])) {
             return Redirect::back()->with('error', 'Cannot edit a payment that has been ' . $chequePayment->status . '. You can only cancel or reverse it.');
         }
 
@@ -420,7 +420,7 @@ class ChequePaymentController extends Controller
                 'due_date' => $b->due_date?->format('Y-m-d'),
                 'description' => $b->description,
             ]),
-            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn ($cat) => ['value' => $cat->value, 'label' => $cat->label]),
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -450,7 +450,7 @@ class ChequePaymentController extends Controller
      */
     public function update(Request $request, ChequePayment $chequePayment): RedirectResponse
     {
-        if (in_array($chequePayment->status, ['cleared', 'issued'])) {
+        if (in_array($chequePayment->status, ['cleared'])) {
             return Redirect::back()->with('error', 'Cannot edit a payment that has been ' . $chequePayment->status . '. You can only cancel or reverse it.');
         }
 
@@ -521,7 +521,7 @@ class ChequePaymentController extends Controller
      */
     public function destroy(ChequePayment $chequePayment): RedirectResponse
     {
-        if (in_array($chequePayment->status, ['cleared', 'issued'])) {
+        if (in_array($chequePayment->status, ['cleared'])) {
             return Redirect::back()->with('error', 'Cannot delete a payment that has been ' . $chequePayment->status . '. You can only cancel or reverse it.');
         }
 

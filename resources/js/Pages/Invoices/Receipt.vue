@@ -94,7 +94,7 @@
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DESCRIPTION</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QUANTITY</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UNIT PRICE</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DISCOUNT</th>
+             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DISCOUNT</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TAXES</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AMOUNT</th>
               </tr>
@@ -161,9 +161,12 @@
           </div>
         </div>
 
-        <div v-if="invoice.bank_account" class="mt-4">
+        <div v-if="invoice.bank_account && (invoice.bank_account.account_number || invoice.bank_account.bank_name)" class="mt-4">
           <h3 class="text-sm font-medium text-gray-700 mb-2">Bank Account:</h3>
-          <p class="text-sm text-gray-600">{{ invoice.bank_account.account_number || '003202010191761141' }} - {{ invoice.bank_account.bank_name || 'Arab Gambian Islamic Bank' }}</p>
+          <p class="text-sm text-gray-600">
+            <template v-if="invoice.bank_account.account_number && invoice.bank_account.bank_name">{{ invoice.bank_account.account_number }} - {{ invoice.bank_account.bank_name }}</template>
+            <template v-else>{{ invoice.bank_account.account_number || invoice.bank_account.bank_name }}</template>
+          </p>
         </div>
       </div>
 
@@ -348,10 +351,16 @@ export default {
         return convertHundreds(Math.floor(n / 1000)) + ' Thousand ' + convertHundreds(n % 1000)
       }
 
+      const convertMillions = (n) => {
+        if (n === 0) return ''
+        if (n < 1000000) return convertThousands(n)
+        return convertThousands(Math.floor(n / 1000000)) + ' Million ' + convertThousands(n % 1000000)
+      }
+
       const integerPart = Math.floor(num)
       const decimalPart = Math.round((num - integerPart) * 100)
 
-      let result = convertThousands(integerPart)
+      let result = convertMillions(integerPart)
       if (result) result += ' Dalasi'
 
       if (decimalPart > 0) {

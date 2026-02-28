@@ -20,16 +20,16 @@ class PaymentCategoryController extends Controller
             $search = Request::input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('label', 'like', "%{$search}%")
-                  ->orWhere('value', 'like', "%{$search}%");
+                    ->orWhere('value', 'like', "%{$search}%");
             });
         }
 
-        $categories = $query->paginate(15)
-            ->through(fn ($category) => [
+        $categories = $query->withCount('chequePayments')->paginate(15)
+            ->through(fn($category) => [
                 'id' => $category->id,
                 'value' => $category->value,
                 'label' => $category->label,
-                'usage_count' => $category->chequePayments()->count(),
+                'usage_count' => $category->cheque_payments_count,
             ]);
 
         return Inertia::render('PaymentCategories/Index', [
