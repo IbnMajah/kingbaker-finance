@@ -18,8 +18,8 @@ use App\Http\Controllers\BillController;
 use App\Http\Controllers\BillPaymentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ExpenseClaimController;
-use App\Http\Controllers\ExpenseItemController;
 use App\Http\Controllers\ChequePaymentController;
+use App\Http\Controllers\PaymentCategoryController;
 use App\Http\Controllers\MiscellaneousController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolesController;
@@ -54,10 +54,12 @@ Route::middleware('auth')->group(function () {
     Route::get('two-factor/setup', [TwoFactorController::class, 'setup'])
         ->name('two-factor.setup');
     Route::post('two-factor/confirm', [TwoFactorController::class, 'confirm'])
+        ->middleware('throttle:5,1')
         ->name('two-factor.confirm');
     Route::get('two-factor/challenge', [TwoFactorController::class, 'challenge'])
         ->name('two-factor.challenge');
     Route::post('two-factor/verify', [TwoFactorController::class, 'verify'])
+        ->middleware('throttle:5,1')
         ->name('two-factor.verify');
 });
 
@@ -399,6 +401,9 @@ Route::middleware('auth')->group(function () {
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])
         ->name('invoices.print');
 
+    Route::get('invoices/{invoice}/receipt', [InvoiceController::class, 'receipt'])
+        ->name('invoices.receipt');
+
     Route::get('invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])
         ->name('invoices.download-pdf');
 
@@ -488,4 +493,8 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('cheque-payments/{chequePayment}/cancel', [ChequePaymentController::class, 'cancel'])
         ->name('cheque-payments.cancel');
+
+    // Payment Categories
+    Route::resource('payment-categories', PaymentCategoryController::class)
+        ->except(['show']);
 });

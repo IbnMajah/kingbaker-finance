@@ -117,6 +117,15 @@
             >
               Payments
             </Link>
+            <Link
+              href="/payment-categories"
+              :class="[
+                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isUrl('payment-categories') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ]"
+            >
+              Payment Categories
+            </Link>
           </div>
 
           <!-- Expenses Children -->

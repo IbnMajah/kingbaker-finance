@@ -82,15 +82,7 @@ class ChequePayment extends Model
 
     public function getCategoryLabelAttribute(): string
     {
-        return match ($this->payment_category) {
-            'vendor_payment' => 'Vendor Payment',
-            'bill' => 'Bill',
-            'staff_advance' => 'Staff Advance',
-            'loan_payment' => 'Loan Payment',
-            'institutional_payment' => 'Institutional Payment',
-            'other_payment' => 'Other Payment',
-            default => 'Unknown',
-        };
+        return PaymentCategory::where('value', $this->payment_category)->value('label') ?? 'Unknown';
     }
 
     public function getPaymentModeLabelAttribute(): string

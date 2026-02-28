@@ -653,6 +653,25 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Generate printable receipt for a paid invoice
+     */
+    public function receipt(Invoice $invoice): Response
+    {
+        if ($invoice->amount_paid <= 0) {
+            return Inertia::render('Invoices/Receipt', [
+                'invoice' => $invoice,
+                'error' => 'No payments have been recorded for this invoice.',
+            ]);
+        }
+
+        $invoice->load(['bankAccount', 'branch', 'creator', 'items']);
+
+        return Inertia::render('Invoices/Receipt', [
+            'invoice' => $invoice,
+        ]);
+    }
+
+    /**
      * Download invoice as PDF
      */
     public function downloadPdf(Invoice $invoice)

@@ -1,12 +1,12 @@
 <template>
   <div class="print-container">
-    <Head :title="`Print Invoice ${invoice.invoice_number}`" />
+    <Head :title="`Receipt - Invoice ${invoice.invoice_number}`" />
 
-    <!-- Print Header -->
+    <!-- Print Header (screen only) -->
     <div class="no-print mb-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800">Invoice Preview</h1>
-      <div class="space-x-2">
-        <button @click="printInvoice" :disabled="isPrinting" class="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 transition-colors duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+      <h1 class="text-2xl font-bold text-gray-800">Receipt Preview</h1>
+      <div class="space-x-2 flex">
+        <button @click="printReceipt" :disabled="isPrinting" class="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 transition-colors duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
           <svg v-if="!isPrinting" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
           </svg>
@@ -14,7 +14,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          {{ isPrinting ? 'Opening Print Dialog...' : 'Print Invoice' }}
+          {{ isPrinting ? 'Opening Print Dialog...' : 'Print Receipt' }}
         </button>
         <Link :href="`/invoices/${invoice.id}`" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors duration-200 flex items-center">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,13 +25,12 @@
       </div>
     </div>
 
-    <!-- Invoice Document -->
-    <div class="invoice-document bg-white">
+    <!-- Receipt Document -->
+    <div class="receipt-document bg-white">
       <!-- Company Header -->
-      <div class="invoice-header mb-8">
+      <div class="receipt-header mb-8">
         <div class="flex justify-between items-start">
           <div class="company-info">
-            <!-- King Baker Logo -->
             <logo class="block mx-auto max-w-24 fill-white" height="12" />
             <div class="text-gray-600 text-sm">
               <p>Demba Burnafa Group</p>
@@ -39,32 +38,42 @@
               <p>Banjul Gambia</p>
             </div>
           </div>
-          <div class="invoice-title text-right">
+          <div class="text-right">
+            <h2 class="text-2xl font-bold text-[#9B672A] mb-2">RECEIPT</h2>
             <div class="text-gray-500 text-sm mb-2">FOR US, BY US</div>
             <div class="text-gray-800 text-sm space-y-1">
-              <p><strong>Invoice:</strong> {{ invoice.invoice_number }}</p>
+              <p><strong>Receipt For:</strong> {{ invoice.invoice_number }}</p>
               <p><strong>Invoice Date:</strong> {{ $formatDate(invoice.invoice_date) }}</p>
-              <p v-if="invoice.due_date"><strong>Due Date:</strong> {{ $formatDate(invoice.due_date) }}</p>
+              <p><strong>Receipt Date:</strong> {{ $formatDate(receiptDate) }}</p>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Status Badge -->
+      <div class="mb-8 flex justify-center">
+        <span
+          class="inline-block px-6 py-2 rounded-full text-sm font-bold tracking-wider uppercase"
+          :class="isPaid ? 'bg-green-100 text-green-800 border-2 border-green-300' : 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300'"
+        >
+          {{ isPaid ? 'PAID IN FULL' : 'PARTIALLY PAID' }}
+        </span>
       </div>
 
       <!-- Customer Information -->
       <div class="customer-info mb-8">
         <div class="flex justify-between items-start">
           <div class="flex-1">
-            <h3 class="text-sm font-medium text-gray-700 mb-2">Bill To:</h3>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Received From:</h3>
             <div class="space-y-1">
               <p class="font-semibold text-lg text-gray-900">{{ invoice.customer_name }}</p>
               <p v-if="invoice.customer_address" class="text-sm text-gray-600">{{ invoice.customer_address }}</p>
               <p v-if="invoice.customer_email" class="text-sm text-gray-600">{{ invoice.customer_email }}</p>
               <p v-if="invoice.customer_phone" class="text-sm text-gray-600">{{ invoice.customer_phone }}</p>
-              <p v-if="invoice.customer_tax_id" class="text-sm text-gray-600">Tax ID: {{ invoice.customer_tax_id }}</p>
             </div>
           </div>
           <div class="text-right">
-            <h3 class="text-sm font-medium text-gray-700 mb-2">Invoice Details:</h3>
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Details:</h3>
             <div class="space-y-1 text-sm">
               <p><strong>Type:</strong> {{ getInvoiceTypeLabel(invoice.invoice_type) }}</p>
               <p><strong>Customer Type:</strong> {{ getCustomerTypeLabel(invoice.customer_type) }}</p>
@@ -77,7 +86,7 @@
       </div>
 
       <!-- Invoice Items Table -->
-      <div class="invoice-items mb-8">
+      <div class="receipt-items mb-8">
         <div class="overflow-hidden border border-gray-200 rounded-lg">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -108,18 +117,34 @@
                 </td>
               </tr>
             </tbody>
-            <tfoot class="bg-white">
-              <tr>
-                <td class="px-4 py-3 text-sm font-medium text-gray-900" colspan="5">Total</td>
-                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $formatAmount(invoice.amount) }}</td>
-              </tr>
-            </tfoot>
           </table>
         </div>
-        
-        <!-- Total in words -->
+      </div>
+
+      <!-- Payment Summary -->
+      <div class="mb-8">
+        <div class="overflow-hidden border border-gray-200 rounded-lg">
+          <table class="min-w-full">
+            <tbody class="divide-y divide-gray-200">
+              <tr class="bg-white">
+                <td class="px-4 py-3 text-sm font-medium text-gray-700">Invoice Total</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900 text-right">{{ $formatAmount(invoice.amount) }}</td>
+              </tr>
+              <tr class="bg-white">
+                <td class="px-4 py-3 text-sm font-medium text-green-700">Amount Paid</td>
+                <td class="px-4 py-3 text-sm font-bold text-green-700 text-right">{{ $formatAmount(invoice.amount_paid) }}</td>
+              </tr>
+              <tr v-if="balanceDue > 0" class="bg-white">
+                <td class="px-4 py-3 text-sm font-medium text-red-700">Balance Due</td>
+                <td class="px-4 py-3 text-sm font-bold text-red-700 text-right">{{ $formatAmount(balanceDue) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Amount in words -->
         <div class="mt-4 text-sm text-gray-500">
-          <p>Total amount in words: <span class="font-medium">{{ amountInWords }}</span></p>
+          <p>Amount paid in words: <span class="font-medium">{{ amountPaidInWords }}</span></p>
         </div>
       </div>
 
@@ -135,37 +160,17 @@
             <p class="text-sm text-gray-600 font-medium">{{ invoice.payment_communication || 'PAYMENT FOR SERVICES RENDERED' }}</p>
           </div>
         </div>
-        
+
         <div v-if="invoice.bank_account" class="mt-4">
           <h3 class="text-sm font-medium text-gray-700 mb-2">Bank Account:</h3>
           <p class="text-sm text-gray-600">{{ invoice.bank_account.account_number || '003202010191761141' }} - {{ invoice.bank_account.bank_name || 'Arab Gambian Islamic Bank' }}</p>
         </div>
       </div>
 
-
-      <!-- Terms & Notes -->
-      <!-- <div class="terms-notes mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 class="text-lg font-semibold mb-3 text-gray-800 border-b-2 border-brand-200 pb-1">Terms & Conditions:</h3>
-            <div class="text-sm space-y-1 text-gray-600">
-              <p>• Payment is due within 30 days of invoice date</p>
-              <p>• All prices are in Gambian Dalasi (GMD)</p>
-              <p>• Goods remain property of King Baker until paid in full</p>
-            </div>
-          </div>
-          <div v-if="invoice.notes">
-            <h3 class="text-lg font-semibold mb-3 text-gray-800 border-b-2 border-brand-200 pb-1">Notes:</h3>
-            <div class="text-sm text-gray-600">
-              <p>{{ invoice.notes }}</p>
-            </div>
-          </div>
-        </div>
-      </div> -->
-
       <!-- Footer -->
-      <div class="invoice-footer border-t border-gray-200 pt-6">
+      <div class="receipt-footer border-t border-gray-200 pt-6">
         <div class="text-sm text-gray-600 space-y-2">
+          <p class="text-center text-gray-500 italic">Thank you for your payment.</p>
           <p>Terms & Conditions: https://kingbakers.net/terms</p>
           <div class="flex justify-between items-center text-xs text-gray-500">
             <div>
@@ -178,9 +183,9 @@
       </div>
     </div>
 
-    <!-- Print Actions (visible only on screen) -->
+    <!-- Print Actions (screen only) -->
     <div class="no-print mt-8 text-center space-x-4">
-      <button @click="printInvoice" :disabled="isPrinting" class="bg-brand-600 text-white px-6 py-3 rounded-md hover:bg-brand-700 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+      <button @click="printReceipt" :disabled="isPrinting" class="bg-brand-600 text-white px-6 py-3 rounded-md hover:bg-brand-700 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
         <svg v-if="!isPrinting" class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
         </svg>
@@ -188,7 +193,7 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        {{ isPrinting ? 'Opening Print Dialog...' : 'Print Invoice' }}
+        {{ isPrinting ? 'Opening Print Dialog...' : 'Print Receipt' }}
       </button>
       <Link :href="`/invoices/${invoice.id}`" class="inline-block bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 transition-colors duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,9 +213,9 @@
           <p class="text-sm font-medium text-blue-800">Print Instructions</p>
         </div>
         <div class="text-xs text-blue-700 space-y-1">
-          <p>• Click the "Print Invoice" button above</p>
-          <p>• Use keyboard shortcut <kbd class="px-1 py-0.5 bg-blue-200 rounded text-xs">Ctrl+P</kbd></p>
-          <p>• Make sure to select the correct printer settings</p>
+          <p>Click the "Print Receipt" button above</p>
+          <p>Use keyboard shortcut <kbd class="px-1 py-0.5 bg-blue-200 rounded text-xs">Ctrl+P</kbd></p>
+          <p>Make sure to select the correct printer settings</p>
         </div>
       </div>
     </div>
@@ -229,10 +234,9 @@ export default {
     Logo,
   },
   mixins: [formatterMixin],
-  layout: null, // No layout for print page
+  layout: null,
   props: {
-      invoice: Object,
-    remaining_amount: Number,
+    invoice: Object,
   },
   data() {
     return {
@@ -240,24 +244,28 @@ export default {
     }
   },
   computed: {
-    amountInWords() {
-      return this.numberToWords(this.invoice.amount)
-    }
+    isPaid() {
+      return this.invoice.status === 'paid'
+    },
+    balanceDue() {
+      return (this.invoice.amount || 0) - (this.invoice.amount_paid || 0)
+    },
+    receiptDate() {
+      return new Date().toISOString().split('T')[0]
+    },
+    amountPaidInWords() {
+      return this.numberToWords(this.invoice.amount_paid)
+    },
   },
   mounted() {
-    // Auto-focus for immediate printing
     if (typeof window !== 'undefined') {
       window.focus()
-      // Add keyboard shortcut for printing (Ctrl+P)
       document.addEventListener('keydown', this.handleKeydown)
-
-      // Add print event listeners for better UX
       window.addEventListener('beforeprint', this.handleBeforePrint)
       window.addEventListener('afterprint', this.handleAfterPrint)
     }
   },
   beforeUnmount() {
-    // Clean up event listeners
     if (typeof document !== 'undefined') {
       document.removeEventListener('keydown', this.handleKeydown)
       window.removeEventListener('beforeprint', this.handleBeforePrint)
@@ -265,28 +273,6 @@ export default {
     }
   },
   methods: {
-    getStatusClass(status) {
-      const classes = {
-        'draft': 'bg-gray-200 text-gray-800',
-        'sent': 'bg-blue-200 text-blue-800',
-        'paid': 'bg-green-200 text-green-800',
-        'partially_paid': 'bg-yellow-200 text-yellow-800',
-        'overdue': 'bg-red-200 text-red-800',
-        'cancelled': 'bg-gray-200 text-gray-800',
-      }
-      return classes[status] || 'bg-gray-200 text-gray-800'
-    },
-    getStatusLabel(status) {
-      const labels = {
-        'draft': 'Draft',
-        'sent': 'Sent',
-        'paid': 'Paid',
-        'partially_paid': 'Partially Paid',
-        'overdue': 'Overdue',
-        'cancelled': 'Cancelled',
-      }
-      return labels[status] || status
-    },
     getInvoiceTypeLabel(type) {
       const types = {
         'bulk_sales': 'Bulk Sales',
@@ -309,44 +295,34 @@ export default {
       }
       return types[type] || type
     },
-    printInvoice() {
+    printReceipt() {
       if (typeof window !== 'undefined' && window.print) {
         this.isPrinting = true
-        // Add a small delay to ensure the page is fully rendered
         setTimeout(() => {
           window.print()
-          // Reset printing state after a delay
           setTimeout(() => {
             this.isPrinting = false
           }, 1000)
         }, 100)
       } else {
-        // Fallback for environments where print is not available
         alert('Print functionality is not available in this browser. Please use Ctrl+P or your browser\'s print menu.')
-        console.error('Print functionality not available')
       }
     },
     handleKeydown(e) {
       if (e.ctrlKey && e.key === 'p') {
-        e.preventDefault() // Prevent default browser print dialog
-        this.printInvoice()
+        e.preventDefault()
+        this.printReceipt()
       }
     },
-    handleBeforePrint() {
-      // You can add any pre-print logic here
-      console.log('Print dialog opened for invoice:', this.invoice.invoice_number)
-    },
-    handleAfterPrint() {
-      // You can add any post-print logic here
-      console.log('Print dialog closed for invoice:', this.invoice.invoice_number)
-    },
+    handleBeforePrint() {},
+    handleAfterPrint() {},
     numberToWords(num) {
       const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
       const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
       const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-      
+
       if (num === 0) return 'Zero'
-      
+
       const convertHundreds = (n) => {
         let result = ''
         if (n > 99) {
@@ -365,24 +341,24 @@ export default {
         }
         return result
       }
-      
+
       const convertThousands = (n) => {
         if (n === 0) return ''
         if (n < 1000) return convertHundreds(n)
         return convertHundreds(Math.floor(n / 1000)) + ' Thousand ' + convertHundreds(n % 1000)
       }
-      
+
       const integerPart = Math.floor(num)
       const decimalPart = Math.round((num - integerPart) * 100)
-      
+
       let result = convertThousands(integerPart)
       if (result) result += ' Dalasi'
-      
+
       if (decimalPart > 0) {
         if (result) result += ' and '
         result += convertHundreds(decimalPart) + ' Bututs'
       }
-      
+
       return result || 'Zero Dalasi'
     },
   },
@@ -390,14 +366,13 @@ export default {
 </script>
 
 <style>
-/* Print-specific styles */
 .print-container {
   min-height: 100vh;
   background: #f5f5f5;
   padding: 20px;
 }
 
-.invoice-document {
+.receipt-document {
   max-width: 800px;
   margin: 0 auto;
   padding: 40px;
@@ -405,14 +380,13 @@ export default {
   background: white;
 }
 
-/* Print media queries */
 @media print {
   .print-container {
     background: white;
     padding: 0;
   }
 
-  .invoice-document {
+  .receipt-document {
     box-shadow: none;
     padding: 20px;
     max-width: none;
@@ -423,14 +397,12 @@ export default {
     display: none !important;
   }
 
-  /* Ensure proper page breaks */
-  .invoice-header,
+  .receipt-header,
   .customer-info,
-  .financial-summary {
+  .receipt-items {
     page-break-inside: avoid;
   }
 
-  /* Adjust font sizes for print */
   body {
     font-size: 12pt;
     line-height: 1.4;
@@ -442,28 +414,26 @@ export default {
   h3 { font-size: 16pt; }
   h4 { font-size: 14pt; }
 
-  /* Ensure colors print correctly */
   .text-brand-brown { color: #9B672A !important; }
   .text-gray-800 { color: #1f2937 !important; }
   .text-gray-600 { color: #4b5563 !important; }
   .text-gray-500 { color: #6b7280 !important; }
   .text-green-600 { color: #059669 !important; }
+  .text-green-700 { color: #047857 !important; }
+  .text-green-800 { color: #065f46 !important; }
   .text-red-600 { color: #dc2626 !important; }
-  .text-blue-800 { color: #1e40af !important; }
+  .text-red-700 { color: #b91c1c !important; }
   .text-yellow-800 { color: #92400e !important; }
-  .bg-brand-brown { background-color: #9B672A !important; }
 
-  /* Print optimization */
-  .invoice-document {
+  .receipt-document {
     -webkit-print-color-adjust: exact;
     color-adjust: exact;
     print-color-adjust: exact;
   }
 }
 
-/* Screen-only styles */
 @media screen {
-  .invoice-document {
+  .receipt-document {
     border-radius: 8px;
   }
 }

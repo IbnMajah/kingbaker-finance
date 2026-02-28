@@ -111,6 +111,11 @@ class TwoFactorController extends Controller
         $user = $request->user();
         $secret = $user->two_factor_secret;
 
+        if (!$secret) {
+            return back()->withErrors(['code' => 'Two-factor authentication is not enabled. Please contact the administrator.']);
+        }
+
+
         $valid = $this->google2fa->verifyKey($secret, $request->code);
 
         if (!$valid) {

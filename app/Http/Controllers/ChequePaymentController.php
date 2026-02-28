@@ -7,8 +7,10 @@ use App\Models\Bill;
 use App\Models\BillPayment;
 use App\Models\Branch;
 use App\Models\ChequePayment;
+use App\Models\PaymentCategory;
 use App\Models\Transaction;
 use App\Models\Vendor;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -208,14 +210,7 @@ class ChequePaymentController extends Controller
             'summary' => $summaryStats,
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get(['id', 'name']),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
-            'paymentCategories' => [
-                ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
-                ['value' => 'bill', 'label' => 'Bill'],
-                ['value' => 'staff_advance', 'label' => 'Staff Advance'],
-                ['value' => 'loan_payment', 'label' => 'Loan Payment'],
-                ['value' => 'institutional_payment', 'label' => 'Institutional Payment'],
-                ['value' => 'other_payment', 'label' => 'Other Payment'],
-            ],
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn ($cat) => ['value' => $cat->value, 'label' => $cat->label]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -259,14 +254,7 @@ class ChequePaymentController extends Controller
                 'due_date' => $b->due_date?->format('Y-m-d'),
                 'description' => $b->description,
             ]),
-            'paymentCategories' => [
-                ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
-                ['value' => 'bill', 'label' => 'Bill'],
-                ['value' => 'staff_advance', 'label' => 'Staff Advance'],
-                ['value' => 'loan_payment', 'label' => 'Loan Payment'],
-                ['value' => 'institutional_payment', 'label' => 'Institutional Payment'],
-                ['value' => 'other_payment', 'label' => 'Other Payment'],
-            ],
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn ($cat) => ['value' => $cat->value, 'label' => $cat->label]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -294,7 +282,7 @@ class ChequePaymentController extends Controller
             'payee' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'payment_category' => 'required|in:vendor_payment,bill,staff_advance,loan_payment,institutional_payment,other_payment',
+            'payment_category' => ['required', Rule::exists('payment_categories', 'value')],
             'payment_mode' => 'required|in:cheque,bank_transfer,cash,nafa,wave,other',
             'bank_account_id' => 'required|exists:bank_accounts,id',
             'branch_id' => 'nullable|exists:branches,id',
@@ -404,8 +392,12 @@ class ChequePaymentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ChequePayment $chequePayment): Response
+    public function edit(ChequePayment $chequePayment): Response|RedirectResponse
     {
+        if (in_array($chequePayment->status, ['cleared', 'issued'])) {
+            return Redirect::back()->with('error', 'Cannot edit a payment that has been ' . $chequePayment->status . '. You can only cancel or reverse it.');
+        }
+
         return Inertia::render('ChequePayments/Edit', [
             'payment' => $chequePayment->load(['bankAccount', 'branch', 'vendor', 'bill']),
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get()->map(fn($a) => [
@@ -428,14 +420,7 @@ class ChequePaymentController extends Controller
                 'due_date' => $b->due_date?->format('Y-m-d'),
                 'description' => $b->description,
             ]),
-            'paymentCategories' => [
-                ['value' => 'vendor_payment', 'label' => 'Vendor Payment'],
-                ['value' => 'bill', 'label' => 'Bill'],
-                ['value' => 'staff_advance', 'label' => 'Staff Advance'],
-                ['value' => 'loan_payment', 'label' => 'Loan Payment'],
-                ['value' => 'institutional_payment', 'label' => 'Institutional Payment'],
-                ['value' => 'other_payment', 'label' => 'Other Payment'],
-            ],
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn ($cat) => ['value' => $cat->value, 'label' => $cat->label]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -465,11 +450,15 @@ class ChequePaymentController extends Controller
      */
     public function update(Request $request, ChequePayment $chequePayment): RedirectResponse
     {
+        if (in_array($chequePayment->status, ['cleared', 'issued'])) {
+            return Redirect::back()->with('error', 'Cannot edit a payment that has been ' . $chequePayment->status . '. You can only cancel or reverse it.');
+        }
+
         $validated = $request->validate([
             'payee' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'payment_category' => 'required|in:vendor_payment,bill,staff_advance,loan_payment,institutional_payment,other_payment',
+            'payment_category' => ['required', Rule::exists('payment_categories', 'value')],
             'payment_mode' => 'required|in:cheque,bank_transfer,cash,nafa,wave,other',
             'bank_account_id' => 'required|exists:bank_accounts,id',
             'branch_id' => 'nullable|exists:branches,id',
@@ -532,8 +521,8 @@ class ChequePaymentController extends Controller
      */
     public function destroy(ChequePayment $chequePayment): RedirectResponse
     {
-        if ($chequePayment->status === 'cleared') {
-            return Redirect::back()->with('error', 'Cannot delete a cleared payment.');
+        if (in_array($chequePayment->status, ['cleared', 'issued'])) {
+            return Redirect::back()->with('error', 'Cannot delete a payment that has been ' . $chequePayment->status . '. You can only cancel or reverse it.');
         }
 
         DB::beginTransaction();
