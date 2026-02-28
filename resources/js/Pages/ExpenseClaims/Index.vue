@@ -70,7 +70,7 @@
           </div>
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(totalAmount) }}</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(totalAmount)" /></p>
             <p class="text-xs text-gray-500 mt-1 hidden lg:block">Current month claims</p>
           </div>
         </div>
@@ -258,13 +258,14 @@ import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
 import mapValues from 'lodash/mapValues'
 import { formatterMixin } from '@/Utils/formatters'
-
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 
 export default {
   components: {
     Head,
     Link,
     Pagination,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,

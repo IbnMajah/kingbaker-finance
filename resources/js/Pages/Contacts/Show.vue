@@ -26,7 +26,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Credits</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(credit_summary.total_credits) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(credit_summary.total_credits)" /></p>
           </div>
         </div>
       </div>
@@ -42,7 +42,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Paid</p>
-            <p class="text-2xl font-semibold text-green-600">{{ $formatAmount(credit_summary.total_paid) }}</p>
+            <p class="text-2xl font-semibold text-green-600"><MaskableAmount :value="$formatAmount(credit_summary.total_paid)" /></p>
           </div>
         </div>
       </div>
@@ -59,7 +59,7 @@
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Outstanding</p>
             <p class="text-2xl font-semibold" :class="credit_summary.total_outstanding > 0 ? 'text-red-600' : 'text-green-600'">
-              {{ $formatAmount(credit_summary.total_outstanding) }}
+              <MaskableAmount :value="$formatAmount(credit_summary.total_outstanding)" />
             </p>
           </div>
         </div>
@@ -298,12 +298,14 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 import { formatterMixin } from '@/Utils/formatters'
 
 export default {
   components: {
     Head,
     Link,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,

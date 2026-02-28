@@ -7,13 +7,14 @@
             <component :is="icon" class="h-8 w-8 text-muted-foreground" />
         </CardHeader>
         <CardContent v-if="numberValue || change">
-            <div class="text-2xl font-bold">{{ numberValue }}</div>
+            <div class="text-2xl font-bold"><MaskableAmount :value="numberValue" /></div>
             <p class="text-xs text-muted-foreground">{{ change }}</p>
         </CardContent>
     </div>
 </template>
 
 <script>
+import MaskableAmount from "@/Shared/MaskableAmount.vue";
 import CardHeader from "@/Shared/CardHeader.vue";
 import CardTitle from "@/Shared/CardTitle.vue";
 import CardDescription from "@/Shared/CardDescription.vue";
@@ -24,6 +25,7 @@ import { cn } from "@/Utils/utils";
 export default {
   name: "Card",
   components: {
+    MaskableAmount,
     CardHeader,
     CardTitle,
     CardDescription,

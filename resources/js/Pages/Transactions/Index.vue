@@ -39,7 +39,7 @@
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Credits</p>
             <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ summary.total_credits || 0 }}</p>
             <p class="text-xs text-gray-500 mt-1">
-              {{ $formatAmount(summary.total_credit_amount || 0) }}</p>
+              <MaskableAmount :value="$formatAmount(summary.total_credit_amount || 0)" /></p>
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Debits</p>
             <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ summary.total_debits || 0 }}</p>
             <p class="text-xs text-gray-500 mt-1">
-              {{ $formatAmount(summary.total_debit_amount || 0) }}</p>
+              <MaskableAmount :value="$formatAmount(summary.total_debit_amount || 0)" /></p>
           </div>
         </div>
       </div>
@@ -266,6 +266,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
 import mapValues from 'lodash/mapValues'
@@ -276,7 +277,8 @@ export default {
     Head,
     Link,
     Pagination,
-    },
+    MaskableAmount,
+  },
   mixins: [formatterMixin],
   layout: Layout,
   setup() {

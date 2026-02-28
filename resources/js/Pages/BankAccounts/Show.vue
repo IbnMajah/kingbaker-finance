@@ -17,7 +17,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Current Balance</div>
         <div v-if="hasPermission('view_reports')" class="text-2xl font-bold" :class="bankAccount.current_balance >= 0 ? 'text-green-600' : 'text-red-600'">
-          {{ $formatAmount(bankAccount.current_balance) }}
+          <MaskableAmount :value="$formatAmount(bankAccount.current_balance)" />
         </div>
         <div v-else class="text-2xl font-bold text-gray-500">
           ••••••
@@ -26,7 +26,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Total Credits</div>
         <div v-if="hasPermission('view_reports')" class="text-2xl font-bold text-green-600">
-          {{ $formatAmount(summary.total_credits) }}
+          <MaskableAmount :value="$formatAmount(summary.total_credits)" />
         </div>
         <div v-else class="text-2xl font-bold text-gray-500">
           ••••••
@@ -35,7 +35,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Total Debits</div>
         <div v-if="hasPermission('view_reports')" class="text-2xl font-bold text-red-600">
-          {{ $formatAmount(summary.total_debits) }}
+          <MaskableAmount :value="$formatAmount(summary.total_debits)" />
         </div>
         <div v-else class="text-2xl font-bold text-gray-500">
           ••••••
@@ -44,7 +44,7 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Net Movement</div>
         <div v-if="hasPermission('view_reports')" class="text-2xl font-bold" :class="summary.net_movement >= 0 ? 'text-green-600' : 'text-red-600'">
-          {{ $formatAmount(summary.net_movement) }}
+          <MaskableAmount :value="$formatAmount(summary.net_movement)" />
         </div>
         <div v-else class="text-2xl font-bold text-gray-500">
           ••••••
@@ -241,6 +241,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
 import throttle from 'lodash/throttle'
@@ -251,6 +252,7 @@ export default {
   components: {
     Head,
     Link,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,

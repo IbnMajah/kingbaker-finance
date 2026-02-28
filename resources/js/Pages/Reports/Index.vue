@@ -19,7 +19,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Total Revenue</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ formatCurrency(overview.totalRevenue) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="formatCurrency(overview.totalRevenue)" /></p>
           </div>
         </div>
       </div>
@@ -33,7 +33,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Total Expenses</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ formatCurrency(overview.totalExpenses) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="formatCurrency(overview.totalExpenses)" /></p>
           </div>
         </div>
       </div>
@@ -48,7 +48,7 @@
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Net Profit</p>
             <p class="text-2xl font-semibold" :class="overview.netProfit >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ formatCurrency(overview.netProfit) }}
+              <MaskableAmount :value="formatCurrency(overview.netProfit)" />
             </p>
           </div>
         </div>
@@ -382,11 +382,13 @@ import { Head } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import Chart from 'chart.js/auto'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 // import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
     Head,
+    MaskableAmount,
   },
   layout: Layout,
   setup() {

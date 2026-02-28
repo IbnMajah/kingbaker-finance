@@ -3,7 +3,7 @@
     <div class="flex justify-between items-start">
       <div>
         <h3 class="text-lg font-medium text-gray-900">{{ title }}</h3>
-        <div class="mt-1 text-3xl font-semibold">{{ amount }}</div>
+        <div class="mt-1 text-3xl font-semibold"><MaskableAmount :value="amount" /></div>
       </div>
       <div :class="[
         'flex items-center text-sm',
@@ -43,7 +43,12 @@
 </template>
 
 <script>
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
+
 export default {
+  components: {
+    MaskableAmount,
+  },
   props: {
     title: {
       type: String,

@@ -17,19 +17,19 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Invoice Amount</div>
         <div class="text-2xl font-bold text-gray-900">
-          {{ $formatAmount(invoice.amount) }}
+          <MaskableAmount :value="$formatAmount(invoice.amount)" />
         </div>
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Amount Paid</div>
         <div class="text-2xl font-bold text-green-600">
-          {{ $formatAmount(invoice.amount_paid) }}
+          <MaskableAmount :value="$formatAmount(invoice.amount_paid)" />
         </div>
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <div class="text-sm font-medium text-gray-500">Balance Due</div>
         <div class="text-2xl font-bold" :class="balanceDue > 0 ? 'text-red-600' : 'text-green-600'">
-          {{ $formatAmount(balanceDue) }}
+          <MaskableAmount :value="$formatAmount(balanceDue)" />
         </div>
       </div>
       <div class="bg-white rounded-lg shadow p-6">
@@ -403,6 +403,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 import { router } from '@inertiajs/vue3'
 import { usePermissions } from '@/composables/usePermissions.js'
 
@@ -410,6 +411,7 @@ export default {
   components: {
     Head,
     Link,
+    MaskableAmount,
   },
   layout: Layout,
   setup() {

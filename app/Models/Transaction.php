@@ -24,6 +24,7 @@ class Transaction extends Model
         'branch_id',
 
         'category',
+        'subcategory',
         'image_path',
         'created_by',
         'is_reconciled',

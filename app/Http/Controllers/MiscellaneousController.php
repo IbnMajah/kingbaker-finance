@@ -51,13 +51,13 @@ class MiscellaneousController extends Controller
             ->orderBy('transaction_date', 'desc');
 
         // Calculate summary statistics with same filters
-        $summaryQuery = clone $query;
+        $totalDebits = (clone $query)->where('type', 'debit')->sum('amount');
+        $totalCredits = (clone $query)->where('type', 'credit')->sum('amount');
         $summaryStats = [
-            'total_transactions' => $summaryQuery->count(),
-            'total_debits' => $summaryQuery->where('type', 'debit')->sum('amount'),
-            'total_credits' => $summaryQuery->where('type', 'credit')->sum('amount'),
-            'net_amount' => $summaryQuery->where('type', 'credit')->sum('amount') -
-                $summaryQuery->where('type', 'debit')->sum('amount'),
+            'total_transactions' => (clone $query)->count(),
+            'total_debits' => $totalDebits,
+            'total_credits' => $totalCredits,
+            'net_amount' => $totalCredits - $totalDebits,
         ];
 
         $transactions = $query->paginate(100)->withQueryString()

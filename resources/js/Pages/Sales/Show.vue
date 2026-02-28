@@ -26,7 +26,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-green-600">{{ $formatAmount(sale.total_amount || sale.amount) }}</p>
+            <p class="text-2xl font-semibold text-green-600"><MaskableAmount :value="$formatAmount(sale.total_amount || sale.amount)" /></p>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Depositable Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(sale.amount) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(sale.amount)" /></p>
           </div>
         </div>
       </div>
@@ -225,6 +225,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 import { formatterMixin } from '@/Utils/formatters'
 import { usePermissions } from '@/composables/usePermissions.js'
 
@@ -232,6 +233,7 @@ export default {
   components: {
     Head,
     Link,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,

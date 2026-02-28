@@ -25,7 +25,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(expenseClaim.total) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(expenseClaim.total)" /></p>
           </div>
         </div>
       </div>
@@ -361,6 +361,7 @@
 import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
+import MaskableAmount from '@/Shared/MaskableAmount.vue';
 import { formatterMixin } from '@/Utils/formatters'
 
 
@@ -368,6 +369,7 @@ export default {
   components: {
     Head,
     Link,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,

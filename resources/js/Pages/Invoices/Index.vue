@@ -37,7 +37,7 @@
           </div>
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_amount) }}</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(summary.total_amount)" /></p>
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
           </div>
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Amount Paid</p>
-            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.total_paid) }}</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(summary.total_paid)" /></p>
           </div>
         </div>
       </div>
@@ -67,7 +67,7 @@
           </div>
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Pending Amount</p>
-            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{{ $formatAmount(summary.pending_amount) }}</p>
+            <p class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(summary.pending_amount)" /></p>
           </div>
         </div>
       </div>
@@ -290,6 +290,7 @@ import Layout from '@/Shared/Layout.vue'
 import Pagination from '@/Shared/Pagination.vue'
 import { usePermissions } from '@/composables/usePermissions.js'
 import { formatterMixin } from '@/Utils/formatters'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
 import mapValues from 'lodash/mapValues'
@@ -299,6 +300,7 @@ export default {
     Head,
     Link,
     Pagination,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,

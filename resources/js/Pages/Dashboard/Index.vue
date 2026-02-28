@@ -75,7 +75,7 @@
               <div class="text-sm text-gray-500">Claims to Review</div>
             </div>
             <div>
-              <div class="text-2xl font-bold">{{ formatCurrency(expenseClaims.pendingAmount) }}</div>
+              <div class="text-2xl font-bold"><MaskableAmount :value="formatCurrency(expenseClaims.pendingAmount)" /></div>
               <div class="text-sm text-gray-500">Total Amount</div>
             </div>
           </div>
@@ -152,12 +152,14 @@ import { usePermissions } from '@/composables/usePermissions.js'
 import Chart from 'chart.js/auto'
 import Card from '@/Shared/Card.vue'
 import { formatterMixin } from '@/Utils/formatters'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 // import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
     Head,
     Card,
+    MaskableAmount,
   },
   layout: Layout,
   mixins: [formatterMixin],

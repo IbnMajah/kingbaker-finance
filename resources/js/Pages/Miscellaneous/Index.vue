@@ -39,7 +39,7 @@
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Debits</p>
             <p class="text-lg md:text-xl lg:text-2xl font-semibold text-red-600">
-              {{ $formatAmount(totalDebits) }}
+              <MaskableAmount :value="$formatAmount(totalDebits)" />
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Total Credits</p>
             <p class="text-lg md:text-xl lg:text-2xl font-semibold text-green-600">
-              {{ $formatAmount(totalCredits) }}
+              <MaskableAmount :value="$formatAmount(totalCredits)" />
             </p>
           </div>
         </div>
@@ -75,7 +75,7 @@
           <div class="lg:ml-4">
             <p class="text-xs md:text-sm font-medium text-gray-600">Net Amount</p>
             <p class="text-lg md:text-xl lg:text-2xl font-semibold" :class="netAmount >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ $formatAmount(netAmount) }}
+              <MaskableAmount :value="$formatAmount(netAmount)" />
             </p>
           </div>
         </div>
@@ -319,12 +319,14 @@ import { usePermissions } from '@/composables/usePermissions.js'
 import throttle from 'lodash/throttle'
 import pickBy from 'lodash/pickBy'
 import mapValues from 'lodash/mapValues'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 
 export default {
   components: {
     Head,
     Link,
     Pagination,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,

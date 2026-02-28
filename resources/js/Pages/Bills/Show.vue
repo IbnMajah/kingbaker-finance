@@ -26,7 +26,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(bill.amount) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(bill.amount)" /></p>
           </div>
         </div>
       </div>
@@ -42,7 +42,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Amount Paid</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(bill.amount_paid || 0) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(bill.amount_paid || 0)" /></p>
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Balance Due</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $formatAmount(balanceDue) }}</p>
+            <p class="text-2xl font-semibold text-gray-900"><MaskableAmount :value="$formatAmount(balanceDue)" /></p>
           </div>
         </div>
       </div>
@@ -419,6 +419,7 @@
 <script>
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import MaskableAmount from '@/Shared/MaskableAmount.vue'
 import { formatterMixin } from '@/Utils/formatters'
 import { usePermissions } from '@/composables/usePermissions.js'
 
@@ -426,6 +427,7 @@ export default {
   components: {
     Head,
     Link,
+    MaskableAmount,
   },
   mixins: [formatterMixin],
   layout: Layout,
