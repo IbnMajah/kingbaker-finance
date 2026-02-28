@@ -207,6 +207,7 @@ export default {
   layout: Layout,
   props: {
     payment: Object,
+    paymentCategories: Array,
   },
   data() {
     return {
@@ -233,6 +234,7 @@ export default {
       }
       return badges[status] || 'bg-gray-100 text-gray-800'
     },
+
     getCategoryLabel(category) {
       const match = this.paymentCategories?.find(c => c.value === category)
       return match?.label || category || 'Unknown'

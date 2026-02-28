@@ -386,6 +386,7 @@ class ChequePaymentController extends Controller
 
         return Inertia::render('ChequePayments/Show', [
             'payment' => $chequePayment,
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
         ]);
     }
 
