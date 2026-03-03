@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -23,6 +24,7 @@ class MiscellaneousController extends Controller
         $query = Transaction::query()
             ->with(['bankAccount', 'branch', 'creator'])
             ->where('category', 'miscellaneous')
+            ->whereNull('reversed_at')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('description', 'like', "%{$search}%")
@@ -184,7 +186,7 @@ class MiscellaneousController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        if ($transaction->category !== 'miscellaneous') {
+        if ($transaction->category !== 'miscellaneous' || $transaction->reversed_at) {
             abort(404);
         }
 
@@ -224,7 +226,7 @@ class MiscellaneousController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        if ($transaction->category !== 'miscellaneous') {
+        if ($transaction->category !== 'miscellaneous' || $transaction->reversed_at) {
             abort(404);
         }
 
@@ -272,7 +274,7 @@ class MiscellaneousController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        if ($transaction->category !== 'miscellaneous') {
+        if ($transaction->category !== 'miscellaneous' || $transaction->reversed_at) {
             abort(404);
         }
 
@@ -314,23 +316,57 @@ class MiscellaneousController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * Creates a reverse transaction for the bank account (like BillPayment/ExpenseClaimPayment
+     * deletions): the original transaction remains for audit and balance stays correct.
      */
     public function destroy(string $id): RedirectResponse
     {
         $transaction = Transaction::findOrFail($id);
 
-        if ($transaction->category !== 'miscellaneous') {
+        if ($transaction->category !== 'miscellaneous' || $transaction->reversed_at) {
             abort(404);
         }
 
-        // Delete receipt image if exists
-        if ($transaction->image_path) {
-            Storage::disk('public')->delete($transaction->image_path);
+        DB::beginTransaction();
+        try {
+            // Create a reverse transaction (opposite type) to offset the original on this bank account.
+            if ($transaction->bank_account_id) {
+                $reverseType = $transaction->type === 'debit' ? 'credit' : 'debit';
+                Transaction::create([
+                    'bank_account_id' => $transaction->bank_account_id,
+                    'transaction_date' => now()->toDateString(),
+                    'type' => $reverseType,
+                    'payment_mode' => $transaction->payment_mode,
+                    'reference_number' => 'REV-' . ($transaction->reference_number ?? 'MISC-' . $transaction->id),
+                    'payee' => $transaction->payee,
+                    'amount' => $transaction->amount,
+                    'description' => 'Reversal: ' . ($transaction->description ?? 'Miscellaneous transaction'),
+                    'category' => 'miscellaneous_reversal',
+                    'branch_id' => $transaction->branch_id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            // Mark as reversed so it no longer appears in the list; original stays for audit and balance (original + reverse = net zero).
+            $updateData = ['reversed_at' => now()];
+            if ($transaction->image_path) {
+                Storage::disk('public')->delete($transaction->image_path);
+                $updateData['image_path'] = null;
+            }
+            $transaction->update($updateData);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Redirect::back()->withErrors([
+                'error' => 'An error occurred while deleting the transaction: ' . $e->getMessage(),
+            ]);
         }
 
-        $transaction->delete();
-
-        return Redirect::route('miscellaneous.index')->with('success', 'Transaction deleted successfully.');
+        return Redirect::route('miscellaneous.index')->with(
+            'success',
+            'Transaction deleted successfully. A reverse transaction has been created for the bank account.'
+        );
     }
 
     /**
@@ -340,7 +376,7 @@ class MiscellaneousController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        if ($transaction->category !== 'miscellaneous') {
+        if ($transaction->category !== 'miscellaneous' || $transaction->reversed_at) {
             abort(404);
         }
 

@@ -28,12 +28,14 @@ class Transaction extends Model
         'image_path',
         'created_by',
         'is_reconciled',
+        'reversed_at',
     ];
 
     protected $casts = [
         'transaction_date' => 'date',
         'amount' => 'decimal:2',
         'is_reconciled' => 'boolean',
+        'reversed_at' => 'datetime',
     ];
 
     public function bankAccount(): BelongsTo
