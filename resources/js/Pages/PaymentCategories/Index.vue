@@ -41,6 +41,7 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Label</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value (Slug)</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usage</th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
@@ -52,6 +53,10 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <code class="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">{{ category.value }}</code>
+            </td>
+            <td class="px-6 py-4">
+              <div v-if="category.description" class="text-sm text-gray-700 max-w-xs truncate">{{ category.description }}</div>
+              <span v-else class="text-sm text-gray-400 italic">Not set</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="text-sm text-gray-500">{{ category.usage_count }} payment{{ category.usage_count !== 1 ? 's' : '' }}</span>
@@ -74,7 +79,7 @@
             </td>
           </tr>
           <tr v-if="categories.data.length === 0">
-            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
               No categories found. <Link href="/payment-categories/create" class="text-brand-600 hover:text-brand-900">Create one</Link>
             </td>
           </tr>

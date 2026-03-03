@@ -40,6 +40,34 @@
             <p class="mt-1 text-xs text-gray-500">Auto-generated from label. Use lowercase letters and underscores only.</p>
             <div v-if="form.errors.value" class="form-error">{{ form.errors.value }}</div>
           </div>
+
+          <div>
+            <label class="form-label" for="description">Description:</label>
+            <input
+              id="description"
+              v-model="form.description"
+              class="form-input"
+              :class="{ error: form.errors.description }"
+              type="text"
+              placeholder="e.g. Payments to vendors for inventory purchases"
+            />
+            <p class="mt-1 text-xs text-gray-500">Shown below the category selector when creating a payment.</p>
+            <div v-if="form.errors.description" class="form-error">{{ form.errors.description }}</div>
+          </div>
+
+          <div>
+            <label class="form-label" for="description_placeholder">Description Placeholder:</label>
+            <input
+              id="description_placeholder"
+              v-model="form.description_placeholder"
+              class="form-input"
+              :class="{ error: form.errors.description_placeholder }"
+              type="text"
+              placeholder="e.g. Describe the vendor payment (e.g., inventory purchase, supplies)"
+            />
+            <p class="mt-1 text-xs text-gray-500">Placeholder text for the description field when creating a payment.</p>
+            <div v-if="form.errors.description_placeholder" class="form-error">{{ form.errors.description_placeholder }}</div>
+          </div>
         </div>
 
         <div class="flex items-center justify-end px-8 py-4 bg-gray-50 border-t border-gray-100 space-x-3">
@@ -74,6 +102,8 @@ export default {
       form: this.$inertia.form({
         label: '',
         value: '',
+        description: '',
+        description_placeholder: '',
       }),
     }
   },

@@ -14,6 +14,8 @@ class PaymentCategory extends Model
     protected $fillable = [
         'value',
         'label',
+        'description',
+        'description_placeholder',
     ];
 
     public function chequePayments(): HasMany

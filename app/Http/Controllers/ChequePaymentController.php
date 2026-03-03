@@ -210,7 +210,7 @@ class ChequePaymentController extends Controller
             'summary' => $summaryStats,
             'bankAccounts' => BankAccount::where('active', true)->orderBy('name')->get(['id', 'name']),
             'branches' => Branch::orderBy('name')->get(['id', 'name']),
-            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label, 'description' => $cat->description, 'description_placeholder' => $cat->description_placeholder]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -254,7 +254,7 @@ class ChequePaymentController extends Controller
                 'due_date' => $b->due_date?->format('Y-m-d'),
                 'description' => $b->description,
             ]),
-            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label, 'description' => $cat->description, 'description_placeholder' => $cat->description_placeholder]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],
@@ -386,7 +386,7 @@ class ChequePaymentController extends Controller
 
         return Inertia::render('ChequePayments/Show', [
             'payment' => $chequePayment,
-            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label, 'description' => $cat->description, 'description_placeholder' => $cat->description_placeholder]),
         ]);
     }
 
@@ -421,7 +421,7 @@ class ChequePaymentController extends Controller
                 'due_date' => $b->due_date?->format('Y-m-d'),
                 'description' => $b->description,
             ]),
-            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label]),
+            'paymentCategories' => PaymentCategory::orderBy('label')->get()->map(fn($cat) => ['value' => $cat->value, 'label' => $cat->label, 'description' => $cat->description, 'description_placeholder' => $cat->description_placeholder]),
             'paymentModes' => [
                 ['value' => 'cheque', 'label' => 'Cheque'],
                 ['value' => 'bank_transfer', 'label' => 'Bank Transfer'],

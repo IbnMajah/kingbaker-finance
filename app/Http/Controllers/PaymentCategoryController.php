@@ -29,6 +29,8 @@ class PaymentCategoryController extends Controller
                 'id' => $category->id,
                 'value' => $category->value,
                 'label' => $category->label,
+                'description' => $category->description,
+                'description_placeholder' => $category->description_placeholder,
                 'usage_count' => $category->cheque_payments_count,
             ]);
 
@@ -48,6 +50,8 @@ class PaymentCategoryController extends Controller
         $validated = Request::validate([
             'value' => ['required', 'string', 'max:255', Rule::unique('payment_categories', 'value')],
             'label' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'description_placeholder' => ['nullable', 'string', 'max:500'],
         ]);
 
         PaymentCategory::create($validated);
@@ -62,6 +66,8 @@ class PaymentCategoryController extends Controller
                 'id' => $paymentCategory->id,
                 'value' => $paymentCategory->value,
                 'label' => $paymentCategory->label,
+                'description' => $paymentCategory->description,
+                'description_placeholder' => $paymentCategory->description_placeholder,
                 'usage_count' => $paymentCategory->chequePayments()->count(),
             ],
         ]);
@@ -72,6 +78,8 @@ class PaymentCategoryController extends Controller
         $validated = Request::validate([
             'value' => ['required', 'string', 'max:255', Rule::unique('payment_categories', 'value')->ignore($paymentCategory->id)],
             'label' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'description_placeholder' => ['nullable', 'string', 'max:500'],
         ]);
 
         $paymentCategory->update($validated);

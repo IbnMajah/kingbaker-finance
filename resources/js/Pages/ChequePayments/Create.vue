@@ -360,26 +360,12 @@ export default {
       this.form.post('/cheque-payments')
     },
     getCategoryDescription() {
-      const descriptions = {
-        vendor_payment: 'Payments to vendors for inventory purchases',
-        bill: 'Payments for bills (can be one-time or recurring)',
-        staff_advance: 'Advances or loans given to staff members',
-        loan_payment: 'Loan repayments to financial institutions',
-        institutional_payment: 'Payments to government or regulatory bodies',
-        other_payment: 'Other miscellaneous payments'
-      }
-      return descriptions[this.form.payment_category] || 'Select a category to see description'
+      const category = this.paymentCategories.find(c => c.value === this.form.payment_category)
+      return category?.description || 'Select a category to see description'
     },
     getDescriptionPlaceholder() {
-      const placeholders = {
-        vendor_payment: 'Describe the vendor payment (e.g., inventory purchase, supplies)',
-        bill: 'Describe the bill payment (e.g., electricity bill for December 2024)',
-        staff_advance: 'Describe the staff advance (e.g., salary advance for John Doe)',
-        loan_payment: 'Describe the loan payment (e.g., monthly installment for business loan)',
-        institutional_payment: 'Describe the institutional payment (e.g., tax payment, license renewal)',
-        other_payment: 'Describe the payment purpose and details'
-      }
-      return placeholders[this.form.payment_category] || 'Describe the payment purpose and details'
+      const category = this.paymentCategories.find(c => c.value === this.form.payment_category)
+      return category?.description_placeholder || 'Describe the payment purpose and details'
     },
     updateFromBill() {
       if (this.form.bill_id) {
