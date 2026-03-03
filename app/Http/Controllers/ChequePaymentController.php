@@ -593,6 +593,23 @@ class ChequePaymentController extends Controller
                             ]);
                         }
                     }
+
+                    // Keep BillPayment in sync with the cheque payment and bill
+                    $billPayment = BillPayment::where('bill_id', $chequePayment->bill_id)
+                        ->where('amount', $chequePayment->amount)
+                        ->where('payment_date', $chequePayment->payment_date)
+                        ->where('bank_account_id', $chequePayment->bank_account_id)
+                        ->first();
+
+                    if ($billPayment) {
+                        $billPayment->update([
+                            'amount' => $validated['amount'],
+                            'payment_date' => $validated['payment_date'],
+                            'reference_number' => $validated['reference_number'] ?? null,
+                            'payment_method' => $validated['payment_mode'],
+                            'bank_account_id' => $validated['bank_account_id'],
+                        ]);
+                    }
                 }
 
                 unset($validated['bill_type'], $validated['bill_number'], $validated['due_date'], $validated['bill_image'], $validated['items']);
