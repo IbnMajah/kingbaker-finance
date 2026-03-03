@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -358,8 +359,13 @@ class MiscellaneousController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            // Log the actual error for debugging
+            Log::error('Transaction reversal failed', [
+                'transaction_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
             return Redirect::back()->withErrors([
-                'error' => 'An error occurred while deleting the transaction: ' . $e->getMessage(),
+                'error' => 'An error occurred while deleting the transaction. Please try again or contact support.',
             ]);
         }
 
