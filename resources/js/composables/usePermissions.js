@@ -34,6 +34,7 @@ export function usePermissions() {
     const canEditBills = computed(() => store.canEditBills)
     const canViewChequePayments = computed(() => store.canViewChequePayments)
     const canEditChequePayments = computed(() => store.canEditChequePayments)
+    const canApproveChequePayments = computed(() => store.canApproveChequePayments)
     const canViewDeposits = computed(() => store.canViewDeposits)
     const canViewInvoices = computed(() => store.canViewInvoices)
     const canEditInvoices = computed(() => store.canEditInvoices)
@@ -125,6 +126,7 @@ export function usePermissions() {
         canEditBills,
         canViewChequePayments,
         canEditChequePayments,
+        canApproveChequePayments,
         canViewDeposits,
         canViewInvoices,
         canEditInvoices,

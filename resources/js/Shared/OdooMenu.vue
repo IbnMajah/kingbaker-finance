@@ -1,8 +1,8 @@
 <template>
   <div>
     <!-- Menu Toggle Button -->
-    <button 
-      @click="toggleMenu" 
+    <button
+      @click="toggleMenu"
       class="fixed top-2 left-4 z-50 p-3 bg-brand-600 text-white rounded-lg shadow-lg hover:bg-brand-700 hover:shadow-xl transition-all duration-200 transform hover:scale-105"
     >
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11,14 +11,14 @@
     </button>
 
     <!-- Overlay Background -->
-    <div 
-      v-if="isMenuOpen" 
+    <div
+      v-if="isMenuOpen"
       @click="closeMenu"
       class="fixed inset-0 z-40 bg-black bg-opacity-50"
     ></div>
 
     <!-- Menu Overlay -->
-    <div 
+    <div
       v-if="isMenuOpen"
       class="fixed top-0 left-0 z-50 w-80 h-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out"
       :class="isMenuOpen ? 'translate-x-0' : '-translate-x-full'"
@@ -40,7 +40,7 @@
         <div class="space-y-2">
           <!-- Overview -->
           <div >
-            <Link 
+            <Link
               href="/"
               @click="selectMainMenu('overview')"
               :class="[
@@ -54,7 +54,7 @@
 
           <!-- Accounts & Transactions -->
           <div v-if="canAccessFinance" class="mb-6">
-            <Link 
+            <Link
               href="/bank-accounts"
               @click="selectMainMenu('accounts')"
               :class="[
@@ -68,7 +68,7 @@
 
           <!-- Sales -->
           <div v-if="canViewSales" class="mb-6">
-            <Link 
+            <Link
               href="/sales"
               @click="selectMainMenu('sales')"
               :class="[
@@ -81,22 +81,22 @@
           </div>
 
           <!-- Vendors -->
-          <div v-if="canViewBills" class="mb-6">
-            <Link 
-              href="/bills"
+          <div v-if="canViewBills || canViewChequePayments" class="mb-6">
+            <Link
+              href="/vendors"
               @click="selectMainMenu('vendors')"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'vendors' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
               ]"
             >
-              Bills & Vendors
+              Vendors & Payments
             </Link>
           </div>
 
           <!-- Expenses -->
           <div v-if="canViewExpenses" class="mb-6">
-            <Link 
+            <Link
               href="/expense-claims"
               @click="selectMainMenu('expenses')"
               :class="[
@@ -110,7 +110,7 @@
 
           <!-- Reports -->
           <div v-if="hasPermission('view_reports')" class="mb-6">
-            <Link 
+            <Link
               href="/reports"
               @click="selectMainMenu('reports')"
               :class="[
@@ -124,7 +124,7 @@
 
           <!-- Organization -->
           <div v-if="canViewBranches || canViewUsers || canAssignRoles" class="mb-6">
-            <Link 
+            <Link
               :href="settingsHref"
               @click="selectMainMenu('organization')"
               :class="[
@@ -152,22 +152,22 @@ export default {
     Link,
   },
   setup() {
-    const { 
-      canAccessFinance, 
-      canViewSales, 
-      canViewBills, 
-      canViewExpenses, 
-      canViewUsers, 
+    const {
+      canAccessFinance,
+      canViewSales,
+      canViewBills,
+      canViewExpenses,
+      canViewUsers,
       canViewBranches,
       canAssignRoles,
       hasPermission,
     } = usePermissions()
-    return { 
-      canAccessFinance, 
-      canViewSales, 
-      canViewBills, 
-      canViewExpenses, 
-      canViewUsers, 
+    return {
+      canAccessFinance,
+      canViewSales,
+      canViewBills,
+      canViewExpenses,
+      canViewUsers,
       canViewBranches,
       canAssignRoles,
       hasPermission,

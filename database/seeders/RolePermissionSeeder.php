@@ -47,6 +47,7 @@ class RolePermissionSeeder extends Seeder
             'create_cheque_payments',
             'edit_cheque_payments',
             'view_cheque_payments',
+            'approve_cheque_payments',
             'create_bills',
             'edit_bills',
             'view_bills',

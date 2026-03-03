@@ -28,6 +28,7 @@
               <h3 class="text-sm font-medium text-red-800">DEBIT Only Module</h3>
               <p class="mt-1 text-sm text-red-700">
                 All payments are debit transactions. The specified bank account will be debited with the payment amount.
+                Payments require approval before they can be issued.
               </p>
             </div>
           </div>
@@ -91,12 +92,43 @@
             </div>
           </div>
 
-          <!-- Conditional Fields Based on Payment Category -->
+          <!-- Phone Number for vendor_payment -->
           <div v-if="form.payment_category === 'vendor_payment'" class="border-t border-gray-200 pt-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Vendor Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Individual Payment Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input
+                  v-model="form.phone_number"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.phone_number ? 'border-red-500' : ''"
+                  placeholder="Payee phone number"
+                />
+                <div v-if="form.errors.phone_number" class="mt-1 text-sm text-red-600">{{ form.errors.phone_number }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bill Information (when category is bill) -->
+          <div v-if="form.payment_category === 'bill'" class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Bill Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bill Type *</label>
+                <select
+                  v-model="form.bill_type"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.bill_type ? 'border-red-500' : ''"
+                >
+                  <option value="">Select Bill Type</option>
+                  <option v-for="type in billTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
+                </select>
+                <div v-if="form.errors.bill_type" class="mt-1 text-sm text-red-600">{{ form.errors.bill_type }}</div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
                 <select
                   v-model="form.vendor_id"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
@@ -107,28 +139,33 @@
                 </select>
                 <div v-if="form.errors.vendor_id" class="mt-1 text-sm text-red-600">{{ form.errors.vendor_id }}</div>
               </div>
-            </div>
-          </div>
 
-          <div v-if="form.payment_category === 'bill'" class="border-t border-gray-200 pt-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Bill Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Bill *</label>
-                <select
-                  v-model="form.bill_id"
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bill Number</label>
+                <input
+                  v-model="form.bill_number"
+                  type="text"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                  :class="form.errors.bill_id ? 'border-red-500' : ''"
-                  @change="updateFromBill"
-                >
-                  <option value="">Select Bill</option>
-                  <option v-for="bill in bills" :key="bill.value" :value="bill.value">{{ bill.label }}</option>
-                </select>
-                <div v-if="form.errors.bill_id" class="mt-1 text-sm text-red-600">{{ form.errors.bill_id }}</div>
+                  :class="form.errors.bill_number ? 'border-red-500' : ''"
+                  placeholder="Bill reference number"
+                />
+                <div v-if="form.errors.bill_number" class="mt-1 text-sm text-red-600">{{ form.errors.bill_number }}</div>
               </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <input
+                  v-model="form.due_date"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.due_date ? 'border-red-500' : ''"
+                />
+                <div v-if="form.errors.due_date" class="mt-1 text-sm text-red-600">{{ form.errors.due_date }}</div>
+              </div>
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Recurring</label>
-                <div class="flex items-center">
+                <div class="flex items-center mt-2">
                   <input
                     v-model="form.is_recurring"
                     type="checkbox"
@@ -136,25 +173,127 @@
                   />
                   <label class="ml-2 text-sm text-gray-700">This is a recurring payment</label>
                 </div>
-                <div v-if="form.errors.is_recurring" class="mt-1 text-sm text-red-600">{{ form.errors.is_recurring }}</div>
+              </div>
+
+              <div v-if="form.is_recurring">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Recurring Frequency *</label>
+                <select
+                  v-model="form.recurring_frequency"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.recurring_frequency ? 'border-red-500' : ''"
+                >
+                  <option value="">Select Frequency</option>
+                  <option v-for="frequency in recurringFrequencies" :key="frequency.value" :value="frequency.value">{{ frequency.label }}</option>
+                </select>
+                <div v-if="form.errors.recurring_frequency" class="mt-1 text-sm text-red-600">{{ form.errors.recurring_frequency }}</div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bill Image</label>
+                <input
+                  @input="form.bill_image = $event.target.files[0]"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                  :class="form.errors.bill_image ? 'border-red-500' : ''"
+                />
+                <div v-if="form.errors.bill_image" class="mt-1 text-sm text-red-600">{{ form.errors.bill_image }}</div>
               </div>
             </div>
-            
-            <!-- Recurring Frequency (only show when recurring is checked) -->
-            <div v-if="form.is_recurring" class="mt-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Recurring Frequency *</label>
-                  <select
-                    v-model="form.recurring_frequency"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                    :class="form.errors.recurring_frequency ? 'border-red-500' : ''"
-                  >
-                    <option value="">Select Frequency</option>
-                    <option v-for="frequency in recurringFrequencies" :key="frequency.value" :value="frequency.value">{{ frequency.label }}</option>
-                  </select>
-                  <div v-if="form.errors.recurring_frequency" class="mt-1 text-sm text-red-600">{{ form.errors.recurring_frequency }}</div>
-                </div>
+
+            <!-- Line Items (for inventory bill type) -->
+            <div v-if="form.bill_type === 'inventory'" class="mt-6">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-md font-medium text-gray-900">Line Items</h4>
+                <button
+                  type="button"
+                  @click="addItem"
+                  class="inline-flex items-center px-3 py-1.5 border border-brand-300 text-sm font-medium rounded-md text-brand-700 bg-brand-50 hover:bg-brand-100"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Item
+                </button>
+              </div>
+              <div v-if="form.errors.items" class="mb-2 text-sm text-red-600">{{ form.errors.items }}</div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-28">Unit Price</th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Unit</th>
+                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-20">Qty</th>
+                      <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-28">Total</th>
+                      <th class="px-3 py-2 w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <tr v-for="(item, index) in form.items" :key="index">
+                      <td class="px-3 py-2">
+                        <input
+                          v-model="item.description"
+                          type="text"
+                          class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                          placeholder="Item description"
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          v-model="item.unit_price"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                          placeholder="0.00"
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          v-model="item.unit_measurement"
+                          type="text"
+                          class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                          placeholder="e.g. kg"
+                        />
+                      </td>
+                      <td class="px-3 py-2">
+                        <input
+                          v-model="item.quantity"
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-brand-500 focus:border-brand-500"
+                          placeholder="1"
+                        />
+                      </td>
+                      <td class="px-3 py-2 text-right text-sm font-medium text-gray-900">
+                        {{ ((item.unit_price || 0) * (item.quantity || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                      </td>
+                      <td class="px-3 py-2">
+                        <button
+                          v-if="form.items.length > 1"
+                          type="button"
+                          @click="removeItem(index)"
+                          class="text-red-500 hover:text-red-700"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="bg-gray-50">
+                      <td colspan="4" class="px-3 py-2 text-right text-sm font-semibold text-gray-700">Grand Total:</td>
+                      <td class="px-3 py-2 text-right text-sm font-bold text-gray-900">
+                        {{ itemsTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             </div>
           </div>
@@ -174,11 +313,13 @@
                     step="0.01"
                     min="0.01"
                     class="w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500"
-                    :class="form.errors.amount ? 'border-red-500' : ''"
+                    :class="[form.errors.amount ? 'border-red-500' : '', isInventoryBill ? 'bg-gray-50' : '']"
+                    :readonly="isInventoryBill"
                     placeholder="0.00"
                   />
                 </div>
                 <div v-if="form.errors.amount" class="mt-1 text-sm text-red-600">{{ form.errors.amount }}</div>
+                <p v-if="isInventoryBill" class="mt-1 text-sm text-gray-500">Auto-calculated from line items</p>
               </div>
 
               <div>
@@ -224,7 +365,6 @@
                   placeholder="Enter reference number"
                 />
                 <div v-if="form.errors.reference_number" class="mt-1 text-sm text-red-600">{{ form.errors.reference_number }}</div>
-                <p class="mt-1 text-sm text-gray-500">Internal reference for tracking</p>
               </div>
 
               <div>
@@ -250,7 +390,6 @@
                   :class="form.errors.receipt_image ? 'border-red-500' : ''"
                 />
                 <div v-if="form.errors.receipt_image" class="mt-1 text-sm text-red-600">{{ form.errors.receipt_image }}</div>
-                <p class="mt-1 text-sm text-gray-500">Upload receipt or supporting document</p>
               </div>
             </div>
           </div>
@@ -270,7 +409,6 @@
                   :placeholder="getDescriptionPlaceholder()"
                 ></textarea>
                 <div v-if="form.errors.description" class="mt-1 text-sm text-red-600">{{ form.errors.description }}</div>
-                <p class="mt-1 text-sm text-gray-500">Provide details about the payment purpose</p>
               </div>
 
               <div>
@@ -327,16 +465,17 @@ export default {
     bankAccounts: Array,
     branches: Array,
     vendors: Array,
-    bills: Array,
     paymentCategories: Array,
     paymentModes: Array,
     recurringFrequencies: Array,
+    billTypes: Array,
   },
   remember: 'form',
   data() {
     return {
       form: this.$inertia.form({
         payee: '',
+        phone_number: '',
         amount: '',
         payment_date: new Date().toISOString().split('T')[0],
         payment_category: '',
@@ -344,7 +483,6 @@ export default {
         bank_account_id: '',
         branch_id: '',
         vendor_id: '',
-        bill_id: '',
         is_recurring: false,
         recurring_frequency: '',
         cheque_number: '',
@@ -352,8 +490,28 @@ export default {
         description: '',
         notes: '',
         receipt_image: null,
+        bill_type: '',
+        bill_number: '',
+        due_date: '',
+        bill_image: null,
+        items: [{ description: '', unit_price: '', unit_measurement: '', quantity: '' }],
       }),
     }
+  },
+  computed: {
+    isInventoryBill() {
+      return this.form.payment_category === 'bill' && this.form.bill_type === 'inventory'
+    },
+    itemsTotal() {
+      return this.form.items.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0)
+    },
+  },
+  watch: {
+    itemsTotal(newVal) {
+      if (this.isInventoryBill) {
+        this.form.amount = newVal > 0 ? newVal : ''
+      }
+    },
   },
   methods: {
     store() {
@@ -367,15 +525,11 @@ export default {
       const category = this.paymentCategories.find(c => c.value === this.form.payment_category)
       return category?.description_placeholder || 'Describe the payment purpose and details'
     },
-    updateFromBill() {
-      if (this.form.bill_id) {
-        const selectedBill = this.bills.find(bill => bill.value == this.form.bill_id)
-        if (selectedBill) {
-          this.form.amount = selectedBill.amount
-          this.form.vendor_id = selectedBill.vendor_id
-          this.form.description = selectedBill.description || `Payment for ${selectedBill.label}`
-        }
-      }
+    addItem() {
+      this.form.items.push({ description: '', unit_price: '', unit_measurement: '', quantity: '' })
+    },
+    removeItem(index) {
+      this.form.items.splice(index, 1)
     },
   },
 }

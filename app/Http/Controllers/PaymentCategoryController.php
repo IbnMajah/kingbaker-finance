@@ -76,7 +76,6 @@ class PaymentCategoryController extends Controller
     public function update(PaymentCategory $paymentCategory): RedirectResponse
     {
         $validated = Request::validate([
-            'value' => ['required', 'string', 'max:255', Rule::unique('payment_categories', 'value')->ignore($paymentCategory->id)],
             'label' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
             'description_placeholder' => ['nullable', 'string', 'max:500'],

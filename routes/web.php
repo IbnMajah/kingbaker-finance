@@ -494,6 +494,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('cheque-payments/{chequePayment}/cancel', [ChequePaymentController::class, 'cancel'])
         ->name('cheque-payments.cancel');
 
+    Route::patch('cheque-payments/{chequePayment}/approve', [ChequePaymentController::class, 'approve'])
+        ->name('cheque-payments.approve');
+
+    Route::patch('cheque-payments/{chequePayment}/reject', [ChequePaymentController::class, 'reject'])
+        ->name('cheque-payments.reject');
+
     // Payment Categories
     Route::resource('payment-categories', PaymentCategoryController::class)
         ->except(['show']);

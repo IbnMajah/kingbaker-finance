@@ -132,6 +132,10 @@ export const usePermissionsStore = defineStore('permissions', {
             return state.hasPermission('edit_cheque_payments')
         },
 
+        canApproveChequePayments: (state) => {
+            return state.hasPermission('approve_cheque_payments')
+        },
+
         canViewDeposits: (state) => {
             return state.hasPermission('view_deposits')
         },

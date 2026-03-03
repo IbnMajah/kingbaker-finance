@@ -88,16 +88,6 @@
           <!-- Vendors Children -->
           <div v-if="selectedMainMenu === 'vendors'" class="flex ml-16 items-center space-x-4">
             <Link
-              v-if="hasPermission('view_bills')"
-              href="/bills"
-              :class="[
-                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                isUrl('bills') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              ]"
-            >
-              Bills
-            </Link>
-            <Link
               v-if="hasPermission('view_vendors')"
               href="/vendors"
               :class="[

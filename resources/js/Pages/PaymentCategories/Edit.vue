@@ -29,17 +29,12 @@
             <label class="form-label" for="value">Value (slug):</label>
             <input
               id="value"
-              v-model="form.value"
-              class="form-input"
-              :class="{ error: form.errors.value }"
-              :readonly="category.usage_count > 0"
+              :value="category.value"
+              class="form-input bg-gray-50 text-gray-500"
               type="text"
+              readonly
             />
-            <p v-if="category.usage_count > 0" class="mt-1 text-xs text-amber-600">
-              This value cannot be changed because it is used by {{ category.usage_count }} payment{{ category.usage_count !== 1 ? 's' : '' }}.
-            </p>
-            <p v-else class="mt-1 text-xs text-gray-500">Use lowercase letters and underscores only.</p>
-            <div v-if="form.errors.value" class="form-error">{{ form.errors.value }}</div>
+            <p class="mt-1 text-xs text-gray-500">The slug cannot be changed after creation.</p>
           </div>
 
           <div>
@@ -108,7 +103,6 @@ export default {
     return {
       form: this.$inertia.form({
         label: this.category.label,
-        value: this.category.value,
         description: this.category.description || '',
         description_placeholder: this.category.description_placeholder || '',
       }),

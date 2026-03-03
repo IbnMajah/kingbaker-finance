@@ -34,6 +34,43 @@
       </div>
     </div>
 
+    <!-- Rejection Notice -->
+    <div v-if="payment.status === 'rejected'" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">Payment Rejected</h3>
+          <p class="mt-1 text-sm text-red-700">{{ payment.rejection_reason }}</p>
+          <p class="mt-2 text-xs text-red-600">
+            Rejected by {{ payment.rejector ? `${payment.rejector.first_name} ${payment.rejector.last_name}` : 'Unknown' }}
+            on {{ payment.rejected_at ? new Date(payment.rejected_at).toLocaleString() : '' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval Info -->
+    <div v-if="payment.approved_by && ['approved', 'issued', 'cleared'].includes(payment.status)" class="bg-indigo-50 border border-indigo-200 rounded-lg p-6 mb-8">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-indigo-800">Payment Approved</h3>
+          <p class="mt-1 text-sm text-indigo-700">
+            Approved by {{ payment.approver ? `${payment.approver.first_name} ${payment.approver.last_name}` : 'Unknown' }}
+            on {{ payment.approved_at ? new Date(payment.approved_at).toLocaleString() : '' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Payment Details -->
     <div class="bg-white rounded-lg shadow p-6 mb-8">
       <h2 class="text-lg font-semibold mb-4">Payment Details</h2>
@@ -73,6 +110,14 @@
           <div class="text-sm font-medium text-gray-500">Payee Name</div>
           <div class="text-gray-900 text-lg font-medium">{{ payment.payee }}</div>
         </div>
+        <div v-if="payment.phone_number">
+          <div class="text-sm font-medium text-gray-500">Phone Number</div>
+          <div class="text-gray-900">{{ payment.phone_number }}</div>
+        </div>
+        <div v-if="payment.vendor">
+          <div class="text-sm font-medium text-gray-500">Vendor</div>
+          <div class="text-gray-900">{{ payment.vendor.name }}</div>
+        </div>
         <div v-if="payment.cheque_number">
           <div class="text-sm font-medium text-gray-500">Cheque Number</div>
           <div class="text-gray-900">{{ payment.cheque_number }}</div>
@@ -81,6 +126,46 @@
           <div class="text-sm font-medium text-gray-500">Reference Number</div>
           <div class="text-gray-900">{{ payment.reference_number }}</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Bill Details (when category is bill) -->
+    <div v-if="payment.bill" class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-lg font-semibold mb-4">Bill Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div v-if="payment.bill.bill_number">
+          <div class="text-sm font-medium text-gray-500">Bill Number</div>
+          <div class="text-gray-900">{{ payment.bill.bill_number }}</div>
+        </div>
+        <div>
+          <div class="text-sm font-medium text-gray-500">Bill Type</div>
+          <div class="text-gray-900 capitalize">{{ payment.bill.bill_type }}</div>
+        </div>
+        <div v-if="payment.bill.due_date">
+          <div class="text-sm font-medium text-gray-500">Due Date</div>
+          <div class="text-gray-900">{{ new Date(payment.bill.due_date).toLocaleDateString() }}</div>
+        </div>
+      </div>
+      <div v-if="payment.bill.items && payment.bill.items.length > 0">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">Line Items</h3>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr v-for="item in payment.bill.items" :key="item.id">
+              <td class="px-4 py-2 text-sm text-gray-900">{{ item.description }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ Number(item.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ item.quantity }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right font-medium">{{ Number(item.total).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -115,7 +200,7 @@
       <h2 class="text-lg font-semibold mb-4">Actions</h2>
       <div class="flex flex-wrap gap-3">
         <Link
-          v-if="!['cleared'].includes(payment.status)"
+          v-if="!['cleared', 'rejected', 'cancelled'].includes(payment.status)"
           :href="`/cheque-payments/${payment.id}/edit`"
           class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +210,28 @@
         </Link>
 
         <button
-          v-if="payment.status === 'pending'"
+          v-if="payment.status === 'pending' && canApproveChequePayments && !isCreator"
+          @click="approvePayment"
+          :disabled="processing"
+          class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md disabled:opacity-50">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          {{ processing ? 'Processing...' : 'Approve' }}
+        </button>
+
+        <button
+          v-if="payment.status === 'pending' && canApproveChequePayments && !isCreator"
+          @click="showRejectModal = true"
+          class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+          Reject
+        </button>
+
+        <button
+          v-if="payment.status === 'approved'"
           @click="markAsIssued"
           :disabled="processing"
           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50">
@@ -147,18 +253,48 @@
         </button>
 
         <button
-          v-if="['pending', 'issued'].includes(payment.status)"
-          @click="confirmCancel"
-          class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md">
+          v-if="['pending', 'approved', 'issued'].includes(payment.status)"
+          @click="showCancelModal = true"
+          class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
           </svg>
           Cancel Payment
         </button>
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Reject Modal -->
+    <div v-if="showRejectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Reject Payment</h3>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Reason for rejection *</label>
+          <textarea
+            v-model="rejectionReason"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+            placeholder="Explain why this payment is being rejected..."
+          ></textarea>
+          <div v-if="rejectError" class="mt-1 text-sm text-red-600">{{ rejectError }}</div>
+        </div>
+        <div class="mt-5 flex justify-end space-x-3">
+          <button
+            @click="showRejectModal = false; rejectionReason = ''; rejectError = ''"
+            class="bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium">
+            Cancel
+          </button>
+          <button
+            @click="rejectPayment"
+            :disabled="processing"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50">
+            {{ processing ? 'Rejecting...' : 'Reject Payment' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancel Confirmation Modal -->
     <div v-if="showCancelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
         <div class="flex items-center">
@@ -198,6 +334,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
 import { router } from '@inertiajs/vue3'
+import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
   components: {
@@ -209,32 +346,36 @@ export default {
     payment: Object,
     paymentCategories: Array,
   },
+  setup() {
+    const { canApproveChequePayments, user } = usePermissions()
+    return { canApproveChequePayments, user }
+  },
   data() {
     return {
       showCancelModal: false,
+      showRejectModal: false,
+      rejectionReason: '',
+      rejectError: '',
       processing: false,
     }
+  },
+  computed: {
+    isCreator() {
+      return this.user?.id === this.payment.created_by
+    },
   },
   methods: {
     getStatusTextClass(status) {
       const classes = {
         'pending': 'text-yellow-600',
+        'approved': 'text-indigo-600',
+        'rejected': 'text-red-600',
         'issued': 'text-blue-600',
         'cleared': 'text-green-600',
-        'cancelled': 'text-red-600',
+        'cancelled': 'text-gray-600',
       }
       return classes[status] || 'text-gray-600'
     },
-    getStatusBadge(status) {
-      const badges = {
-        pending: 'bg-yellow-100 text-yellow-800',
-        issued: 'bg-blue-100 text-blue-800',
-        cleared: 'bg-green-100 text-green-800',
-        cancelled: 'bg-red-100 text-red-800',
-      }
-      return badges[status] || 'bg-gray-100 text-gray-800'
-    },
-
     getCategoryLabel(category) {
       const match = this.paymentCategories?.find(c => c.value === category)
       return match?.label || category || 'Unknown'
@@ -250,49 +391,46 @@ export default {
       }
       return labels[mode] || 'Unknown'
     },
+    approvePayment() {
+      this.processing = true
+      router.patch(`/cheque-payments/${this.payment.id}/approve`, {}, {
+        onFinish: () => { this.processing = false }
+      })
+    },
+    rejectPayment() {
+      if (!this.rejectionReason.trim()) {
+        this.rejectError = 'Please provide a reason for rejection.'
+        return
+      }
+      this.processing = true
+      router.patch(`/cheque-payments/${this.payment.id}/reject`, {
+        rejection_reason: this.rejectionReason,
+      }, {
+        onSuccess: () => {
+          this.showRejectModal = false
+          this.rejectionReason = ''
+        },
+        onFinish: () => { this.processing = false }
+      })
+    },
     markAsIssued() {
       this.processing = true
       router.patch(`/cheque-payments/${this.payment.id}/mark-issued`, {}, {
-        onSuccess: () => {
-          // Page will refresh with updated data
-        },
-        onError: () => {
-          // Handle error
-        },
-        onFinish: () => {
-          this.processing = false
-        }
+        onFinish: () => { this.processing = false }
       })
     },
     markAsCleared() {
       this.processing = true
       router.patch(`/cheque-payments/${this.payment.id}/mark-cleared`, {}, {
-        onSuccess: () => {
-          // Page will refresh with updated data
-        },
-        onError: () => {
-          // Handle error
-        },
-        onFinish: () => {
-          this.processing = false
-        }
+        onFinish: () => { this.processing = false }
       })
-    },
-    confirmCancel() {
-      this.showCancelModal = true
     },
     cancelPayment() {
       this.processing = true
       router.patch(`/cheque-payments/${this.payment.id}/cancel`, {}, {
-        onSuccess: () => {
-          // Redirect will be handled by the backend
-        },
-        onError: () => {
-          this.processing = false
-          // Handle error
-        },
         onFinish: () => {
           this.showCancelModal = false
+          this.processing = false
         }
       })
     },

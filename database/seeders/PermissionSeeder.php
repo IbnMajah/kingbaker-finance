@@ -53,6 +53,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'create_cheque_payments', 'display_name' => 'Create Cheque Payments', 'module' => 'finance', 'action' => 'create'],
             ['name' => 'edit_cheque_payments', 'display_name' => 'Edit Cheque Payments', 'module' => 'finance', 'action' => 'update'],
             ['name' => 'view_cheque_payments', 'display_name' => 'View Cheque Payments', 'module' => 'finance', 'action' => 'read'],
+            ['name' => 'approve_cheque_payments', 'display_name' => 'Approve Cheque Payments', 'module' => 'finance', 'action' => 'approve'],
             ['name' => 'create_bills', 'display_name' => 'Create Bills', 'module' => 'finance', 'action' => 'create'],
             ['name' => 'edit_bills', 'display_name' => 'Edit Bills', 'module' => 'finance', 'action' => 'update'],
             ['name' => 'view_bills', 'display_name' => 'View Bills', 'module' => 'finance', 'action' => 'read'],

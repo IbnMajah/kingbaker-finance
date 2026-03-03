@@ -292,13 +292,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
                     </Link>
-                    <Link v-if="canEditChequePayments && !['cleared'].includes(payment.status)" :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900" title="Edit Payment">
+                    <Link v-if="canEditChequePayments && !['cleared', 'rejected', 'cancelled'].includes(payment.status)" :href="`/cheque-payments/${payment.id}/edit`" class="text-indigo-600 hover:text-indigo-900" title="Edit Payment">
                       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
                       </svg>
                     </Link>
                     <button
-                      v-if="payment.status === 'pending'"
+                      v-if="payment.status === 'approved'"
                       @click.stop="markAsIssued(payment.id)"
                       class="text-blue-600 hover:text-blue-900"
                       title="Mark as Issued"
@@ -413,9 +413,11 @@ export default {
     getStatusBadge(status) {
       const badges = {
         pending: 'bg-yellow-100 text-yellow-800',
+        approved: 'bg-indigo-100 text-indigo-800',
+        rejected: 'bg-red-100 text-red-800',
         issued: 'bg-blue-100 text-blue-800',
         cleared: 'bg-green-100 text-green-800',
-        cancelled: 'bg-red-100 text-red-800',
+        cancelled: 'bg-gray-100 text-gray-800',
       }
       return badges[status] || 'bg-gray-100 text-gray-800'
     },

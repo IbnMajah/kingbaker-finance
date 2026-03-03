@@ -109,14 +109,6 @@
             <div :class="isUrl('vendors') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Vendors</div>
           </Link>
         </div>
-        <div v-if="permissions.hasPermission('view_bills')" class="mb-4">
-          <Link class="group flex items-center py-3" href="/bills">
-            <svg class="mr-2 w-4 h-4" :class="isUrl('bills') ? 'fill-white' : 'fill-brand-400 group-hover:fill-white'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 9h2v2H8V9zm0 3h2v2H8v-2zm0 3h8v2H8v-2z"/>
-            </svg>
-            <div :class="isUrl('bills') ? 'text-white' : 'text-brand-300 group-hover:text-white'">Bills</div>
-          </Link>
-        </div>
         <div v-if="permissions.hasPermission('view_cheque_payments')" class="mb-4">
           <Link class="group flex items-center py-3" href="/cheque-payments">
             <svg class="mr-2 w-4 h-4" :class="isUrl('cheque-payments') ? 'fill-white' : 'fill-brand-400 group-hover:fill-white'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
