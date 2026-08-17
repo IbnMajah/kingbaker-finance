@@ -127,6 +127,26 @@ class TwoFactorDevicesTest extends TestCase
         $this->assertFalse(session()->has('two_factor_authenticated'));
     }
 
+    public function test_device_removal_password_attempts_are_rate_limited(): void
+    {
+        $device = $this->createDevice('Personal phone');
+
+        $this->actingAs($this->user)
+            ->withSession(['two_factor_authenticated' => true]);
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->delete("/two-factor/devices/{$device->id}", [
+                'password' => 'incorrect-password',
+            ])->assertSessionHasErrors('password');
+        }
+
+        $this->delete("/two-factor/devices/{$device->id}", [
+            'password' => 'incorrect-password',
+        ])->assertStatus(429);
+
+        $this->assertDatabaseHas('user_two_factor_devices', ['id' => $device->id]);
+    }
+
     public function test_user_cannot_remove_another_users_device(): void
     {
         $otherUser = User::factory()->create();

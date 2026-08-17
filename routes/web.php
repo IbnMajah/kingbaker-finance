@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::get('two-factor/devices', [TwoFactorController::class, 'devices'])
         ->name('two-factor.devices.index');
     Route::post('two-factor/devices', [TwoFactorController::class, 'storeDevice'])
+        ->middleware('throttle:10,1')
         ->name('two-factor.devices.store');
     Route::post('two-factor/devices/confirm', [TwoFactorController::class, 'confirmDevice'])
         ->middleware('throttle:5,1')
@@ -71,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('two-factor/devices/pending', [TwoFactorController::class, 'cancelDevice'])
         ->name('two-factor.devices.cancel');
     Route::delete('two-factor/devices/{device}', [TwoFactorController::class, 'destroyDevice'])
+        ->middleware('throttle:5,1')
         ->name('two-factor.devices.destroy');
 });
 
