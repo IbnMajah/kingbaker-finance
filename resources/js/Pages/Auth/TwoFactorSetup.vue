@@ -22,7 +22,16 @@
             </div>
 
             <form class="mt-8" @submit.prevent="confirm">
-              <div>
+              <div class="space-y-4">
+                <text-input
+                  v-model="form.name"
+                  :error="form.errors.name"
+                  label="Device Name"
+                  type="text"
+                  maxlength="100"
+                  placeholder="e.g. Personal phone"
+                  autocomplete="off"
+                />
                 <text-input
                   v-model="form.code"
                   :error="form.errors.code"
@@ -87,6 +96,7 @@ export default {
   data() {
     return {
       form: this.$inertia.form({
+        name: 'Primary authenticator',
         code: '',
       }),
     }

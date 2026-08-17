@@ -208,6 +208,7 @@
             <template #dropdown>
               <div class="mt-2 py-2 text-sm bg-white rounded shadow-xl">
                 <Link class="block px-6 py-2 hover:text-white hover:bg-brand-500" :href="`/users/${auth.user.id}/edit`">My Profile</Link>
+                <Link class="block px-6 py-2 hover:text-white hover:bg-brand-500" href="/two-factor/devices">2FA Devices</Link>
                 <Link v-if="hasPermission('view_users')" class="block px-6 py-2 hover:text-white hover:bg-brand-500" href="/users">Manage Users</Link>
                 <Link class="block px-6 py-2 w-full text-left hover:text-white hover:bg-brand-500" href="/logout" method="delete" as="button">Logout</Link>
               </div>

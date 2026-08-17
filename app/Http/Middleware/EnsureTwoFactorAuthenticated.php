@@ -9,7 +9,10 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureTwoFactorAuthenticated
 {
     protected array $excludedRoutes = [
-        'two-factor.*',
+        'two-factor.setup',
+        'two-factor.confirm',
+        'two-factor.challenge',
+        'two-factor.verify',
         'logout',
         'login',
         'login.store',

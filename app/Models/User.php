@@ -64,7 +64,12 @@ class User extends Authenticatable
 
     public function hasTwoFactorEnabled(): bool
     {
-        return !is_null($this->two_factor_confirmed_at);
+        return $this->twoFactorDevices()->whereNotNull('confirmed_at')->exists();
+    }
+
+    public function twoFactorDevices(): HasMany
+    {
+        return $this->hasMany(UserTwoFactorDevice::class);
     }
 
     public function resolveRouteBinding($value, $field = null)
