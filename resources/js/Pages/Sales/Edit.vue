@@ -161,18 +161,24 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Cashier
               </label>
-              <input
-                v-model="form.cashier"
-                type="text"
-                placeholder="Enter cashier name"
+              <select
+                v-model="form.hr_cashier_id"
+                :disabled="sale.deleted_at"
                 :class="[
                   'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
-                  form.errors.cashier ? 'border-red-300' : 'border-gray-300'
+                  form.errors.hr_cashier_id || form.errors.cashier ? 'border-red-300' : 'border-gray-300'
                 ]"
-                :disabled="sale.deleted_at"
-              />
-              <p v-if="form.errors.cashier" class="mt-1 text-sm text-red-600">
-                {{ form.errors.cashier }}
+              >
+                <option value="">Select a cashier</option>
+                <option v-for="cashier in cashierOptions" :key="cashier.id" :value="cashier.id">
+                  {{ cashier.name }}<template v-if="cashier.employee_id"> ({{ cashier.employee_id }})</template>
+                </option>
+              </select>
+              <p v-if="form.errors.hr_cashier_id || form.errors.cashier" class="mt-1 text-sm text-red-600">
+                {{ form.errors.hr_cashier_id || form.errors.cashier }}
+              </p>
+              <p v-else-if="cashiers.length === 0" class="mt-1 text-sm text-gray-500">
+                No cashiers have been synced from HR yet.
               </p>
             </div>
 
@@ -513,6 +519,44 @@
                 </p>
                 <p class="mt-1 text-sm text-gray-500">Amount to be deposited</p>
               </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Actual Reconciled Total
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-gray-500 sm:text-sm">D</span>
+                  </div>
+                  <input
+                    v-model="form.actual_total"
+                    type="text"
+                    placeholder="0.00"
+                    :disabled="sale.deleted_at"
+                    :class="[
+                      'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
+                      form.errors.actual_total ? 'border-red-300' : 'border-gray-300'
+                    ]"
+                    @input="formatOptionalNumber('actual_total', $event)"
+                    @blur="formatOptionalNumber('actual_total', $event)"
+                  />
+                </div>
+                <p v-if="form.errors.actual_total" class="mt-1 text-sm text-red-600">
+                  {{ form.errors.actual_total }}
+                </p>
+                <p class="mt-1 text-sm text-gray-500">Cash counted at closing. Variance is Expected − Actual.</p>
+              </div>
+            </div>
+            <div v-if="form.actual_total !== '' && form.actual_total !== null" class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-sm text-gray-500">Expected total (from sale) − Actual</p>
+              <div class="mt-1 flex flex-wrap items-center gap-3">
+                <span class="text-2xl font-bold text-gray-900">GMD {{ calculatedVariance.toFixed(2) }}</span>
+                <span
+                  class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  :class="calculatedVariance > 0 ? 'bg-red-100 text-red-800' : calculatedVariance < 0 ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'"
+                >
+                  {{ calculatedVariance > 0 ? 'Shortage' : calculatedVariance < 0 ? 'Surplus' : 'Balanced' }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -581,6 +625,10 @@ export default {
       type: Array,
       default: () => []
     },
+    cashiers: {
+      type: Array,
+      default: () => []
+    },
     customers: {
       type: Array,
       default: () => []
@@ -601,7 +649,9 @@ export default {
         mobile_money_aps: this.sale.mobile_money_aps?.toString() || '0',
         mobile_money_wave: this.sale.mobile_money_wave?.toString() || '0',
         cashier: this.sale.cashier || '',
+        hr_cashier_id: this.sale.hr_cashier_id || '',
         closing_manager: this.sale.closing_manager || '',
+        actual_total: this.sale.actual_total != null ? this.sale.actual_total.toString() : '',
         credit_items: (this.sale.credit_items || []).map(item => ({
           customer_id: item.customer_id,
           description: item.description || '',
@@ -632,7 +682,54 @@ export default {
       }
       
       return total
-    }
+    },
+    availableCashiers() {
+      if (!this.form.branch_id) {
+        return this.cashiers
+      }
+
+      const matching = this.cashiers.filter(
+        cashier => String(cashier.branch_id) === String(this.form.branch_id)
+      )
+
+      return matching.length ? matching : this.cashiers
+    },
+    cashierOptions() {
+      const options = [...this.availableCashiers]
+      if (
+        this.form.hr_cashier_id
+        && !options.some(cashier => String(cashier.id) === String(this.form.hr_cashier_id))
+      ) {
+        options.unshift({
+          id: this.form.hr_cashier_id,
+          employee_id: '',
+          name: this.form.cashier || 'Selected cashier',
+          branch_id: null,
+        })
+      } else if (this.form.cashier && !options.some(cashier => cashier.name === this.form.cashier) && !this.form.hr_cashier_id) {
+        options.unshift({
+          id: `current-${this.form.cashier}`,
+          employee_id: '',
+          name: this.form.cashier,
+          branch_id: null,
+        })
+      }
+      return options
+    },
+    calculatedVariance() {
+      return Math.round(((Number(this.totalAmount) || 0) - (Number(this.form.actual_total) || 0)) * 100) / 100
+    },
+  },
+  watch: {
+    'form.branch_id'() {
+      if (
+        this.form.hr_cashier_id
+        && !this.availableCashiers.some(cashier => String(cashier.id) === String(this.form.hr_cashier_id))
+      ) {
+        this.form.hr_cashier_id = ''
+        this.form.cashier = ''
+      }
+    },
   },
   methods: {
     update() {
@@ -646,6 +743,10 @@ export default {
         mobile_money_my_nafa: parseFloat(this.form.mobile_money_my_nafa) || 0,
         mobile_money_aps: parseFloat(this.form.mobile_money_aps) || 0,
         mobile_money_wave: parseFloat(this.form.mobile_money_wave) || 0,
+        hr_cashier_id: this.form.hr_cashier_id || null,
+        actual_total: this.form.actual_total === '' || this.form.actual_total === null
+          ? null
+          : parseFloat(this.form.actual_total),
         credit_items: this.form.credit_items.map(item => ({
           customer_id: item.customer_id,
           description: item.description,
@@ -680,6 +781,15 @@ export default {
         this.form[field] = '0'
       }
       this.updateTotalAmount()
+    },
+    formatOptionalNumber(field, event) {
+      let value = event.target.value.replace(/[^0-9.]/g, '')
+      if (value === '' || value === '.') {
+        this.form[field] = ''
+        return
+      }
+      const num = parseFloat(value)
+      this.form[field] = isNaN(num) ? '' : num.toFixed(2)
     },
     formatCreditNumber(index, field, event) {
       let value = event.target.value.replace(/[^0-9.]/g, '')

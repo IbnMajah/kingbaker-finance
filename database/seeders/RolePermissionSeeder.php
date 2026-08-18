@@ -69,6 +69,14 @@ class RolePermissionSeeder extends Seeder
             'print_receipts',
             'view_reports',
             'generate_reports',
+            'manage_cashier_assignments',
+            'manage_shifts',
+            'view_cashier_variances',
+            'create_cashier_variances',
+            'approve_cashier_variances',
+            'adjust_cashier_variances',
+            'export_cashier_variances',
+            'override_cashier_variance_assignment',
 
             // System permissions
             'create_organizations',
@@ -113,6 +121,9 @@ class RolePermissionSeeder extends Seeder
             'view_transactions', // cannot reconcile
             'print_receipts',
             'view_reports',
+            'view_cashier_variances',
+            'create_cashier_variances',
+            'export_cashier_variances',
 
             // System permissions
             'view_organizations',
@@ -220,6 +231,8 @@ class RolePermissionSeeder extends Seeder
             'view_vendors',
             'view_transactions',
             'view_reports',
+            'view_cashier_variances',
+            'export_cashier_variances',
 
             'view_inventory',
             'view_products',
@@ -267,6 +280,9 @@ class RolePermissionSeeder extends Seeder
             'view_deposits',
             'create_expenses',
             'view_expenses',
+            'view_cashier_variances',
+            'create_cashier_variances',
+            'approve_cashier_variances',
 
             // System permissions
             'view_own_branch_only',

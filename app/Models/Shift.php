@@ -5,16 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shift extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name'];
+    protected $fillable = [
+        'name',
+        'start_time',
+        'end_time',
+        'description',
+        'active',
+    ];
 
-    public function sales()
+    protected $casts = [
+        'active' => 'boolean',
+    ];
+
+    public function sales(): HasMany
     {
         return $this->hasMany(Sale::class);
+    }
+
+    public function hrCashiers(): HasMany
+    {
+        return $this->hasMany(HrCashier::class, 'default_shift_id');
+    }
+
+    public function cashierReconciliations(): HasMany
+    {
+        return $this->hasMany(CashierReconciliation::class);
     }
 
     public function scopeFilter($query, array $filters)

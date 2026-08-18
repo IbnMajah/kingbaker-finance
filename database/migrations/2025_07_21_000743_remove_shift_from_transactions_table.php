@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SqliteSchema;
 
 return new class extends Migration
 {
@@ -11,6 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            SqliteSchema::dropColumns('transactions', ['shift_id']);
+
+            return;
+        }
+
         Schema::table('transactions', function (Blueprint $table) {
             $table->dropForeign(['shift_id']);
             $table->dropColumn('shift_id');

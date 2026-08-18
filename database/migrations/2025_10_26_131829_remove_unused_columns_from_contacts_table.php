@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SqliteSchema;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,8 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('contacts', function (Blueprint $table) {
-            $table->dropColumn(['organization_id', 'city', 'region', 'country', 'postal_code']);
+        $columns = ['organization_id', 'city', 'region', 'country', 'postal_code'];
+
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            SqliteSchema::dropColumns('contacts', $columns);
+
+            return;
+        }
+
+        Schema::table('contacts', function (Blueprint $table) use ($columns) {
+            $table->dropColumn($columns);
         });
     }
 

@@ -23,6 +23,11 @@ use App\Http\Controllers\PaymentCategoryController;
 use App\Http\Controllers\MiscellaneousController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\CashierAssignmentController;
+use App\Http\Controllers\CashierController;
+use App\Http\Controllers\CashierVarianceController;
+use App\Http\Controllers\CashierVarianceReportController;
+use App\Http\Controllers\ShiftController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -85,6 +90,63 @@ Route::middleware('auth')->group(function () {
     // Uses custom middleware alias registered in bootstrap/app.php
     Route::resource('roles', RolesController::class)
         ->middleware('permission:assign_roles');
+
+    // Cashier and shift settings
+    Route::get('cashiers/{cashier}', [CashierController::class, 'show'])
+        ->name('cashiers.show');
+    Route::get('cashier-assignments', [CashierAssignmentController::class, 'index'])
+        ->middleware('permission:manage_cashier_assignments')
+        ->name('cashier-assignments.index');
+    Route::put('cashier-assignments/{cashier}', [CashierAssignmentController::class, 'update'])
+        ->middleware('permission:manage_cashier_assignments')
+        ->name('cashier-assignments.update');
+    Route::post('cashier-assignments/sync', [CashierAssignmentController::class, 'sync'])
+        ->middleware(['permission:manage_cashier_assignments', 'throttle:3,1'])
+        ->name('cashier-assignments.sync');
+    Route::resource('shifts', ShiftController::class)
+        ->except(['show'])
+        ->middleware('permission:manage_shifts');
+
+    // Cashier variance reconciliation and ledger
+    Route::get('cashier-variances', [CashierVarianceController::class, 'index'])
+        ->middleware('permission:view_cashier_variances')
+        ->name('cashier-variances.index');
+    Route::get('cashier-variances/create', [CashierVarianceController::class, 'create'])
+        ->middleware('permission:create_cashier_variances')
+        ->name('cashier-variances.create');
+    Route::post('cashier-variances', [CashierVarianceController::class, 'store'])
+        ->middleware('permission:create_cashier_variances')
+        ->name('cashier-variances.store');
+    Route::get('cashier-variances/export', CashierVarianceReportController::class)
+        ->middleware('permission:export_cashier_variances')
+        ->name('cashier-variances.export');
+    Route::get('cashier-variances/ledger/{employeeId}', [CashierVarianceController::class, 'ledger'])
+        ->middleware('permission:view_cashier_variances')
+        ->name('cashier-variances.ledger');
+    Route::get('cashier-variances/{cashierVariance}', [CashierVarianceController::class, 'show'])
+        ->middleware('permission:view_cashier_variances')
+        ->name('cashier-variances.show');
+    Route::get('cashier-variances/{cashierVariance}/receipt', [CashierVarianceController::class, 'receipt'])
+        ->middleware('permission:view_cashier_variances')
+        ->name('cashier-variances.receipt');
+    Route::post('cashier-variances/{cashierVariance}/update', [CashierVarianceController::class, 'update'])
+        ->middleware('permission:create_cashier_variances')
+        ->name('cashier-variances.update');
+    Route::put('cashier-variances/{cashierVariance}/submit', [CashierVarianceController::class, 'submit'])
+        ->middleware('permission:create_cashier_variances')
+        ->name('cashier-variances.submit');
+    Route::put('cashier-variances/{cashierVariance}/approve', [CashierVarianceController::class, 'approve'])
+        ->middleware('permission:approve_cashier_variances')
+        ->name('cashier-variances.approve');
+    Route::put('cashier-variances/{cashierVariance}/reject', [CashierVarianceController::class, 'reject'])
+        ->middleware('permission:approve_cashier_variances')
+        ->name('cashier-variances.reject');
+    Route::post('cashier-variances/{cashierVariance}/reverse', [CashierVarianceController::class, 'reverse'])
+        ->middleware('permission:adjust_cashier_variances')
+        ->name('cashier-variances.reverse');
+    Route::delete('cashier-variances/{cashierVariance}', [CashierVarianceController::class, 'destroy'])
+        ->middleware('permission:create_cashier_variances')
+        ->name('cashier-variances.destroy');
 
     // Miscellaneous Transactions
     Route::resource('miscellaneous', MiscellaneousController::class);

@@ -49,6 +49,16 @@
             >
               Deposits
             </Link>
+            <Link
+              v-if="hasPermission('view_cashier_variances')"
+              href="/cashier-variances"
+              :class="[
+                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isUrl('cashier-variances') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ]"
+            >
+              Cashier Variances
+            </Link>
           </div>
 
           <!-- Sales Children -->
@@ -188,6 +198,26 @@
               ]"
             >
               Roles
+            </Link>
+            <Link
+              v-if="hasPermission('manage_cashier_assignments')"
+              href="/cashier-assignments"
+              :class="[
+                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isUrl('cashier-assignments') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ]"
+            >
+              Cashiers
+            </Link>
+            <Link
+              v-if="hasPermission('manage_shifts')"
+              href="/shifts"
+              :class="[
+                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isUrl('shifts') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ]"
+            >
+              Shifts
             </Link>
           </div>
         </div>

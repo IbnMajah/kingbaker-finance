@@ -52,7 +52,7 @@ export default {
     const currentUrl = this.$page.url.substr(1)
     if (currentUrl === '') {
       this.selectedMainMenu = 'overview'
-    } else if (currentUrl.startsWith('bank-accounts') || currentUrl.startsWith('transactions') || currentUrl.startsWith('deposits')) {
+    } else if (currentUrl.startsWith('bank-accounts') || currentUrl.startsWith('transactions') || currentUrl.startsWith('deposits') || currentUrl.startsWith('cashier-variances')) {
       this.selectedMainMenu = 'accounts'
     } else if (currentUrl.startsWith('sales')) {
       this.selectedMainMenu = 'sales'
@@ -62,7 +62,7 @@ export default {
       this.selectedMainMenu = 'expenses'
     } else if (currentUrl.startsWith('reports')) {
       this.selectedMainMenu = 'reports'
-    } else if (currentUrl.startsWith('branches') || currentUrl.startsWith('users') || currentUrl.startsWith('roles')) {
+    } else if (currentUrl.startsWith('branches') || currentUrl.startsWith('users') || currentUrl.startsWith('roles') || currentUrl.startsWith('cashier-assignments') || currentUrl.startsWith('shifts')) {
       this.selectedMainMenu = 'organization'
     }
   }

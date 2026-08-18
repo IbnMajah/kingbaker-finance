@@ -12,8 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Update the ENUM values for payment_category
-        DB::statement("ALTER TABLE cheque_payments MODIFY COLUMN payment_category ENUM('vendor_payment','bill','staff_advance','loan_payment','institutional_payment','other_payment') NOT NULL");
+        $this->modifyPaymentCategory("ENUM('vendor_payment','bill','staff_advance','loan_payment','institutional_payment','other_payment') NOT NULL");
     }
 
     /**
@@ -21,7 +20,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert back to the original ENUM values
-        DB::statement("ALTER TABLE cheque_payments MODIFY COLUMN payment_category ENUM('vendor_payment','recurring_bill','staff_advance','loan_payment','institutional_payment','other_payment') NOT NULL");
+        $this->modifyPaymentCategory("ENUM('vendor_payment','recurring_bill','staff_advance','loan_payment','institutional_payment','other_payment') NOT NULL");
+    }
+
+    private function modifyPaymentCategory(string $definition): void
+    {
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
+        DB::statement("ALTER TABLE cheque_payments MODIFY COLUMN payment_category {$definition}");
     }
 };

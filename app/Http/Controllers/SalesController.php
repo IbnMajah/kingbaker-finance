@@ -5,16 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use App\Models\SaleCreditItem;
 use App\Models\Branch;
+use App\Models\HrCashier;
 use App\Models\Shift;
 use App\Models\Contact;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\BankAccount;
+use App\Models\User;
+use App\Services\SaleCashierVarianceSynchronizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -86,6 +90,7 @@ class SalesController extends Controller
                 'sales_date' => $sale->sales_date,
                 'amount' => $sale->amount,
                 'cashier' => $sale->cashier,
+                'hr_cashier_id' => $sale->hr_cashier_id,
                 'closing_manager' => $sale->closing_manager,
                 'branch' => $sale->branch ? [
                     'id' => $sale->branch->id,
@@ -124,6 +129,7 @@ class SalesController extends Controller
                 'value' => $s->id,
                 'label' => $s->name
             ]),
+            'cashiers' => $this->selectableCashiers($user),
             'customers' => Contact::when($user->account_id ?? null, function ($query) use ($user) {
                 $query->where('account_id', $user->account_id);
             })
@@ -154,7 +160,11 @@ class SalesController extends Controller
             'mobile_money_my_nafa' => ['nullable', 'numeric', 'min:0'],
             'mobile_money_aps' => ['nullable', 'numeric', 'min:0'],
             'mobile_money_wave' => ['nullable', 'numeric', 'min:0'],
-            'cashier' => ['nullable', 'string', 'max:255'],
+            'cashier' => $request->filled('hr_cashier_id')
+                ? ['nullable', 'string', 'max:255']
+                : $this->cashierValidationRules(),
+            'hr_cashier_id' => ['nullable', 'integer', 'exists:hr_cashiers,id'],
+            'actual_total' => ['nullable', 'numeric', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
             'credit_items.*.customer_id' => ['required_with:credit_items', 'exists:contacts,id'],
@@ -163,6 +173,8 @@ class SalesController extends Controller
             'credit_items.*.unit_measurement' => ['nullable', 'string', 'max:50'],
             'credit_items.*.quantity' => ['required_with:credit_items', 'numeric', 'min:0.01'],
         ]);
+
+        $this->applyCashierSelection($validated);
 
         // Calculate total amount if not provided
         $totalAmount = $validated['total_amount'] ?? 0;
@@ -185,7 +197,8 @@ class SalesController extends Controller
         unset($validated['credit_items']);
 
         $controller = $this;
-        DB::transaction(function () use ($validated, $totalAmount, $creditItems, $controller) {
+        $synchronizer = app(SaleCashierVarianceSynchronizer::class);
+        DB::transaction(function () use ($validated, $totalAmount, $creditItems, $controller, $synchronizer) {
             // Create the sale
             $sale = Sale::create([
                 ...$validated,
@@ -268,6 +281,8 @@ class SalesController extends Controller
                     }
                 }
             }
+
+            $synchronizer->sync($sale->fresh(['branch', 'shift', 'hrCashier']), Auth::user());
         });
 
         return Redirect::route('sales')->with('success', 'Sale created successfully.');
@@ -292,12 +307,14 @@ class SalesController extends Controller
                 'sales_date' => $sale->sales_date->format('Y-m-d'),
                 'amount' => $sale->amount,
                 'total_amount' => $sale->total_amount ?? 0,
+                'actual_total' => $sale->actual_total,
                 'cash_amount' => $sale->cash_amount ?? 0,
                 'bank_transfer_amount' => $sale->bank_transfer_amount ?? 0,
                 'mobile_money_my_nafa' => $sale->mobile_money_my_nafa ?? 0,
                 'mobile_money_aps' => $sale->mobile_money_aps ?? 0,
                 'mobile_money_wave' => $sale->mobile_money_wave ?? 0,
                 'cashier' => $sale->cashier,
+                'hr_cashier_id' => $sale->hr_cashier_id,
                 'closing_manager' => $sale->closing_manager,
                 'branch' => $sale->branch,
                 'shift' => $sale->shift,
@@ -329,6 +346,7 @@ class SalesController extends Controller
                 'value' => $s->id,
                 'label' => $s->name
             ]),
+            'cashiers' => $this->selectableCashiers($user),
             'customers' => Contact::when($user->account_id ?? null, function ($query) use ($user) {
                 $query->where('account_id', $user->account_id);
             })
@@ -355,7 +373,7 @@ class SalesController extends Controller
             abort(403, 'You can only view sales from your branch.');
         }
 
-        $sale->load(['branch', 'shift', 'creditItems.customer']);
+        $sale->load(['branch', 'shift', 'creditItems.customer', 'reconciliation']);
 
         return Inertia::render('Sales/Show', [
             'sale' => [
@@ -365,13 +383,18 @@ class SalesController extends Controller
                 'sales_date' => $sale->sales_date->format('Y-m-d'),
                 'amount' => $sale->amount,
                 'total_amount' => $sale->total_amount ?? 0,
+                'actual_total' => $sale->actual_total,
                 'cash_amount' => $sale->cash_amount ?? 0,
                 'bank_transfer_amount' => $sale->bank_transfer_amount ?? 0,
                 'mobile_money_my_nafa' => $sale->mobile_money_my_nafa ?? 0,
                 'mobile_money_aps' => $sale->mobile_money_aps ?? 0,
                 'mobile_money_wave' => $sale->mobile_money_wave ?? 0,
                 'cashier' => $sale->cashier,
+                'hr_cashier_id' => $sale->hr_cashier_id,
                 'closing_manager' => $sale->closing_manager,
+                'reconciliation_id' => $sale->reconciliation?->id,
+                'calculated_variance' => $sale->reconciliation?->calculated_variance,
+                'classification' => $sale->reconciliation?->classification,
                 'branch' => $sale->branch ? [
                     'id' => $sale->branch->id,
                     'name' => $sale->branch->name,
@@ -420,7 +443,11 @@ class SalesController extends Controller
             'mobile_money_my_nafa' => ['nullable', 'numeric', 'min:0'],
             'mobile_money_aps' => ['nullable', 'numeric', 'min:0'],
             'mobile_money_wave' => ['nullable', 'numeric', 'min:0'],
-            'cashier' => ['nullable', 'string', 'max:255'],
+            'cashier' => $request->filled('hr_cashier_id')
+                ? ['nullable', 'string', 'max:255']
+                : $this->cashierValidationRules($sale->cashier),
+            'hr_cashier_id' => ['nullable', 'integer', 'exists:hr_cashiers,id'],
+            'actual_total' => ['nullable', 'numeric', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
             'credit_items.*.customer_id' => ['required_with:credit_items', 'exists:contacts,id'],
@@ -429,6 +456,8 @@ class SalesController extends Controller
             'credit_items.*.unit_measurement' => ['nullable', 'string', 'max:50'],
             'credit_items.*.quantity' => ['required_with:credit_items', 'numeric', 'min:0.01'],
         ]);
+
+        $this->applyCashierSelection($validated);
 
         // Calculate total amount if not provided
         $totalAmount = $validated['total_amount'] ?? 0;
@@ -450,7 +479,8 @@ class SalesController extends Controller
         $creditItems = $validated['credit_items'] ?? [];
         unset($validated['credit_items']);
 
-        DB::transaction(function () use ($sale, $validated, $totalAmount, $creditItems) {
+        $synchronizer = app(SaleCashierVarianceSynchronizer::class);
+        DB::transaction(function () use ($sale, $validated, $totalAmount, $creditItems, $synchronizer) {
             // Update the sale
             $sale->update([
                 ...$validated,
@@ -479,6 +509,8 @@ class SalesController extends Controller
                     ]);
                 }
             }
+
+            $synchronizer->sync($sale->fresh(['branch', 'shift', 'hrCashier', 'reconciliation']), Auth::user());
         });
 
         return Redirect::route('sales')->with('success', 'Sale updated successfully.');
@@ -547,5 +579,57 @@ class SalesController extends Controller
             throw new \RuntimeException('No active bank account available for invoice creation');
         }
         return $bankAccount->id;
+    }
+
+    private function selectableCashiers(?User $user = null): array
+    {
+        $user ??= Auth::user();
+
+        return HrCashier::query()
+            ->active()
+            ->when(!($user->role === 'admin' || $user->owner) && $user->branch_id, function ($query) use ($user) {
+                $query->where(function ($query) use ($user) {
+                    $query->where('branch_id', $user->branch_id)
+                        ->orWhereNull('branch_id');
+                });
+            })
+            ->orderBy('name')
+            ->get(['id', 'employee_id', 'name', 'branch_id'])
+            ->map(fn (HrCashier $cashier) => [
+                'id' => $cashier->id,
+                'employee_id' => $cashier->employee_id,
+                'name' => $cashier->name,
+                'branch_id' => $cashier->branch_id,
+            ])
+            ->all();
+    }
+
+    private function cashierValidationRules(?string $existingName = null): array
+    {
+        $names = collect($this->selectableCashiers())
+            ->pluck('name')
+            ->when(filled($existingName), fn ($names) => $names->push($existingName))
+            ->unique()
+            ->values()
+            ->all();
+
+        return ['nullable', 'string', 'max:255', Rule::in($names)];
+    }
+
+    private function applyCashierSelection(array &$validated): void
+    {
+        if (! empty($validated['hr_cashier_id'])) {
+            $cashier = HrCashier::findOrFail($validated['hr_cashier_id']);
+            $validated['cashier'] = $cashier->name;
+
+            return;
+        }
+
+        if (! empty($validated['cashier'])) {
+            $validated['hr_cashier_id'] = HrCashier::query()
+                ->active()
+                ->where('name', $validated['cashier'])
+                ->value('id');
+        }
     }
 }

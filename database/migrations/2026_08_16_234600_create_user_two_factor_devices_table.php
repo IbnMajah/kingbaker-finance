@@ -12,9 +12,9 @@ return new class extends Migration
         Schema::create('user_two_factor_devices', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('user_id');
+            $table->timestamp('confirmed_at');
             $table->string('name', 100);
             $table->text('secret');
-            $table->timestamp('confirmed_at');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
@@ -27,7 +27,7 @@ return new class extends Migration
             ->orderBy('id')
             ->chunkById(100, function ($users): void {
                 $now = now();
-                $devices = $users->map(fn ($user) => [
+                $devices = $users->map(fn($user) => [
                     'user_id' => $user->id,
                     'name' => 'Primary authenticator',
                     'secret' => $user->two_factor_secret,

@@ -75,6 +75,14 @@ class PermissionSeeder extends Seeder
             ['name' => 'print_receipts', 'display_name' => 'Print Receipts', 'module' => 'finance', 'action' => 'print'],
             ['name' => 'view_reports', 'display_name' => 'View Financial Reports', 'module' => 'finance', 'action' => 'read'],
             ['name' => 'generate_reports', 'display_name' => 'Generate Financial Reports', 'module' => 'finance', 'action' => 'create'],
+            ['name' => 'manage_cashier_assignments', 'display_name' => 'Manage Cashier Assignments', 'module' => 'finance', 'action' => 'update'],
+            ['name' => 'manage_shifts', 'display_name' => 'Manage Shifts', 'module' => 'finance', 'action' => 'update'],
+            ['name' => 'view_cashier_variances', 'display_name' => 'View Cashier Variances', 'module' => 'finance', 'action' => 'read'],
+            ['name' => 'create_cashier_variances', 'display_name' => 'Create Cashier Variances', 'module' => 'finance', 'action' => 'create'],
+            ['name' => 'approve_cashier_variances', 'display_name' => 'Approve Cashier Variances', 'module' => 'finance', 'action' => 'approve'],
+            ['name' => 'adjust_cashier_variances', 'display_name' => 'Reverse Cashier Variances', 'module' => 'finance', 'action' => 'update'],
+            ['name' => 'export_cashier_variances', 'display_name' => 'Export Cashier Variances', 'module' => 'finance', 'action' => 'export'],
+            ['name' => 'override_cashier_variance_assignment', 'display_name' => 'Override Cashier Variance Assignment', 'module' => 'finance', 'action' => 'update'],
         ];
 
         $this->insertPermissions($permissions);

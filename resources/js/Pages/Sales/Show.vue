@@ -129,7 +129,26 @@
         </div>
         <div>
           <div class="text-sm font-medium text-gray-500">Cashier</div>
-          <div class="text-gray-900">{{ sale.cashier || 'N/A' }}</div>
+          <div class="text-gray-900">
+            <Link v-if="sale.hr_cashier_id" :href="`/cashiers/${sale.hr_cashier_id}`" class="text-brand-600 hover:text-brand-800">
+              {{ sale.cashier }}
+            </Link>
+            <span v-else>{{ sale.cashier || 'N/A' }}</span>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm font-medium text-gray-500">Actual Reconciled Total</div>
+          <div class="text-gray-900">{{ sale.actual_total == null ? '—' : $formatAmount(sale.actual_total) }}</div>
+        </div>
+        <div>
+          <div class="text-sm font-medium text-gray-500">Variance (Expected − Actual)</div>
+          <div class="text-gray-900">
+            <Link v-if="sale.reconciliation_id" :href="`/cashier-variances/${sale.reconciliation_id}`" class="text-brand-600 hover:text-brand-800">
+              {{ $formatAmount(sale.calculated_variance) }}
+              <span class="ml-1 capitalize">{{ sale.classification }}</span>
+            </Link>
+            <span v-else>—</span>
+          </div>
         </div>
         <div>
           <div class="text-sm font-medium text-gray-500">Closing Manager</div>

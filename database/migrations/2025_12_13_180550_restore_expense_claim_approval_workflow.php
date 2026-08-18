@@ -12,8 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First, temporarily modify the column to allow all values
-        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'");
+        $this->modifyStatusColumn("VARCHAR(20) DEFAULT 'draft'");
 
         // Update any existing 'active' claims to 'submitted' for approval
         DB::table('expense_claims')
@@ -25,8 +24,12 @@ return new class extends Migration
         if (!Schema::hasColumn('expense_claims', 'approved_by')) {
             Schema::table('expense_claims', function (Blueprint $table) {
                 $table->unsignedInteger('approved_by')->nullable()->after('status');
+
+                if (! $this->usingMysql()) {
+                    $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+                }
             });
-        } else {
+        } elseif ($this->usingMysql()) {
             // If column exists, check if it needs to be modified to match users.id type
             $columnInfo = DB::selectOne("
                 SELECT DATA_TYPE, COLUMN_TYPE
@@ -42,8 +45,81 @@ return new class extends Migration
             }
         }
 
-        // Add foreign key constraint if it doesn't exist
-        // Use raw SQL to check and add foreign key safely
+        if ($this->usingMysql()) {
+            $this->ensureMysqlApprovedByForeignKey();
+        }
+
+        $this->modifyStatusColumn("ENUM('draft', 'submitted', 'approved', 'rejected', 'paid') DEFAULT 'draft'");
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        if ($this->usingMysql()) {
+            $dbName = DB::connection()->getDatabaseName();
+            $fk = DB::selectOne("
+                SELECT CONSTRAINT_NAME
+                FROM information_schema.KEY_COLUMN_USAGE
+                WHERE TABLE_SCHEMA = ?
+                AND TABLE_NAME = 'expense_claims'
+                AND COLUMN_NAME = 'approved_by'
+                AND REFERENCED_TABLE_NAME IS NOT NULL
+                LIMIT 1
+            ", [$dbName]);
+
+            if ($fk && isset($fk->CONSTRAINT_NAME)) {
+                try {
+                    DB::statement("ALTER TABLE expense_claims DROP FOREIGN KEY {$fk->CONSTRAINT_NAME}");
+                } catch (\Exception $e) {
+                    Schema::table('expense_claims', function (Blueprint $table) use ($fk) {
+                        $table->dropForeign($fk->CONSTRAINT_NAME);
+                    });
+                }
+            }
+        } elseif (Schema::hasColumn('expense_claims', 'approved_by')) {
+            Schema::table('expense_claims', function (Blueprint $table) {
+                $table->dropForeign(['approved_by']);
+            });
+        }
+
+        // Remove approved_by column if it exists
+        if (Schema::hasColumn('expense_claims', 'approved_by')) {
+            Schema::table('expense_claims', function (Blueprint $table) {
+                $table->dropColumn('approved_by');
+            });
+        }
+
+        $this->modifyStatusColumn("VARCHAR(20) DEFAULT 'draft'");
+
+        DB::table('expense_claims')
+            ->whereIn('status', ['submitted', 'approved', 'paid'])
+            ->update(['status' => 'active']);
+
+        DB::table('expense_claims')
+            ->where('status', 'rejected')
+            ->update(['status' => 'cancelled']);
+
+        $this->modifyStatusColumn("ENUM('draft', 'active', 'cancelled') DEFAULT 'active'");
+    }
+
+    private function usingMysql(): bool
+    {
+        return Schema::getConnection()->getDriverName() === 'mysql';
+    }
+
+    private function modifyStatusColumn(string $definition): void
+    {
+        if (! $this->usingMysql()) {
+            return;
+        }
+
+        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status {$definition}");
+    }
+
+    private function ensureMysqlApprovedByForeignKey(): void
+    {
         $dbName = DB::connection()->getDatabaseName();
         $fkExists = DB::selectOne("
             SELECT CONSTRAINT_NAME
@@ -55,77 +131,24 @@ return new class extends Migration
             LIMIT 1
         ", [$dbName]);
 
-        if (!$fkExists) {
-            // Try to add the foreign key, ignore if it already exists
-            try {
-                DB::statement("
-                    ALTER TABLE expense_claims
-                    ADD CONSTRAINT expense_claims_approved_by_foreign
-                    FOREIGN KEY (approved_by) REFERENCES users(id)
-                    ON DELETE SET NULL
-                ");
-            } catch (\Exception $e) {
-                // Foreign key might already exist with different name, try to find and use it
-                // or just continue if it fails
-                if (
-                    strpos($e->getMessage(), 'Duplicate foreign key') === false &&
-                    strpos($e->getMessage(), 'already exists') === false
-                ) {
-                    throw $e;
-                }
+        if ($fkExists) {
+            return;
+        }
+
+        try {
+            DB::statement("
+                ALTER TABLE expense_claims
+                ADD CONSTRAINT expense_claims_approved_by_foreign
+                FOREIGN KEY (approved_by) REFERENCES users(id)
+                ON DELETE SET NULL
+            ");
+        } catch (\Exception $e) {
+            if (
+                strpos($e->getMessage(), 'Duplicate foreign key') === false &&
+                strpos($e->getMessage(), 'already exists') === false
+            ) {
+                throw $e;
             }
         }
-
-        // Now modify the status enum to include: draft, submitted, approved, rejected, paid
-        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status ENUM('draft', 'submitted', 'approved', 'rejected', 'paid') DEFAULT 'draft'");
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        // Find and drop the foreign key constraint if it exists
-        $dbName = DB::connection()->getDatabaseName();
-        $fk = DB::selectOne("
-            SELECT CONSTRAINT_NAME
-            FROM information_schema.KEY_COLUMN_USAGE
-            WHERE TABLE_SCHEMA = ?
-            AND TABLE_NAME = 'expense_claims'
-            AND COLUMN_NAME = 'approved_by'
-            AND REFERENCED_TABLE_NAME IS NOT NULL
-            LIMIT 1
-        ", [$dbName]);
-
-        if ($fk && isset($fk->CONSTRAINT_NAME)) {
-            try {
-                DB::statement("ALTER TABLE expense_claims DROP FOREIGN KEY {$fk->CONSTRAINT_NAME}");
-            } catch (\Exception $e) {
-                // Try alternative method
-                Schema::table('expense_claims', function (Blueprint $table) use ($fk) {
-                    $table->dropForeign($fk->CONSTRAINT_NAME);
-                });
-            }
-        }
-
-        // Remove approved_by column if it exists
-        if (Schema::hasColumn('expense_claims', 'approved_by')) {
-            Schema::table('expense_claims', function (Blueprint $table) {
-                $table->dropColumn('approved_by');
-            });
-        }
-
-        // Change status enum back to: draft, active, cancelled
-        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'");
-
-        DB::table('expense_claims')
-            ->whereIn('status', ['submitted', 'approved', 'paid'])
-            ->update(['status' => 'active']);
-
-        DB::table('expense_claims')
-            ->where('status', 'rejected')
-            ->update(['status' => 'cancelled']);
-
-        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status ENUM('draft', 'active', 'cancelled') DEFAULT 'active'");
     }
 };

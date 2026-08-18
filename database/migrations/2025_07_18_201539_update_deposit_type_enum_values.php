@@ -18,8 +18,10 @@ return new class extends Migration
             return;
         }
 
-        // First, expand the enum to include both old and new values
-        DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('cash', 'cash_deposit', 'bank_transfer', 'nafa', 'nafa_deposit', 'wave', 'wave_deposit', 'cheque', 'cheque_deposit', 'sales', 'daily_sales_deposit')");
+        $this->modifyDepositTypeEnum([
+            'cash', 'cash_deposit', 'bank_transfer', 'nafa', 'nafa_deposit',
+            'wave', 'wave_deposit', 'cheque', 'cheque_deposit', 'sales', 'daily_sales_deposit',
+        ]);
 
         // Now update existing data to use new enum values
         DB::table('deposits')->where('deposit_type', 'cash')->update(['deposit_type' => 'cash_deposit']);
@@ -28,8 +30,9 @@ return new class extends Migration
         DB::table('deposits')->where('deposit_type', 'cheque')->update(['deposit_type' => 'cheque_deposit']);
         DB::table('deposits')->where('deposit_type', 'sales')->update(['deposit_type' => 'daily_sales_deposit']);
 
-        // Finally, remove the old enum values
-        DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('cash_deposit', 'bank_transfer', 'nafa_deposit', 'wave_deposit', 'cheque_deposit', 'daily_sales_deposit')");
+        $this->modifyDepositTypeEnum([
+            'cash_deposit', 'bank_transfer', 'nafa_deposit', 'wave_deposit', 'cheque_deposit', 'daily_sales_deposit',
+        ]);
     }
 
     /**
@@ -42,8 +45,10 @@ return new class extends Migration
             return;
         }
 
-        // Expand enum to include old values
-        DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('cash', 'cash_deposit', 'bank_transfer', 'nafa', 'nafa_deposit', 'wave', 'wave_deposit', 'cheque', 'cheque_deposit', 'sales', 'daily_sales_deposit')");
+        $this->modifyDepositTypeEnum([
+            'cash', 'cash_deposit', 'bank_transfer', 'nafa', 'nafa_deposit',
+            'wave', 'wave_deposit', 'cheque', 'cheque_deposit', 'sales', 'daily_sales_deposit',
+        ]);
 
         // Revert data to old enum values
         DB::table('deposits')->where('deposit_type', 'cash_deposit')->update(['deposit_type' => 'cash']);
@@ -52,7 +57,19 @@ return new class extends Migration
         DB::table('deposits')->where('deposit_type', 'cheque_deposit')->update(['deposit_type' => 'cheque']);
         DB::table('deposits')->where('deposit_type', 'daily_sales_deposit')->update(['deposit_type' => 'sales']);
 
-        // Restore original enum
-        DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('cash', 'bank_transfer', 'nafa', 'wave', 'cheque', 'sales')");
+        $this->modifyDepositTypeEnum(['cash', 'bank_transfer', 'nafa', 'wave', 'cheque', 'sales']);
+    }
+
+    /**
+     * @param  list<string>  $values
+     */
+    private function modifyDepositTypeEnum(array $values): void
+    {
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
+        $enum = implode("', '", $values);
+        DB::statement("ALTER TABLE deposits MODIFY COLUMN deposit_type ENUM('{$enum}')");
     }
 };

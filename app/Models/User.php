@@ -125,6 +125,13 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
+    public function isAdminOrManager(): bool
+    {
+        return $this->owner
+            || in_array($this->role, ['admin', 'manager', 'finance_manager'], true)
+            || $this->hasAnyRole(['admin', 'finance_manager']);
+    }
+
     public function hasPermission(string $permission): bool
     {
         // Admin and owner always have all permissions

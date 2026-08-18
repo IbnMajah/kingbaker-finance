@@ -182,7 +182,12 @@
                 <div class="max-w-24 truncate">{{ sale.shift?.name || 'N/A' }}</div>
               </td>
               <td class="hidden md:table-cell px-3 py-3 text-xs text-gray-900">
-                <div class="max-w-28 truncate">{{ sale.cashier || 'N/A' }}</div>
+                <div class="max-w-28 truncate">
+                  <Link v-if="sale.hr_cashier_id" :href="`/cashiers/${sale.hr_cashier_id}`" class="text-brand-600 hover:text-brand-800">
+                    {{ sale.cashier }}
+                  </Link>
+                  <span v-else>{{ sale.cashier || 'N/A' }}</span>
+                </div>
               </td>
               <td class="px-3 py-3 whitespace-nowrap text-xs text-right">
                 <span class="font-medium text-green-600">

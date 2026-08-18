@@ -22,7 +22,9 @@ class Sale extends Model
         'mobile_money_aps',
         'mobile_money_wave',
         'cashier',
-        'closing_manager'
+        'hr_cashier_id',
+        'closing_manager',
+        'actual_total',
     ];
 
     protected $casts = [
@@ -34,6 +36,7 @@ class Sale extends Model
         'mobile_money_my_nafa' => 'decimal:2',
         'mobile_money_aps' => 'decimal:2',
         'mobile_money_wave' => 'decimal:2',
+        'actual_total' => 'decimal:2',
     ];
 
     public function branch()
@@ -54,6 +57,16 @@ class Sale extends Model
     public function creditItems()
     {
         return $this->hasMany(SaleCreditItem::class);
+    }
+
+    public function hrCashier()
+    {
+        return $this->belongsTo(HrCashier::class, 'hr_cashier_id');
+    }
+
+    public function reconciliation()
+    {
+        return $this->hasOne(CashierReconciliation::class);
     }
 
     public function scopeFilter($query, array $filters)

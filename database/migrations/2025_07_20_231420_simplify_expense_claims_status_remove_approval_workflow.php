@@ -12,8 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First, temporarily modify the column to allow all values
-        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'");
+        $this->modifyStatusColumn("VARCHAR(20) DEFAULT 'draft'");
 
         // Update any existing claims with approval statuses to 'active'
         DB::table('expense_claims')
@@ -24,10 +23,13 @@ return new class extends Migration
             ->where('status', 'rejected')
             ->update(['status' => 'cancelled']);
 
-        // Now modify the status enum to only include: draft, active, cancelled
-        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status ENUM('draft', 'active', 'cancelled') DEFAULT 'active'");
+        $this->modifyStatusColumn("ENUM('draft', 'active', 'cancelled') DEFAULT 'active'");
 
-        // Remove approval-related columns
+        // SQLite cannot drop a foreign-key column in place; restore adds this back next.
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('expense_claims', function (Blueprint $table) {
             $table->dropForeign(['approved_by']);
             $table->dropColumn('approved_by');
@@ -45,8 +47,7 @@ return new class extends Migration
             $table->foreign('approved_by')->references('id')->on('users');
         });
 
-        // Restore the original status enum
-        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status ENUM('draft', 'submitted', 'approved', 'rejected', 'paid') DEFAULT 'draft'");
+        $this->modifyStatusColumn("ENUM('draft', 'submitted', 'approved', 'rejected', 'paid') DEFAULT 'draft'");
 
         // Update statuses back
         DB::table('expense_claims')
@@ -56,5 +57,14 @@ return new class extends Migration
         DB::table('expense_claims')
             ->where('status', 'cancelled')
             ->update(['status' => 'rejected']);
+    }
+
+    private function modifyStatusColumn(string $definition): void
+    {
+        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
+        DB::statement("ALTER TABLE expense_claims MODIFY COLUMN status {$definition}");
     }
 };

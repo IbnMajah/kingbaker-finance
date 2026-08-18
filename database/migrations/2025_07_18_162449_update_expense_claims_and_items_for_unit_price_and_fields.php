@@ -17,7 +17,9 @@ return new class extends Migration
                 $table->renameColumn('total_amount', 'total');
             }
             if (Schema::hasColumn('expense_claims', 'bank_account_id')) {
-                $table->dropForeign(['bank_account_id']);
+                if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+                    $table->dropForeign(['bank_account_id']);
+                }
                 $table->dropColumn('bank_account_id');
             }
             if (!Schema::hasColumn('expense_claims', 'title')) {

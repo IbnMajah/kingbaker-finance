@@ -123,7 +123,7 @@
           </div>
 
           <!-- Organization -->
-          <div v-if="canViewBranches || canViewUsers || canAssignRoles" class="mb-6">
+          <div v-if="canViewBranches || canViewUsers || canAssignRoles || hasPermission('manage_cashier_assignments') || hasPermission('manage_shifts')" class="mb-6">
             <Link
               :href="settingsHref"
               @click="selectMainMenu('organization')"
@@ -183,6 +183,9 @@ export default {
   },
   computed: {
     settingsHref() {
+      if (!this.canViewBranches && !this.canViewUsers && !this.canAssignRoles) {
+        return this.hasPermission('manage_cashier_assignments') ? '/cashier-assignments' : '/shifts'
+      }
       // If the user can't view branches/users but can manage roles, take them straight to Roles.
       if (!this.canViewBranches && !this.canViewUsers && this.canAssignRoles) return '/roles'
       return '/branches'

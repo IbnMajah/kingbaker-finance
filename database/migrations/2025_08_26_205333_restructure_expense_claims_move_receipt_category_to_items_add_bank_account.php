@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SqliteSchema;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,9 +25,13 @@ return new class extends Migration
         });
 
         // Remove category and receipt_image_path from expense_claims table
-        Schema::table('expense_claims', function (Blueprint $table) {
-            $table->dropColumn(['category', 'receipt_image_path']);
-        });
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            SqliteSchema::dropColumns('expense_claims', ['category', 'receipt_image_path']);
+        } else {
+            Schema::table('expense_claims', function (Blueprint $table) {
+                $table->dropColumn(['category', 'receipt_image_path']);
+            });
+        }
     }
 
     /**
