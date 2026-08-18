@@ -42,7 +42,7 @@
           <div >
             <Link
               href="/"
-              @click="selectMainMenu('overview')"
+              @click="closeMenu"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'overview' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
@@ -56,7 +56,7 @@
           <div v-if="canAccessFinance" class="mb-6">
             <Link
               href="/bank-accounts"
-              @click="selectMainMenu('accounts')"
+              @click="closeMenu"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'accounts' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
@@ -70,7 +70,7 @@
           <div v-if="canViewSales" class="mb-6">
             <Link
               href="/sales"
-              @click="selectMainMenu('sales')"
+              @click="closeMenu"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'sales' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
@@ -84,7 +84,7 @@
           <div v-if="canViewBills || canViewChequePayments" class="mb-6">
             <Link
               href="/vendors"
-              @click="selectMainMenu('vendors')"
+              @click="closeMenu"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'vendors' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
@@ -98,7 +98,7 @@
           <div v-if="canViewExpenses" class="mb-6">
             <Link
               href="/expense-claims"
-              @click="selectMainMenu('expenses')"
+              @click="closeMenu"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'expenses' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
@@ -112,7 +112,7 @@
           <div v-if="hasPermission('view_reports')" class="mb-6">
             <Link
               href="/reports"
-              @click="selectMainMenu('reports')"
+              @click="closeMenu"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'reports' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
@@ -126,7 +126,7 @@
           <div v-if="canViewBranches || canViewUsers || canAssignRoles || hasPermission('manage_cashier_assignments') || hasPermission('manage_shifts')" class="mb-6">
             <Link
               :href="settingsHref"
-              @click="selectMainMenu('organization')"
+              @click="closeMenu"
               :class="[
                 'block w-full text-left px-4 py-3 rounded-lg transition-colors',
                 selectedMainMenu === 'organization' ? 'bg-brand-100 text-brand-700' : 'text-gray-700 hover:bg-gray-100'
@@ -150,6 +150,9 @@ import { usePermissions } from '@/composables/usePermissions.js'
 export default {
   components: {
     Link,
+  },
+  props: {
+    selectedMainMenu: String,
   },
   setup() {
     const {
@@ -178,7 +181,6 @@ export default {
   data() {
     return {
       isMenuOpen: false,
-      selectedMainMenu: null,
     }
   },
   computed: {
@@ -198,30 +200,6 @@ export default {
     closeMenu() {
       this.isMenuOpen = false
     },
-    selectMainMenu(menuKey) {
-      this.selectedMainMenu = menuKey
-      this.$emit('menu-selected', menuKey)
-      this.closeMenu()
-    }
   },
-  mounted() {
-    // Set initial menu based on current URL
-    const currentUrl = this.$page.url.substr(1)
-    if (currentUrl === '') {
-      this.selectedMainMenu = 'overview'
-    } else if (currentUrl.startsWith('bank-accounts') || currentUrl.startsWith('transactions') || currentUrl.startsWith('deposits')) {
-      this.selectedMainMenu = 'accounts'
-    } else if (currentUrl.startsWith('sales')) {
-      this.selectedMainMenu = 'sales'
-    } else if (currentUrl.startsWith('bills') || currentUrl.startsWith('vendors') || currentUrl.startsWith('cheque-payments')) {
-      this.selectedMainMenu = 'vendors'
-    } else if (currentUrl.startsWith('expense-claims') || currentUrl.startsWith('miscellaneous')) {
-      this.selectedMainMenu = 'expenses'
-    } else if (currentUrl.startsWith('reports')) {
-      this.selectedMainMenu = 'reports'
-    } else if (currentUrl.startsWith('branches') || currentUrl.startsWith('users') || currentUrl.startsWith('roles')) {
-      this.selectedMainMenu = 'organization'
-    }
-  }
 }
 </script>

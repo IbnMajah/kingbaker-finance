@@ -33,10 +33,78 @@
 
 ## Runtime requirements
 
-- Run `php artisan schedule:run` every minute. It refreshes cashiers hourly and dispatches pending HR outbox events every five minutes.
-- Run at least one `php artisan queue:work --tries=5` process under a process supervisor.
+Apache serves HTTP only. Do not run Artisan commands in a terminal session or every five minutes by hand. Use cron for the scheduler and Supervisor for the queue worker. Both survive logout and reboot.
+
+In production set:
+
+```dotenv
+QUEUE_CONNECTION=database
+```
+
+`sync` will process HR jobs inside `schedule:run`. That can block the scheduler if HR is slow or down.
+
+### Scheduler (cron)
+
+Laravel needs `schedule:run` once a minute. It then runs `hr:sync-cashiers` hourly and `cashier-variances:process-outbox` every five minutes, with `withoutOverlapping()`.
+
+As the application user:
+
+```bash
+crontab -e
+```
+
+```cron
+* * * * * cd /var/www/finance && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Replace `/var/www/finance` with the real project path and use the same PHP binary Apache uses (`which php`). Confirm with `php artisan schedule:list`.
+
+### Queue worker (Supervisor)
+
+The outbox command dispatches `ProcessCashierVarianceOutbox` jobs. Keep one worker running:
+
+```bash
+sudo apt install supervisor
+```
+
+Create `/etc/supervisor/conf.d/finance-worker.conf`:
+
+```ini
+[program:finance-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/finance/artisan queue:work database --sleep=1 --tries=5 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/finance/storage/logs/worker.log
+stopwaitsecs=60
+```
+
+```bash
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start finance-worker:*
+sudo supervisorctl status
+```
+
+After each deploy:
+
+```bash
+php artisan config:cache
+php artisan queue:restart
+```
+
+The worker finishes the current job, then reloads new code.
+
+### Other
+
 - Use HTTPS even on the same server unless the connection is strictly loopback. Restrict the HR integration location at the web server/firewall and application allowlist.
 - Store the token only in environment or secret-manager configuration. Never put it in source control or logs.
+- The application user must be able to write `storage/` and `bootstrap/cache/` so schedule overlap locks work.
 
 ## Operations and recovery
 

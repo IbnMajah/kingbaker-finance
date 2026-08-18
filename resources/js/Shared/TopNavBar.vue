@@ -204,7 +204,7 @@
               href="/cashier-assignments"
               :class="[
                 'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                isUrl('cashier-assignments') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                isUrl('cashier-assignments', 'cashiers') ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               ]"
             >
               Cashiers
@@ -254,6 +254,7 @@
 import { Link } from '@inertiajs/vue3'
 import Icon from '@/Shared/Icon.vue'
 import Dropdown from '@/Shared/Dropdown.vue'
+import { isCurrentUrl } from '@/Utils/navigation.js'
 import { usePermissions } from '@/composables/usePermissions.js'
 
 export default {
@@ -272,11 +273,7 @@ export default {
   },
   methods: {
     isUrl(...urls) {
-      let currentUrl = this.$page.url.substr(1)
-      if (urls[0] === '') {
-        return currentUrl === ''
-      }
-      return urls.filter((url) => currentUrl.startsWith(url)).length
+      return isCurrentUrl(this.$page.url, ...urls)
     },
   },
 }
