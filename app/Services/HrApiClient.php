@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
 
@@ -32,16 +33,35 @@ class HrApiClient
                 ]);
 
                 if (! $response->successful()) {
+                    // Log the response
+                    Log::error('HR service response: ' . $response->body(), [
+                        'url' => $response->effectiveUri(),
+                        'status' => $response->status(),
+                        'headers' => $response->headers(),
+                        'body' => $response->body(),
+                    ]);
                     throw new RuntimeException('The HR service could not complete the cashier refresh.');
                 }
 
                 $payload = $response->json();
                 if (! is_array($payload)) {
+                    Log::error('HR service returned an invalid response: ' . $response->body(), [
+                        'url' => $response->effectiveUri(),
+                        'status' => $response->status(),
+                        'headers' => $response->headers(),
+                        'body' => $response->body(),
+                    ]);
                     throw new RuntimeException('The HR service returned an invalid response.');
                 }
 
                 $items = data_get($payload, 'data.data', data_get($payload, 'data', data_get($payload, 'employees')));
                 if (! is_array($items)) {
+                    Log::error('HR service returned an invalid cashier list: ' . $response->body(), [
+                        'url' => $response->effectiveUri(),
+                        'status' => $response->status(),
+                        'headers' => $response->headers(),
+                        'body' => $response->body(),
+                    ]);
                     throw new RuntimeException('The HR service returned an invalid cashier list.');
                 }
 
@@ -56,8 +76,15 @@ class HrApiClient
 
             return $cashiers;
         } catch (RuntimeException $exception) {
+            Log::error('HR service exception: ' . $exception->getMessage(), [
+                'line' => $exception->getLine(),
+                'code' => $exception->getCode(),
+                'trace' => $exception->getTrace(),
+                'trace_string' => $exception->getTraceAsString(),
+            ]);
             throw $exception;
         } catch (Throwable) {
+            Log::error('HR service temporary unavailable.');
             throw new RuntimeException('The HR service is temporarily unavailable.');
         }
     }
