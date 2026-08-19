@@ -16,9 +16,9 @@ php artisan optimize &&
 echo "Application optimized" &&
 php artisan up &&
 echo "Application is now live" &&
-sudo service apache2 restart && 
+sudo service apache2 restart &&
 echo "Apache restarted" &&
-echo "Deployed successfully!" &&
-php artisan optimize &&
-echo "Application optimized"
+php artisan queue:restart &&
+echo "Queue workers signaled to reload" &&
+echo "Deployed successfully!"
 

@@ -91,14 +91,12 @@ sudo supervisorctl start finance-worker:*
 sudo supervisorctl status
 ```
 
-After each deploy:
+`build_prod.sh` already runs `php artisan optimize` (which caches config) and `php artisan queue:restart` after each deploy. The worker finishes the current job, then reloads new code. If you deploy without that script, run:
 
 ```bash
-php artisan config:cache
+php artisan optimize
 php artisan queue:restart
 ```
-
-The worker finishes the current job, then reloads new code.
 
 ### Other
 
