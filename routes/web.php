@@ -577,5 +577,6 @@ Route::middleware('auth')->group(function () {
 
     // Payment Categories
     Route::resource('payment-categories', PaymentCategoryController::class)
-        ->except(['show']);
+        ->except(['show'])
+        ->middleware('permission:manage_payment_categories');
 });

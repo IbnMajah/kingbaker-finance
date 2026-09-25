@@ -103,7 +103,7 @@
             <!-- Cashier -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Cashier
+                Cashier <span class="text-red-500">*</span>
               </label>
               <select
                 v-model="form.hr_cashier_id"
@@ -160,12 +160,16 @@
                   </div>
                   <input
                     v-model="form.cash_amount"
-                    type="text"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
                     placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.cash_amount ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('cash_amount', $event)"
                     @blur="formatNumber('cash_amount', $event)"
                   />
@@ -186,12 +190,16 @@
                   </div>
                   <input
                     v-model="form.bank_transfer_amount"
-                    type="text"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
                     placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.bank_transfer_amount ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('bank_transfer_amount', $event)"
                     @blur="formatNumber('bank_transfer_amount', $event)"
                   />
@@ -212,12 +220,16 @@
                   </div>
                   <input
                     v-model="form.mobile_money_my_nafa"
-                    type="text"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
                     placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.mobile_money_my_nafa ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('mobile_money_my_nafa', $event)"
                     @blur="formatNumber('mobile_money_my_nafa', $event)"
                   />
@@ -238,12 +250,16 @@
                   </div>
                   <input
                     v-model="form.mobile_money_aps"
-                    type="text"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
                     placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.mobile_money_aps ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('mobile_money_aps', $event)"
                     @blur="formatNumber('mobile_money_aps', $event)"
                   />
@@ -264,12 +280,16 @@
                   </div>
                   <input
                     v-model="form.mobile_money_wave"
-                    type="text"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
                     placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.mobile_money_wave ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('mobile_money_wave', $event)"
                     @blur="formatNumber('mobile_money_wave', $event)"
                   />
@@ -346,10 +366,14 @@
                       <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
                       <input
                         v-model="item.unit_price"
-                        type="text"
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputmode="numeric"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`credit_items.${index}.unit_price`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="0"
+                        @keydown="preventDecimalKey"
                         @input="formatCreditNumber(index, 'unit_price', $event); updateTotalAmount()"
                         @blur="formatCreditNumber(index, 'unit_price', $event)"
                       />
@@ -380,10 +404,14 @@
                       <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
                       <input
                         v-model="item.quantity"
-                        type="text"
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputmode="numeric"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`credit_items.${index}.quantity`] ? 'border-red-300' : 'border-gray-300'"
                         placeholder="1"
+                        @keydown="preventDecimalKey"
                         @input="formatCreditNumber(index, 'quantity', $event); updateTotalAmount()"
                         @blur="formatCreditNumber(index, 'quantity', $event)"
                       />
@@ -434,12 +462,16 @@
                   </div>
                   <input
                     v-model="form.amount"
-                    type="text"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
                     placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.amount ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('amount', $event)"
                     @blur="formatNumber('amount', $event)"
                   />
@@ -459,12 +491,16 @@
                   </div>
                   <input
                     v-model="form.actual_total"
-                    type="text"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
                     placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.actual_total ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatOptionalNumber('actual_total', $event)"
                     @blur="formatOptionalNumber('actual_total', $event)"
                   />
@@ -521,6 +557,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
+import { preventDecimalKey, toWholeNumber } from '@/Utils/formatters.js'
 
 export default {
   components: {
@@ -628,6 +665,10 @@ export default {
         this.form.cashier = ''
       }
     },
+    'form.hr_cashier_id'(cashierId) {
+      const selected = this.cashiers.find(cashier => String(cashier.id) === String(cashierId))
+      this.form.cashier = selected?.name || ''
+    },
   },
   methods: {
     store() {
@@ -656,18 +697,16 @@ export default {
       
       this.form.transform(() => formData).post('/sales')
     },
+    preventDecimalKey,
     formatNumber(field, event) {
-      const value = event.target.value.replace(/\D/g, '')
-      this.form[field] = value === '' ? '0' : String(parseInt(value, 10))
+      this.form[field] = toWholeNumber(event.target.value)
       this.updateTotalAmount()
     },
     formatOptionalNumber(field, event) {
-      const value = event.target.value.replace(/\D/g, '')
-      this.form[field] = value === '' ? '' : String(parseInt(value, 10))
+      this.form[field] = toWholeNumber(event.target.value, '')
     },
     formatCreditNumber(index, field, event) {
-      const value = event.target.value.replace(/\D/g, '')
-      this.form.credit_items[index][field] = value === '' ? '0' : String(parseInt(value, 10))
+      this.form.credit_items[index][field] = toWholeNumber(event.target.value)
     },
     updateTotalAmount() {
       // No-op: totalAmount is computed and will auto-update

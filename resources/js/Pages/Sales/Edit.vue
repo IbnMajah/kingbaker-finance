@@ -151,7 +151,7 @@
                 Total Amount
               </label>
               <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-                <div class="text-lg font-bold text-brand-600">GMD {{ totalAmount.toFixed(2) }}</div>
+                <div class="text-lg font-bold text-brand-600">GMD {{ totalAmount }}</div>
                 <p class="text-xs text-gray-500 mt-1">Calculated from all payment methods</p>
               </div>
             </div>
@@ -218,12 +218,16 @@
                   </div>
                   <input
                     v-model="form.cash_amount"
-                    type="text"
-                    placeholder="0.00"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.cash_amount ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('cash_amount', $event)"
                     @blur="formatNumber('cash_amount', $event)"
                     :disabled="sale.deleted_at"
@@ -245,12 +249,16 @@
                   </div>
                   <input
                     v-model="form.bank_transfer_amount"
-                    type="text"
-                    placeholder="0.00"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.bank_transfer_amount ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('bank_transfer_amount', $event)"
                     @blur="formatNumber('bank_transfer_amount', $event)"
                     :disabled="sale.deleted_at"
@@ -272,12 +280,16 @@
                   </div>
                   <input
                     v-model="form.mobile_money_my_nafa"
-                    type="text"
-                    placeholder="0.00"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.mobile_money_my_nafa ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('mobile_money_my_nafa', $event)"
                     @blur="formatNumber('mobile_money_my_nafa', $event)"
                     :disabled="sale.deleted_at"
@@ -299,12 +311,16 @@
                   </div>
                   <input
                     v-model="form.mobile_money_aps"
-                    type="text"
-                    placeholder="0.00"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.mobile_money_aps ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('mobile_money_aps', $event)"
                     @blur="formatNumber('mobile_money_aps', $event)"
                     :disabled="sale.deleted_at"
@@ -326,12 +342,16 @@
                   </div>
                   <input
                     v-model="form.mobile_money_wave"
-                    type="text"
-                    placeholder="0.00"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.mobile_money_wave ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('mobile_money_wave', $event)"
                     @blur="formatNumber('mobile_money_wave', $event)"
                     :disabled="sale.deleted_at"
@@ -412,10 +432,14 @@
                       <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
                       <input
                         v-model="item.unit_price"
-                        type="text"
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputmode="numeric"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`credit_items.${index}.unit_price`] ? 'border-red-300' : 'border-gray-300'"
-                        placeholder="0.00"
+                        placeholder="0"
+                        @keydown="preventDecimalKey"
                         @input="formatCreditNumber(index, 'unit_price', $event); updateTotalAmount()"
                         @blur="formatCreditNumber(index, 'unit_price', $event)"
                         :disabled="sale.deleted_at"
@@ -448,10 +472,14 @@
                       <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
                       <input
                         v-model="item.quantity"
-                        type="text"
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputmode="numeric"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         :class="form.errors[`credit_items.${index}.quantity`] ? 'border-red-300' : 'border-gray-300'"
-                        placeholder="1.00"
+                        placeholder="1"
+                        @keydown="preventDecimalKey"
                         @input="formatCreditNumber(index, 'quantity', $event); updateTotalAmount()"
                         @blur="formatCreditNumber(index, 'quantity', $event)"
                         :disabled="sale.deleted_at"
@@ -467,7 +495,7 @@
                     <div class="text-right">
                       <div class="text-sm text-gray-500">Item Total:</div>
                       <div class="text-lg font-bold text-blue-600">
-                        GMD {{ ((parseFloat(item.unit_price) || 0) * (parseFloat(item.quantity) || 0)).toFixed(2) }}
+                        GMD {{ (parseInt(item.unit_price, 10) || 0) * (parseInt(item.quantity, 10) || 0) }}
                       </div>
                     </div>
                   </div>
@@ -503,12 +531,16 @@
                   </div>
                   <input
                     v-model="form.amount"
-                    type="text"
-                    placeholder="0.00"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.amount ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatNumber('amount', $event)"
                     @blur="formatNumber('amount', $event)"
                     :disabled="sale.deleted_at"
@@ -529,13 +561,17 @@
                   </div>
                   <input
                     v-model="form.actual_total"
-                    type="text"
-                    placeholder="0.00"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
                     :disabled="sale.deleted_at"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
                       form.errors.actual_total ? 'border-red-300' : 'border-gray-300'
                     ]"
+                    @keydown="preventDecimalKey"
                     @input="formatOptionalNumber('actual_total', $event)"
                     @blur="formatOptionalNumber('actual_total', $event)"
                   />
@@ -549,7 +585,7 @@
             <div v-if="form.actual_total !== '' && form.actual_total !== null" class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p class="text-sm text-gray-500">Expected total (from sale) − Actual</p>
               <div class="mt-1 flex flex-wrap items-center gap-3">
-                <span class="text-2xl font-bold text-gray-900">GMD {{ calculatedVariance.toFixed(2) }}</span>
+                <span class="text-2xl font-bold text-gray-900">GMD {{ calculatedVariance }}</span>
                 <span
                   class="rounded-full px-2 py-0.5 text-xs font-medium"
                   :class="calculatedVariance > 0 ? 'bg-red-100 text-red-800' : calculatedVariance < 0 ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'"
@@ -603,7 +639,7 @@
 <script>
 import { Head, Link } from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout.vue'
-import { formatterMixin } from '@/Utils/formatters'
+import { formatterMixin, preventDecimalKey, toWholeNumber } from '@/Utils/formatters'
 
 export default {
   components: {
@@ -641,23 +677,23 @@ export default {
         branch_id: this.sale.branch_id,
         shift_id: this.sale.shift_id,
         sales_date: this.sale.sales_date,
-        amount: this.sale.amount?.toString() || '0',
-        total_amount: this.sale.total_amount?.toString() || '0',
-        cash_amount: this.sale.cash_amount?.toString() || '0',
-        bank_transfer_amount: this.sale.bank_transfer_amount?.toString() || '0',
-        mobile_money_my_nafa: this.sale.mobile_money_my_nafa?.toString() || '0',
-        mobile_money_aps: this.sale.mobile_money_aps?.toString() || '0',
-        mobile_money_wave: this.sale.mobile_money_wave?.toString() || '0',
+        amount: toWholeNumber(this.sale.amount),
+        total_amount: toWholeNumber(this.sale.total_amount),
+        cash_amount: toWholeNumber(this.sale.cash_amount),
+        bank_transfer_amount: toWholeNumber(this.sale.bank_transfer_amount),
+        mobile_money_my_nafa: toWholeNumber(this.sale.mobile_money_my_nafa),
+        mobile_money_aps: toWholeNumber(this.sale.mobile_money_aps),
+        mobile_money_wave: toWholeNumber(this.sale.mobile_money_wave),
         cashier: this.sale.cashier || '',
         hr_cashier_id: this.sale.hr_cashier_id || '',
         closing_manager: this.sale.closing_manager || '',
-        actual_total: this.sale.actual_total != null ? this.sale.actual_total.toString() : '',
+        actual_total: this.sale.actual_total != null ? toWholeNumber(this.sale.actual_total, '') : '',
         credit_items: (this.sale.credit_items || []).map(item => ({
           customer_id: item.customer_id,
           description: item.description || '',
-          unit_price: item.unit_price?.toString() || '0',
+          unit_price: toWholeNumber(item.unit_price),
           unit_measurement: item.unit_measurement || '',
-          quantity: item.quantity?.toString() || '1',
+          quantity: toWholeNumber(item.quantity, '1'),
         })),
       }),
     }
@@ -667,16 +703,16 @@ export default {
       let total = 0
       
       // Add payment method amounts
-      total += parseFloat(this.form.cash_amount) || 0
-      total += parseFloat(this.form.bank_transfer_amount) || 0
-      total += parseFloat(this.form.mobile_money_my_nafa) || 0
-      total += parseFloat(this.form.mobile_money_aps) || 0
-      total += parseFloat(this.form.mobile_money_wave) || 0
+      total += parseInt(this.form.cash_amount, 10) || 0
+      total += parseInt(this.form.bank_transfer_amount, 10) || 0
+      total += parseInt(this.form.mobile_money_my_nafa, 10) || 0
+      total += parseInt(this.form.mobile_money_aps, 10) || 0
+      total += parseInt(this.form.mobile_money_wave, 10) || 0
       
       // Add credit items totals
       if (this.form.credit_items && Array.isArray(this.form.credit_items)) {
         this.form.credit_items.forEach(item => {
-          const itemTotal = (parseFloat(item.unit_price) || 0) * (parseFloat(item.quantity) || 0)
+          const itemTotal = (parseInt(item.unit_price, 10) || 0) * (parseInt(item.quantity, 10) || 0)
           total += itemTotal
         })
       }
@@ -717,7 +753,7 @@ export default {
       return options
     },
     calculatedVariance() {
-      return Math.round(((Number(this.totalAmount) || 0) - (Number(this.form.actual_total) || 0)) * 100) / 100
+      return (Number(this.totalAmount) || 0) - (parseInt(this.form.actual_total, 10) || 0)
     },
   },
   watch: {
@@ -736,23 +772,23 @@ export default {
       // Convert string values to numbers before submitting
       const formData = {
         ...this.form.data(),
-        amount: parseFloat(this.form.amount) || 0,
+        amount: parseInt(this.form.amount, 10) || 0,
         total_amount: this.totalAmount,
-        cash_amount: parseFloat(this.form.cash_amount) || 0,
-        bank_transfer_amount: parseFloat(this.form.bank_transfer_amount) || 0,
-        mobile_money_my_nafa: parseFloat(this.form.mobile_money_my_nafa) || 0,
-        mobile_money_aps: parseFloat(this.form.mobile_money_aps) || 0,
-        mobile_money_wave: parseFloat(this.form.mobile_money_wave) || 0,
+        cash_amount: parseInt(this.form.cash_amount, 10) || 0,
+        bank_transfer_amount: parseInt(this.form.bank_transfer_amount, 10) || 0,
+        mobile_money_my_nafa: parseInt(this.form.mobile_money_my_nafa, 10) || 0,
+        mobile_money_aps: parseInt(this.form.mobile_money_aps, 10) || 0,
+        mobile_money_wave: parseInt(this.form.mobile_money_wave, 10) || 0,
         hr_cashier_id: this.form.hr_cashier_id || null,
         actual_total: this.form.actual_total === '' || this.form.actual_total === null
           ? null
-          : parseFloat(this.form.actual_total),
+          : parseInt(this.form.actual_total, 10),
         credit_items: this.form.credit_items.map(item => ({
           customer_id: item.customer_id,
           description: item.description,
-          unit_price: parseFloat(item.unit_price) || 0,
+          unit_price: parseInt(item.unit_price, 10) || 0,
           unit_measurement: item.unit_measurement || null,
-          quantity: parseFloat(item.quantity) || 0,
+          quantity: parseInt(item.quantity, 10) || 0,
         })),
       }
       
@@ -768,41 +804,16 @@ export default {
         this.$inertia.put(`/sales/${this.sale.id}/restore`)
       }
     },
+    preventDecimalKey,
     formatNumber(field, event) {
-      let value = event.target.value.replace(/[^0-9.]/g, '')
-      if (value === '' || value === '.') {
-        this.form[field] = '0'
-        return
-      }
-      const num = parseFloat(value)
-      if (!isNaN(num)) {
-        this.form[field] = num.toFixed(2)
-      } else {
-        this.form[field] = '0'
-      }
+      this.form[field] = toWholeNumber(event.target.value)
       this.updateTotalAmount()
     },
     formatOptionalNumber(field, event) {
-      let value = event.target.value.replace(/[^0-9.]/g, '')
-      if (value === '' || value === '.') {
-        this.form[field] = ''
-        return
-      }
-      const num = parseFloat(value)
-      this.form[field] = isNaN(num) ? '' : num.toFixed(2)
+      this.form[field] = toWholeNumber(event.target.value, '')
     },
     formatCreditNumber(index, field, event) {
-      let value = event.target.value.replace(/[^0-9.]/g, '')
-      if (value === '' || value === '.') {
-        this.form.credit_items[index][field] = '0'
-        return
-      }
-      const num = parseFloat(value)
-      if (!isNaN(num)) {
-        this.form.credit_items[index][field] = num.toFixed(2)
-      } else {
-        this.form.credit_items[index][field] = '0'
-      }
+      this.form.credit_items[index][field] = toWholeNumber(event.target.value)
     },
     updateTotalAmount() {
       this.$forceUpdate()

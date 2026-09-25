@@ -31,6 +31,26 @@ export function formatAmount(amount) {
 }
 
 /**
+ * Keep only the whole-number part of a user-entered amount.
+ */
+export function toWholeNumber(value, emptyValue = '0') {
+    const raw = String(value ?? '')
+    const whole = raw.split(/[.,]/)[0].replace(/\D/g, '')
+
+    if (whole === '') {
+        return emptyValue
+    }
+
+    return String(parseInt(whole, 10))
+}
+
+export function preventDecimalKey(event) {
+    if (['.', ',', 'e', 'E', '+', '-'].includes(event.key)) {
+        event.preventDefault()
+    }
+}
+
+/**
  * Format date and time to human readable format: 'Wed, 31st May 2025, 2:30 PM'
  * @param {string|Date} dateTime - DateTime to format
  * @returns {string} Formatted datetime string

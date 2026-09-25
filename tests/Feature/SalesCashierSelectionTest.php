@@ -88,7 +88,17 @@ class SalesCashierSelectionTest extends TestCase
             ->from('/sales/create')
             ->post('/sales', array_merge($payload, ['cashier' => 'Typed By Hand']))
             ->assertRedirect('/sales/create')
-            ->assertSessionHasErrors('cashier');
+            ->assertSessionHasErrors('hr_cashier_id');
+
+        $this->actingAs($user)
+            ->withSession(['two_factor_authenticated' => true])
+            ->from('/sales/create')
+            ->post('/sales', array_merge($payload, [
+                'hr_cashier_id' => $cashier->id,
+                'cash_amount' => '50.25',
+            ]))
+            ->assertRedirect('/sales/create')
+            ->assertSessionHasErrors('cash_amount');
 
         $this->actingAs($user)
             ->withSession(['two_factor_authenticated' => true])

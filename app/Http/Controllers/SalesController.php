@@ -153,25 +153,25 @@ class SalesController extends Controller
             'branch_id' => ['required', 'exists:branches,id'],
             'shift_id' => ['required', 'exists:shifts,id'],
             'sales_date' => ['required', 'date'],
-            'amount' => ['required', 'numeric', 'min:0'], // depositable_amount
-            'total_amount' => ['nullable', 'numeric', 'min:0'],
-            'cash_amount' => ['nullable', 'numeric', 'min:0'],
-            'bank_transfer_amount' => ['nullable', 'numeric', 'min:0'],
-            'mobile_money_my_nafa' => ['nullable', 'numeric', 'min:0'],
-            'mobile_money_aps' => ['nullable', 'numeric', 'min:0'],
-            'mobile_money_wave' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['required', 'integer', 'min:0'], // depositable_amount
+            'total_amount' => ['nullable', 'integer', 'min:0'],
+            'cash_amount' => ['nullable', 'integer', 'min:0'],
+            'bank_transfer_amount' => ['nullable', 'integer', 'min:0'],
+            'mobile_money_my_nafa' => ['nullable', 'integer', 'min:0'],
+            'mobile_money_aps' => ['nullable', 'integer', 'min:0'],
+            'mobile_money_wave' => ['nullable', 'integer', 'min:0'],
             'cashier' => $request->filled('hr_cashier_id')
                 ? ['nullable', 'string', 'max:255']
                 : $this->cashierValidationRules(),
-            'hr_cashier_id' => ['nullable', 'integer', 'exists:hr_cashiers,id'],
-            'actual_total' => ['nullable', 'numeric', 'min:0'],
+            'hr_cashier_id' => ['required', 'integer', 'exists:hr_cashiers,id'],
+            'actual_total' => ['nullable', 'integer', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
             'credit_items.*.customer_id' => ['required_with:credit_items', 'exists:contacts,id'],
             'credit_items.*.description' => ['required_with:credit_items', 'string', 'max:255'],
-            'credit_items.*.unit_price' => ['required_with:credit_items', 'numeric', 'min:0.01'],
+            'credit_items.*.unit_price' => ['required_with:credit_items', 'integer', 'min:1'],
             'credit_items.*.unit_measurement' => ['nullable', 'string', 'max:50'],
-            'credit_items.*.quantity' => ['required_with:credit_items', 'numeric', 'min:0.01'],
+            'credit_items.*.quantity' => ['required_with:credit_items', 'integer', 'min:1'],
         ]);
 
         $this->applyCashierSelection($validated);
@@ -436,25 +436,25 @@ class SalesController extends Controller
             'branch_id' => ['required', 'exists:branches,id'],
             'shift_id' => ['required', 'exists:shifts,id'],
             'sales_date' => ['required', 'date'],
-            'amount' => ['required', 'numeric', 'min:0'], // depositable_amount
-            'total_amount' => ['nullable', 'numeric', 'min:0'],
-            'cash_amount' => ['nullable', 'numeric', 'min:0'],
-            'bank_transfer_amount' => ['nullable', 'numeric', 'min:0'],
-            'mobile_money_my_nafa' => ['nullable', 'numeric', 'min:0'],
-            'mobile_money_aps' => ['nullable', 'numeric', 'min:0'],
-            'mobile_money_wave' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['required', 'integer', 'min:0'], // depositable_amount
+            'total_amount' => ['nullable', 'integer', 'min:0'],
+            'cash_amount' => ['nullable', 'integer', 'min:0'],
+            'bank_transfer_amount' => ['nullable', 'integer', 'min:0'],
+            'mobile_money_my_nafa' => ['nullable', 'integer', 'min:0'],
+            'mobile_money_aps' => ['nullable', 'integer', 'min:0'],
+            'mobile_money_wave' => ['nullable', 'integer', 'min:0'],
             'cashier' => $request->filled('hr_cashier_id')
                 ? ['nullable', 'string', 'max:255']
                 : $this->cashierValidationRules($sale->cashier),
             'hr_cashier_id' => ['nullable', 'integer', 'exists:hr_cashiers,id'],
-            'actual_total' => ['nullable', 'numeric', 'min:0'],
+            'actual_total' => ['nullable', 'integer', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
             'credit_items.*.customer_id' => ['required_with:credit_items', 'exists:contacts,id'],
             'credit_items.*.description' => ['required_with:credit_items', 'string', 'max:255'],
-            'credit_items.*.unit_price' => ['required_with:credit_items', 'numeric', 'min:0.01'],
+            'credit_items.*.unit_price' => ['required_with:credit_items', 'integer', 'min:1'],
             'credit_items.*.unit_measurement' => ['nullable', 'string', 'max:50'],
-            'credit_items.*.quantity' => ['required_with:credit_items', 'numeric', 'min:0.01'],
+            'credit_items.*.quantity' => ['required_with:credit_items', 'integer', 'min:1'],
         ]);
 
         $this->applyCashierSelection($validated);
