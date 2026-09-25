@@ -88,7 +88,34 @@ class SalesCashierSelectionTest extends TestCase
             ->from('/sales/create')
             ->post('/sales', array_merge($payload, ['cashier' => 'Typed By Hand']))
             ->assertRedirect('/sales/create')
-            ->assertSessionHasErrors('hr_cashier_id');
+            ->assertSessionHasErrors(['hr_cashier_id', 'cashier']);
+
+        $this->actingAs($user)
+            ->withSession(['two_factor_authenticated' => true])
+            ->from('/sales/create')
+            ->post('/sales', array_merge($payload, [
+                'hr_cashier_id' => $cashier->id,
+                'cashier' => 'Typed By Hand',
+            ]))
+            ->assertRedirect('/sales/create')
+            ->assertSessionHasErrors('cashier');
+
+        $inactive = HrCashier::create([
+            'employee_id' => 'EMP-2',
+            'name' => 'Inactive Cashier',
+            'status' => 'inactive',
+            'branch_id' => $branch->id,
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['two_factor_authenticated' => true])
+            ->from('/sales/create')
+            ->post('/sales', array_merge($payload, [
+                'hr_cashier_id' => $inactive->id,
+                'cashier' => 'Inactive Cashier',
+            ]))
+            ->assertRedirect('/sales/create')
+            ->assertSessionHasErrors(['hr_cashier_id', 'cashier']);
 
         $this->actingAs($user)
             ->withSession(['two_factor_authenticated' => true])
@@ -102,7 +129,10 @@ class SalesCashierSelectionTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['two_factor_authenticated' => true])
-            ->post('/sales', array_merge($payload, ['hr_cashier_id' => $cashier->id]))
+            ->post('/sales', array_merge($payload, [
+                'hr_cashier_id' => $cashier->id,
+                'cashier' => 'Ama Mensah',
+            ]))
             ->assertRedirect('/sales');
 
         $this->assertDatabaseHas('sales', [

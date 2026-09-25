@@ -160,10 +160,8 @@ class SalesController extends Controller
             'mobile_money_my_nafa' => ['nullable', 'integer', 'min:0'],
             'mobile_money_aps' => ['nullable', 'integer', 'min:0'],
             'mobile_money_wave' => ['nullable', 'integer', 'min:0'],
-            'cashier' => $request->filled('hr_cashier_id')
-                ? ['nullable', 'string', 'max:255']
-                : $this->cashierValidationRules(),
-            'hr_cashier_id' => ['required', 'integer', 'exists:hr_cashiers,id'],
+            'cashier' => $this->cashierValidationRules(),
+            'hr_cashier_id' => $this->hrCashierIdValidationRules(),
             'actual_total' => ['nullable', 'integer', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
@@ -443,10 +441,8 @@ class SalesController extends Controller
             'mobile_money_my_nafa' => ['nullable', 'integer', 'min:0'],
             'mobile_money_aps' => ['nullable', 'integer', 'min:0'],
             'mobile_money_wave' => ['nullable', 'integer', 'min:0'],
-            'cashier' => $request->filled('hr_cashier_id')
-                ? ['nullable', 'string', 'max:255']
-                : $this->cashierValidationRules($sale->cashier),
-            'hr_cashier_id' => ['nullable', 'integer', 'exists:hr_cashiers,id'],
+            'cashier' => $this->cashierValidationRules($sale->cashier),
+            'hr_cashier_id' => $this->hrCashierIdValidationRules(required: false),
             'actual_total' => ['nullable', 'integer', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
@@ -614,6 +610,15 @@ class SalesController extends Controller
             ->all();
 
         return ['nullable', 'string', 'max:255', Rule::in($names)];
+    }
+
+    private function hrCashierIdValidationRules(bool $required = true): array
+    {
+        return [
+            $required ? 'required' : 'nullable',
+            'integer',
+            Rule::in(collect($this->selectableCashiers())->pluck('id')->all()),
+        ];
     }
 
     private function applyCashierSelection(array &$validated): void
