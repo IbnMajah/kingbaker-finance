@@ -137,8 +137,8 @@
           </div>
         </div>
         <div>
-          <div class="text-sm font-medium text-gray-500">Actual Reconciled Total</div>
-          <div class="text-gray-900">{{ sale.actual_total == null ? '—' : $formatAmount(sale.actual_total) }}</div>
+          <div class="text-sm font-medium text-gray-500">Expected Total</div>
+          <div class="text-gray-900">{{ sale.expected_total == null ? '—' : $formatAmount(sale.expected_total) }}</div>
         </div>
         <div>
           <div class="text-sm font-medium text-gray-500">Variance (Expected − Actual)</div>
@@ -237,6 +237,12 @@
           </tfoot>
         </table>
       </div>
+    </div>
+
+    <!-- Bag Discount -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-lg font-semibold mb-4">Bag Discount</h2>
+      <div class="text-lg font-semibold text-gray-900">{{ $formatAmount(sale.bag_discount_amount || 0) }}</div>
     </div>
   </div>
 </template>

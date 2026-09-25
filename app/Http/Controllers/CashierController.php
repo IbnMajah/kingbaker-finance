@@ -49,7 +49,7 @@ class CashierController extends Controller
         $salesSummary = (clone $salesQuery)->selectRaw(
             'COUNT(*) as sales_count,
             COALESCE(SUM(total_amount), 0) as total_amount,
-            COALESCE(SUM(actual_total), 0) as actual_total'
+            COALESCE(SUM(expected_total), 0) as expected_total'
         )->first();
 
         return Inertia::render('Cashiers/Show', [
@@ -76,7 +76,7 @@ class CashierController extends Controller
                 'branch' => $sale->branch,
                 'shift' => $sale->shift,
                 'total_amount' => $sale->total_amount,
-                'actual_total' => $sale->actual_total,
+                'expected_total' => $sale->expected_total,
                 'amount' => $sale->amount,
                 'variance' => $sale->reconciliation?->calculated_variance,
                 'classification' => $sale->reconciliation?->classification,

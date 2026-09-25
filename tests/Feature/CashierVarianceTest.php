@@ -55,19 +55,20 @@ class CashierVarianceTest extends TestCase
                 'amount' => 80,
                 'cash_amount' => 100,
                 'hr_cashier_id' => $cashier->id,
-                'actual_total' => 80,
+                'expected_total' => 80,
             ])
             ->assertRedirect('/sales');
 
         $sale = Sale::firstOrFail();
         $this->assertSame('100.00', $sale->total_amount);
+        $this->assertSame('80.00', $sale->expected_total);
         $this->assertDatabaseHas('cashier_reconciliations', [
             'sale_id' => $sale->id,
             'hr_cashier_id' => $cashier->id,
-            'expected_total' => 100,
-            'actual_total' => 80,
-            'calculated_variance' => 20,
-            'classification' => 'shortage',
+            'expected_total' => 80,
+            'actual_total' => 100,
+            'calculated_variance' => -20,
+            'classification' => 'surplus',
             'status' => 'draft',
         ]);
     }
@@ -238,7 +239,7 @@ class CashierVarianceTest extends TestCase
             ->from('/cashier-variances/create')
             ->post('/cashier-variances', [
                 'sale_id' => $existing->sale_id,
-                'actual_total' => '80.00',
+                'expected_total' => '80.00',
                 'submit' => true,
             ])
             ->assertRedirect('/cashier-variances/create')
@@ -280,7 +281,7 @@ class CashierVarianceTest extends TestCase
             'sales_date' => today(),
             'amount' => $classification === 'shortage' ? 80 : 46310,
             'total_amount' => $classification === 'shortage' ? 100 : 46250,
-            'actual_total' => $classification === 'shortage' ? 80 : 46310,
+            'expected_total' => $classification === 'shortage' ? 80 : 46310,
             'cashier' => $cashier->name,
         ]);
 

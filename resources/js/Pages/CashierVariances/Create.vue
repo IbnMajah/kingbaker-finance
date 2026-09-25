@@ -5,7 +5,7 @@
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900">Record Cashier Reconciliation</h1>
       <p class="mt-2 text-gray-600">
-        Select a recorded sale. Expected total comes from the sale; enter the actual amount counted at closing.
+        Select a recorded sale. Actual total comes from the sale denominations; enter the expected amount.
       </p>
     </div>
 
@@ -16,7 +16,7 @@
           <select v-model="form.sale_id" class="form-select" :class="{ error: form.errors.sale_id }">
             <option value="">Select a sale</option>
             <option v-for="sale in sales" :key="sale.id" :value="sale.id">
-              {{ sale.sales_date }} · {{ sale.cashier }} · {{ sale.branch }} / {{ sale.shift }} · Expected {{ formatMoney(sale.total_amount) }}
+              {{ sale.sales_date }} · {{ sale.cashier }} · {{ sale.branch }} / {{ sale.shift }} · Actual {{ formatMoney(sale.total_amount) }}
             </option>
           </select>
           <div v-if="form.errors.sale_id" class="form-error">{{ form.errors.sale_id }}</div>
@@ -27,13 +27,13 @@
 
         <div v-if="selectedSale" class="grid gap-6 md:grid-cols-3">
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <p class="text-sm text-gray-500">Expected total</p>
+            <p class="text-sm text-gray-500">Actual total</p>
             <p class="mt-1 text-xl font-semibold">{{ formatMoney(selectedSale.total_amount) }}</p>
           </div>
           <text-input
-            v-model="form.actual_total"
-            :error="form.errors.actual_total"
-            label="Actual Reconciled Total"
+            v-model="form.expected_total"
+            :error="form.errors.expected_total"
+            label="Expected Total"
             type="number"
             step="0.01"
             min="0"
@@ -80,7 +80,7 @@ export default {
     return {
       form: this.$inertia.form({
         sale_id: '',
-        actual_total: '',
+        expected_total: '',
         comments: '',
         submit: false,
       }),
@@ -92,7 +92,7 @@ export default {
     },
     calculatedVariance() {
       if (!this.selectedSale) return 0
-      return Math.round(((Number(this.selectedSale.total_amount) || 0) - (Number(this.form.actual_total) || 0)) * 100) / 100
+      return Math.round(((Number(this.form.expected_total) || 0) - (Number(this.selectedSale.total_amount) || 0)) * 100) / 100
     },
     classificationLabel() {
       if (this.calculatedVariance > 0) return 'Shortage'

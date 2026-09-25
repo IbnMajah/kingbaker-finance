@@ -21,10 +21,11 @@ class Sale extends Model
         'mobile_money_my_nafa',
         'mobile_money_aps',
         'mobile_money_wave',
+        'bag_discount_amount',
         'cashier',
         'hr_cashier_id',
         'closing_manager',
-        'actual_total',
+        'expected_total',
     ];
 
     protected $casts = [
@@ -36,7 +37,8 @@ class Sale extends Model
         'mobile_money_my_nafa' => 'decimal:2',
         'mobile_money_aps' => 'decimal:2',
         'mobile_money_wave' => 'decimal:2',
-        'actual_total' => 'decimal:2',
+        'bag_discount_amount' => 'decimal:2',
+        'expected_total' => 'decimal:2',
     ];
 
     public function branch()

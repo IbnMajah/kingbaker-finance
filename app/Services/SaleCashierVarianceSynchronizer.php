@@ -18,7 +18,7 @@ class SaleCashierVarianceSynchronizer
         $sale->loadMissing(['branch', 'shift', 'hrCashier', 'reconciliation']);
         $existing = $sale->reconciliation;
 
-        if (! $sale->hr_cashier_id || $sale->actual_total === null || ! $sale->hrCashier || ! $sale->branch || ! $sale->shift) {
+        if (! $sale->hr_cashier_id || $sale->expected_total === null || ! $sale->hrCashier || ! $sale->branch || ! $sale->shift) {
             if ($existing?->isMutable()) {
                 $existing->delete();
                 $sale->unsetRelation('reconciliation');
@@ -32,8 +32,8 @@ class SaleCashierVarianceSynchronizer
             return $existing;
         }
 
-        $expected = $this->calculator->format((string) $sale->total_amount);
-        $actual = $this->calculator->format((string) $sale->actual_total);
+        $expected = $this->calculator->format((string) $sale->expected_total);
+        $actual = $this->calculator->format((string) $sale->total_amount);
         $calculation = $this->calculator->calculate($expected, $actual);
         $reference = 'SALE-'.$sale->id;
         $cashier = $sale->hrCashier;

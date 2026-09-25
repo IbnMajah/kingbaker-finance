@@ -518,6 +518,45 @@
             </div>
           </div>
 
+          <!-- Bag Discount -->
+          <div class="border-t border-gray-200 pt-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">Bag Discount</h3>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div class="p-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Amount
+                </label>
+                <div class="relative max-w-md">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-gray-500 sm:text-sm">D</span>
+                  </div>
+                  <input
+                    v-model="form.bag_discount_amount"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="0"
+                    :disabled="sale.deleted_at"
+                    :class="[
+                      'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
+                      form.errors.bag_discount_amount ? 'border-red-300' : 'border-gray-300'
+                    ]"
+                    @keydown="preventDecimalKey"
+                    @input="formatNumber('bag_discount_amount', $event)"
+                    @blur="formatNumber('bag_discount_amount', $event)"
+                  />
+                </div>
+                <p v-if="form.errors.bag_discount_amount" class="mt-1 text-sm text-red-600">
+                  {{ form.errors.bag_discount_amount }}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Depositable Amount -->
           <div class="border-t border-gray-200 pt-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -553,14 +592,14 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Actual Reconciled Total
+                  Expected Total
                 </label>
                 <div class="relative">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span class="text-gray-500 sm:text-sm">D</span>
                   </div>
                   <input
-                    v-model="form.actual_total"
+                    v-model="form.expected_total"
                     type="number"
                     min="0"
                     step="1"
@@ -569,21 +608,21 @@
                     :disabled="sale.deleted_at"
                     :class="[
                       'w-full pl-8 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
-                      form.errors.actual_total ? 'border-red-300' : 'border-gray-300'
+                      form.errors.expected_total ? 'border-red-300' : 'border-gray-300'
                     ]"
                     @keydown="preventDecimalKey"
-                    @input="formatOptionalNumber('actual_total', $event)"
-                    @blur="formatOptionalNumber('actual_total', $event)"
+                    @input="formatOptionalNumber('expected_total', $event)"
+                    @blur="formatOptionalNumber('expected_total', $event)"
                   />
                 </div>
-                <p v-if="form.errors.actual_total" class="mt-1 text-sm text-red-600">
-                  {{ form.errors.actual_total }}
+                <p v-if="form.errors.expected_total" class="mt-1 text-sm text-red-600">
+                  {{ form.errors.expected_total }}
                 </p>
-                <p class="mt-1 text-sm text-gray-500">Cash counted at closing. Variance is Expected − Actual.</p>
+                <p class="mt-1 text-sm text-gray-500">Target amount for this sale. Actual is the denomination total. Variance is Expected − Actual.</p>
               </div>
             </div>
-            <div v-if="form.actual_total !== '' && form.actual_total !== null" class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p class="text-sm text-gray-500">Expected total (from sale) − Actual</p>
+            <div v-if="form.expected_total !== '' && form.expected_total !== null" class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-sm text-gray-500">Expected − Actual (denomination total)</p>
               <div class="mt-1 flex flex-wrap items-center gap-3">
                 <span class="text-2xl font-bold text-gray-900">GMD {{ calculatedVariance }}</span>
                 <span
@@ -684,10 +723,11 @@ export default {
         mobile_money_my_nafa: toWholeNumber(this.sale.mobile_money_my_nafa),
         mobile_money_aps: toWholeNumber(this.sale.mobile_money_aps),
         mobile_money_wave: toWholeNumber(this.sale.mobile_money_wave),
+        bag_discount_amount: toWholeNumber(this.sale.bag_discount_amount),
         cashier: this.sale.cashier || '',
         hr_cashier_id: this.sale.hr_cashier_id || '',
         closing_manager: this.sale.closing_manager || '',
-        actual_total: this.sale.actual_total != null ? toWholeNumber(this.sale.actual_total, '') : '',
+        expected_total: this.sale.expected_total != null ? toWholeNumber(this.sale.expected_total, '') : '',
         credit_items: (this.sale.credit_items || []).map(item => ({
           customer_id: item.customer_id,
           description: item.description || '',
@@ -708,6 +748,7 @@ export default {
       total += parseInt(this.form.mobile_money_my_nafa, 10) || 0
       total += parseInt(this.form.mobile_money_aps, 10) || 0
       total += parseInt(this.form.mobile_money_wave, 10) || 0
+      total += parseInt(this.form.bag_discount_amount, 10) || 0
       
       // Add credit items totals
       if (this.form.credit_items && Array.isArray(this.form.credit_items)) {
@@ -753,7 +794,7 @@ export default {
       return options
     },
     calculatedVariance() {
-      return (Number(this.totalAmount) || 0) - (parseInt(this.form.actual_total, 10) || 0)
+      return (parseInt(this.form.expected_total, 10) || 0) - (Number(this.totalAmount) || 0)
     },
   },
   watch: {
@@ -779,10 +820,11 @@ export default {
         mobile_money_my_nafa: parseInt(this.form.mobile_money_my_nafa, 10) || 0,
         mobile_money_aps: parseInt(this.form.mobile_money_aps, 10) || 0,
         mobile_money_wave: parseInt(this.form.mobile_money_wave, 10) || 0,
+        bag_discount_amount: parseInt(this.form.bag_discount_amount, 10) || 0,
         hr_cashier_id: this.form.hr_cashier_id || null,
-        actual_total: this.form.actual_total === '' || this.form.actual_total === null
+        expected_total: this.form.expected_total === '' || this.form.expected_total === null
           ? null
-          : parseInt(this.form.actual_total, 10),
+          : parseInt(this.form.expected_total, 10),
         credit_items: this.form.credit_items.map(item => ({
           customer_id: item.customer_id,
           description: item.description,

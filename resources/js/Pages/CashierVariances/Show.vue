@@ -44,7 +44,7 @@
           </div>
           <dl class="grid gap-6 sm:grid-cols-2">
             <div><dt class="text-sm text-gray-500">Expected total</dt><dd class="mt-1 text-xl font-semibold">{{ money(reconciliation.expected_total) }}</dd></div>
-            <div><dt class="text-sm text-gray-500">Actual reconciled total</dt><dd class="mt-1 text-xl font-semibold">{{ money(reconciliation.actual_total) }}</dd></div>
+            <div><dt class="text-sm text-gray-500">Actual total</dt><dd class="mt-1 text-xl font-semibold">{{ money(reconciliation.actual_total) }}</dd></div>
             <div><dt class="text-sm text-gray-500">Calculated variance</dt><dd class="mt-1 text-xl font-semibold">{{ money(reconciliation.calculated_variance) }}</dd></div>
             <div>
               <dt class="text-sm text-gray-500">Formula</dt>
@@ -126,10 +126,10 @@
 
     <Modal :show="showEdit" @close="showEdit = false">
       <form class="max-h-screen overflow-y-auto p-6" @submit.prevent="update">
-        <h2 class="text-lg font-semibold">Correct actual total</h2>
-        <p class="mt-2 text-sm text-gray-600">Expected total stays the system sale total. Variance is recalculated as Expected − Actual.</p>
+        <h2 class="text-lg font-semibold">Correct expected total</h2>
+        <p class="mt-2 text-sm text-gray-600">Actual total stays the sale denomination total. Variance is recalculated as Expected − Actual.</p>
         <div class="mt-4 grid gap-4">
-          <text-input v-model="editForm.actual_total" :error="editForm.errors.actual_total" type="number" step="0.01" label="Actual Reconciled Total" />
+          <text-input v-model="editForm.expected_total" :error="editForm.errors.expected_total" type="number" step="0.01" label="Expected Total" />
         </div>
         <textarea-input v-model="editForm.comments" :error="editForm.errors.comments" class="mt-4" label="Comments" />
         <div class="mt-6 flex justify-end gap-3">
@@ -180,7 +180,7 @@ export default {
       reviewForm: this.$inertia.form({ reason: '' }),
       reverseForm: this.$inertia.form({ reason: '' }),
       editForm: this.$inertia.form({
-        actual_total: this.reconciliation.actual_total,
+        expected_total: this.reconciliation.expected_total,
         comments: this.reconciliation.comments,
       }),
     }

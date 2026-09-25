@@ -160,9 +160,10 @@ class SalesController extends Controller
             'mobile_money_my_nafa' => ['nullable', 'integer', 'min:0'],
             'mobile_money_aps' => ['nullable', 'integer', 'min:0'],
             'mobile_money_wave' => ['nullable', 'integer', 'min:0'],
+            'bag_discount_amount' => ['nullable', 'integer', 'min:0'],
             'cashier' => $this->cashierValidationRules(),
             'hr_cashier_id' => $this->hrCashierIdValidationRules(),
-            'actual_total' => ['nullable', 'integer', 'min:0'],
+            'expected_total' => ['nullable', 'integer', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
             'credit_items.*.customer_id' => ['required_with:credit_items', 'exists:contacts,id'],
@@ -181,7 +182,8 @@ class SalesController extends Controller
                 ($validated['bank_transfer_amount'] ?? 0) +
                 ($validated['mobile_money_my_nafa'] ?? 0) +
                 ($validated['mobile_money_aps'] ?? 0) +
-                ($validated['mobile_money_wave'] ?? 0);
+                ($validated['mobile_money_wave'] ?? 0) +
+                ($validated['bag_discount_amount'] ?? 0);
 
             // Add credit items total
             if (isset($validated['credit_items']) && is_array($validated['credit_items'])) {
@@ -206,6 +208,7 @@ class SalesController extends Controller
                 'mobile_money_my_nafa' => $validated['mobile_money_my_nafa'] ?? 0,
                 'mobile_money_aps' => $validated['mobile_money_aps'] ?? 0,
                 'mobile_money_wave' => $validated['mobile_money_wave'] ?? 0,
+                'bag_discount_amount' => $validated['bag_discount_amount'] ?? 0,
             ]);
 
             // Create credit items and invoices for customers with positive amounts
@@ -305,12 +308,13 @@ class SalesController extends Controller
                 'sales_date' => $sale->sales_date->format('Y-m-d'),
                 'amount' => $sale->amount,
                 'total_amount' => $sale->total_amount ?? 0,
-                'actual_total' => $sale->actual_total,
+                'expected_total' => $sale->expected_total,
                 'cash_amount' => $sale->cash_amount ?? 0,
                 'bank_transfer_amount' => $sale->bank_transfer_amount ?? 0,
                 'mobile_money_my_nafa' => $sale->mobile_money_my_nafa ?? 0,
                 'mobile_money_aps' => $sale->mobile_money_aps ?? 0,
                 'mobile_money_wave' => $sale->mobile_money_wave ?? 0,
+                'bag_discount_amount' => $sale->bag_discount_amount ?? 0,
                 'cashier' => $sale->cashier,
                 'hr_cashier_id' => $sale->hr_cashier_id,
                 'closing_manager' => $sale->closing_manager,
@@ -381,12 +385,13 @@ class SalesController extends Controller
                 'sales_date' => $sale->sales_date->format('Y-m-d'),
                 'amount' => $sale->amount,
                 'total_amount' => $sale->total_amount ?? 0,
-                'actual_total' => $sale->actual_total,
+                'expected_total' => $sale->expected_total,
                 'cash_amount' => $sale->cash_amount ?? 0,
                 'bank_transfer_amount' => $sale->bank_transfer_amount ?? 0,
                 'mobile_money_my_nafa' => $sale->mobile_money_my_nafa ?? 0,
                 'mobile_money_aps' => $sale->mobile_money_aps ?? 0,
                 'mobile_money_wave' => $sale->mobile_money_wave ?? 0,
+                'bag_discount_amount' => $sale->bag_discount_amount ?? 0,
                 'cashier' => $sale->cashier,
                 'hr_cashier_id' => $sale->hr_cashier_id,
                 'closing_manager' => $sale->closing_manager,
@@ -441,9 +446,10 @@ class SalesController extends Controller
             'mobile_money_my_nafa' => ['nullable', 'integer', 'min:0'],
             'mobile_money_aps' => ['nullable', 'integer', 'min:0'],
             'mobile_money_wave' => ['nullable', 'integer', 'min:0'],
+            'bag_discount_amount' => ['nullable', 'integer', 'min:0'],
             'cashier' => $this->cashierValidationRules($sale->cashier),
             'hr_cashier_id' => $this->hrCashierIdValidationRules(required: false),
-            'actual_total' => ['nullable', 'integer', 'min:0'],
+            'expected_total' => ['nullable', 'integer', 'min:0'],
             'closing_manager' => ['nullable', 'string', 'max:255'],
             'credit_items' => ['nullable', 'array'],
             'credit_items.*.customer_id' => ['required_with:credit_items', 'exists:contacts,id'],
@@ -462,7 +468,8 @@ class SalesController extends Controller
                 ($validated['bank_transfer_amount'] ?? 0) +
                 ($validated['mobile_money_my_nafa'] ?? 0) +
                 ($validated['mobile_money_aps'] ?? 0) +
-                ($validated['mobile_money_wave'] ?? 0);
+                ($validated['mobile_money_wave'] ?? 0) +
+                ($validated['bag_discount_amount'] ?? 0);
 
             // Add credit items total
             if (isset($validated['credit_items']) && is_array($validated['credit_items'])) {
@@ -486,6 +493,7 @@ class SalesController extends Controller
                 'mobile_money_my_nafa' => $validated['mobile_money_my_nafa'] ?? 0,
                 'mobile_money_aps' => $validated['mobile_money_aps'] ?? 0,
                 'mobile_money_wave' => $validated['mobile_money_wave'] ?? 0,
+                'bag_discount_amount' => $validated['bag_discount_amount'] ?? 0,
             ]);
 
             // Delete existing credit items

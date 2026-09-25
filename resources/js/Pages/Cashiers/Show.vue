@@ -62,8 +62,8 @@
               <td class="px-4 py-3 text-sm text-gray-700">
                 {{ sale.branch?.name || '—' }} · {{ sale.shift?.name || '—' }}
               </td>
+              <td class="px-4 py-3 text-right text-sm">{{ sale.expected_total === null ? '—' : money(sale.expected_total) }}</td>
               <td class="px-4 py-3 text-right text-sm">{{ money(sale.total_amount) }}</td>
-              <td class="px-4 py-3 text-right text-sm">{{ sale.actual_total === null ? '—' : money(sale.actual_total) }}</td>
               <td class="px-4 py-3 text-right text-sm font-medium" :class="varianceClass(sale.variance)">
                 <Link v-if="sale.reconciliation_id" :href="`/cashier-variances/${sale.reconciliation_id}`">
                   {{ sale.variance === null ? '—' : money(sale.variance) }}

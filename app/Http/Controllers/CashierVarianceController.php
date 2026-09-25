@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\CashierReconciliation;
 use App\Models\HrCashier;
 use App\Models\Sale;
+use App\Services\CashierVarianceCalculator;
 use App\Services\CashierVarianceWorkflow;
 use App\Services\SaleCashierVarianceSynchronizer;
 use Illuminate\Http\RedirectResponse;
@@ -109,7 +110,7 @@ class CashierVarianceController extends Controller
                     'id' => $sale->id,
                     'sales_date' => $sale->sales_date?->toDateString(),
                     'total_amount' => $sale->total_amount,
-                    'actual_total' => $sale->actual_total,
+                    'expected_total' => $sale->expected_total,
                     'cashier' => $sale->hrCashier?->name ?? $sale->cashier,
                     'employee_id' => $sale->hrCashier?->employee_id,
                     'branch' => $sale->branch?->name,
@@ -122,7 +123,7 @@ class CashierVarianceController extends Controller
     {
         $validated = $request->validate([
             'sale_id' => ['required', 'integer', 'exists:sales,id', Rule::unique('cashier_reconciliations', 'sale_id')],
-            'actual_total' => ['required', 'numeric', 'min:0'],
+            'expected_total' => ['required', 'numeric', 'min:0'],
             'comments' => ['nullable', 'string', 'max:2000'],
             'submit' => ['nullable', 'boolean'],
         ]);
@@ -134,7 +135,7 @@ class CashierVarianceController extends Controller
             403
         );
 
-        $sale->update(['actual_total' => $validated['actual_total']]);
+        $sale->update(['expected_total' => $validated['expected_total']]);
         $reconciliation = $synchronizer->sync($sale->fresh(['branch', 'shift', 'hrCashier', 'reconciliation']), $request->user());
 
         if ($reconciliation && filled($validated['comments'] ?? null)) {
@@ -165,7 +166,7 @@ class CashierVarianceController extends Controller
         $this->authorizeBranch($request, $cashierVariance);
 
         $cashierVariance->load([
-            'sale:id,sales_date,total_amount,actual_total,amount',
+            'sale:id,sales_date,total_amount,expected_total,amount',
             'branch:id,name',
             'shift:id,name',
             'creator:id,first_name,last_name',
@@ -209,18 +210,28 @@ class CashierVarianceController extends Controller
         abort_unless($cashierVariance->isMutable(), 422);
 
         $validated = $request->validate([
-            'actual_total' => ['required', 'numeric', 'min:0'],
+            'expected_total' => ['required', 'numeric', 'min:0'],
             'comments' => ['nullable', 'string', 'max:2000'],
         ]);
 
         if ($cashierVariance->sale_id) {
             $sale = $cashierVariance->sale()->firstOrFail();
-            $sale->update(['actual_total' => $validated['actual_total']]);
+            $sale->update(['expected_total' => $validated['expected_total']]);
             $synchronizer->sync($sale->fresh(['branch', 'shift', 'hrCashier', 'reconciliation']), $request->user());
             $cashierVariance->refresh()->update(['comments' => $validated['comments'] ?? null]);
         } else {
-            $cashierVariance->sale?->update(['actual_total' => $validated['actual_total']]);
-            $cashierVariance->update(['actual_total' => $validated['actual_total'], 'comments' => $validated['comments'] ?? null]);
+            $calculator = app(CashierVarianceCalculator::class);
+            $expected = $calculator->format($validated['expected_total']);
+            $actual = $calculator->format((string) $cashierVariance->actual_total);
+            $calculation = $calculator->calculate($expected, $actual);
+
+            $cashierVariance->sale?->update(['expected_total' => $validated['expected_total']]);
+            $cashierVariance->update([
+                'expected_total' => $expected,
+                'calculated_variance' => $calculation['amount'],
+                'classification' => $calculation['classification'],
+                'comments' => $validated['comments'] ?? null,
+            ]);
         }
 
         return back()->with('success', 'Reconciliation updated.');
